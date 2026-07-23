@@ -384,8 +384,8 @@
     .card{ padding: 24px 20px 22px; }
     .report-preview, .side-card, .redact-modal, .preview-modal{ border-radius: var(--r-md); }
     .redact-workspace{ grid-template-columns:1fr; overflow-y:auto; }
-    .redact-guide-panel{ border-right:0; border-bottom:1px solid var(--linha); overflow:visible; }
-    .redact-document-panel{ min-height:480px; }
+    .redact-guide-panel{ border-right:0; border-bottom:1px solid var(--linha); overflow:visible; order:2; }
+    .redact-document-panel{ min-height:480px; order:1; }
     .scv-review-grid{ grid-template-columns:1fr; }
     .scv-type-grid{ grid-template-columns:1fr; }
     .step-node{ width: auto; flex: 1; }
@@ -402,6 +402,12 @@
     .btn{ width: 100%; }
     .nav-row{ flex-wrap: wrap; gap: 10px; }
     .nav-row .btn{ flex: 1; }
+    .redact-actions .left-group .btn,
+    .redact-actions .right-group .btn,
+    .redact-zoom .btn,
+    .redact-pager .btn,
+    .scv-import-actions .btn,
+    .translado-file-actions .btn{ width: auto; flex: 1 1 auto; }
     .footer-pill{ font-size: 12px; padding: 7px 14px; }
   }
 
@@ -4321,3 +4327,4 @@ ReactDOM.createRoot(document.getElementById("app-root")).render(<App />);
 </script>
 </body>
 </html>
+"fix: botões mobile e ordem do editor de tarja"
