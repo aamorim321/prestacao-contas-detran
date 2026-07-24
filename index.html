@@ -315,6 +315,71 @@
   .rp-declaracao-title{ font-size: 13.5px; font-weight: 800; color: var(--verde-escuro); margin-bottom: 6px; letter-spacing: .04em; }
   .rp-declaracao-text{ font-size: 13.5px; color: #31424f; text-align: justify; line-height: 1.6; }
 
+  /* ===== Página 1 — refinamentos para o layout aprovado ===== */
+  .rp-a4{ width: 794px; min-height: 1123px; display: flex; flex-direction: column; box-sizing: border-box; }
+  .rp-a4 .rp-footer{ margin-top: auto; }
+  .report-preview .rp-logos img:first-child{ height: 42px; }
+  .report-preview .rp-logo-col img{ height: 46px; }
+  .rp-topbar{ height: 6px; border-radius: 3px; margin: -6px 0 20px; background: linear-gradient(90deg, var(--navy) 0%, var(--navy) 74%, var(--verde-vivo) 84%, var(--verde-vivo) 100%); }
+  .rp-kicker{ display: flex; align-items: center; justify-content: center; gap: 12px; }
+  .rp-kicker i{ width: 26px; height: 2px; background: var(--verde-vivo); border-radius: 1px; }
+  .rp-sv-box{ display: inline-block; border: 1.5px solid var(--linha); border-radius: 8px; padding: 7px 24px; font-family: var(--font-dado); font-size: 14.5px; color: #31424f; background: #fff; }
+  .rp-resumo-grid{ position: relative; }
+  .rp-resumo-grid::before{ content: ""; position: absolute; left: 50%; top: 12px; bottom: 14px; width: 1px; background: #e6ebee; }
+  .rp-resumo-item{ align-items: center; }
+  .rp-ri-icon{ width: 34px; height: 34px; border-radius: 50%; background: var(--azul-tint); color: var(--azul); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .rp-declaracao-icon{ background: none; color: #3f9b2f; width: 46px; height: 46px; border-radius: 0; }
+  .rp-sign-clip{ width: 34px; height: 34px; border-radius: 50%; background: var(--azul-tint); color: var(--azul); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 6px; }
+  .rp-sign .rp-sign-note{ color: var(--azul); font-style: normal; }
+  .rp-sign-line{ width: 320px; max-width: 70%; height: 1px; background: #c9d2d8; margin: 10px auto; }
+  .rp-sign .rp-sign-name{ border-top: none; padding-top: 0; margin-top: 0; letter-spacing: .02em; }
+  .rp-foot{ display: flex; align-items: center; border-top: 1px solid #e8ecef; padding: 12px 0 10px; font-size: 11.5px; color: #44525c; line-height: 1.5; }
+  .rp-foot-seg{ display: flex; gap: 9px; align-items: center; padding: 0 14px; border-left: 1px solid #e6ebee; white-space: nowrap; }
+  .rp-foot-seg:first-child{ border-left: none; padding-left: 0; flex: 1; white-space: normal; }
+  .rp-foot-seg b{ color: var(--grafite); }
+  .rp-foot-ic{ width: 26px; height: 26px; border-radius: 50%; background: var(--azul-tint); color: var(--azul); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  /* ===== Páginas de anexo (renderizadas em HTML, mesmo estilo da página 1) ===== */
+  .ax-page{ width: 794px; min-height: 1123px; background: #fff; padding: 30px 40px 0; display: flex; flex-direction: column; box-sizing: border-box; font-family: var(--font-corpo); color: var(--grafite); }
+  .ax-logos{ display: flex; justify-content: space-between; align-items: center; }
+  .ax-logos img.detran{ height: 42px; }
+  .ax-logos img.parana{ height: 46px; }
+  .ax-bar{ height: 5px; border-radius: 3px; margin: 14px 0 24px; background: linear-gradient(90deg, var(--navy) 0%, var(--navy) 76%, var(--verde-vivo) 86%, var(--verde-vivo) 100%); }
+  .ax-title-row{ display: flex; gap: 16px; align-items: center; margin-bottom: 18px; }
+  .ax-title-icon{ width: 58px; height: 58px; border-radius: 16px; background: #3f9b2f; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .ax-anexo-num{ color: #3f9b2f; font-weight: 800; font-size: 19px; letter-spacing: .03em; }
+  .ax-anexo-titulo{ color: var(--navy); font-weight: 800; font-size: 27px; letter-spacing: .01em; line-height: 1.2; }
+  .ax-contexto{ background: #f2f4f6; border: 1px solid #e3e8ec; border-radius: 14px; display: flex; padding: 15px 6px; margin-bottom: 20px; }
+  .ax-ctx-item{ flex: 1; display: flex; gap: 11px; align-items: center; padding: 0 15px; border-left: 1px solid #dde3e8; min-width: 0; }
+  .ax-ctx-item:first-child{ border-left: none; }
+  .ax-ctx-ic{ color: var(--azul); flex-shrink: 0; }
+  .ax-ctx-item b{ display: block; font-size: 13px; color: var(--grafite); margin-bottom: 2px; }
+  .ax-ctx-item span{ display: block; font-size: 14px; color: #44525c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ax-frame{ border: 1px solid #e3e8ec; border-radius: 14px; flex: 1; display: flex; align-items: center; justify-content: center; padding: 18px; margin-bottom: 16px; min-height: 420px; }
+  .ax-frame img{ max-width: 100%; max-height: 660px; object-fit: contain; box-shadow: 0 2px 12px rgba(0,0,0,.09); border-radius: 4px; background: #fff; }
+  .ax-frame-vazio{ font-style: italic; color: var(--cinza); font-size: 14px; text-align: center; }
+  .ax-pill{ display: flex; gap: 9px; align-items: center; background: #eef4fa; border: 1px solid #d8e6f2; color: var(--azul); border-radius: 12px; padding: 10px 20px; font-size: 13.5px; margin: 0 auto 16px; width: fit-content; }
+  .ax-tcard{ border: 1px solid #e3e8ec; border-radius: 14px; padding: 15px 18px 16px; margin-bottom: 15px; }
+  .ax-tcard-head{ display: flex; gap: 12px; align-items: center; margin-bottom: 11px; }
+  .ax-tnum{ width: 30px; height: 30px; border-radius: 8px; background: #3f9b2f; color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .ax-tcard-title{ color: var(--navy); font-weight: 800; font-size: 17px; letter-spacing: .03em; }
+  .ax-tfields{ display: flex; border-bottom: 1px solid #e8ecef; padding-bottom: 12px; margin-bottom: 14px; }
+  .ax-tfield{ flex: 1; display: flex; gap: 10px; align-items: center; padding: 0 12px; border-left: 1px solid #e8ecef; min-width: 0; }
+  .ax-tfield:first-child{ border-left: none; padding-left: 0; }
+  .ax-tfield b{ display: block; font-size: 12.5px; color: var(--grafite); margin-bottom: 1px; }
+  .ax-tfield span{ display: block; font-size: 13.5px; color: #44525c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ax-treceipt{ display: flex; justify-content: center; }
+  .ax-treceipt img{ max-height: 258px; max-width: 78%; object-fit: contain; box-shadow: 0 2px 10px rgba(0,0,0,.09); border-radius: 6px; background: #fff; }
+  .ax-tsummary{ border: 1.5px solid #bfe0ae; background: #f3faee; border-radius: 14px; display: flex; gap: 15px; align-items: center; padding: 13px 18px; margin-bottom: 15px; }
+  .ax-tsummary-icon{ width: 46px; height: 46px; border-radius: 12px; background: #3f9b2f; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .ax-tsummary-title{ color: #2c6e1c; font-weight: 800; font-size: 15px; margin-bottom: 2px; }
+  .ax-tsummary div span{ font-size: 13.5px; color: #31424f; }
+  .ax-verde{ color: #2c8a12; font-weight: 800; }
+  .ax-footer{ margin-top: auto; }
+  .ax-footer-line{ display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 12.5px; color: #44525c; padding: 11px 0 9px; border-top: 1px solid #e8ecef; }
+  .ax-footer-line b{ color: var(--grafite); }
+  .ax-footer-bar{ height: 7px; margin: 0 -40px; background: linear-gradient(90deg, #0b1e3a 0%, var(--navy) 10%, var(--navy) 80%, var(--verde-vivo) 90%, var(--verde-vivo) 100%); }
+
   /* ================= FOOTER ================= */
   .footer-links-bar{ background: var(--azul); }
   .footer-links-bar .band-inner{ padding-top: 14px; padding-bottom: 14px; display:flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
@@ -2357,7 +2422,7 @@ function LocalidadeSelect({ value, onChange, estados, estadosErro, municipiosCac
   );
 }
 
-function ReportPreview({ form }) {
+function ReportPreview({ form, modoPdf, paginaTexto }) {
   const periodo = form.dataSaida && form.dataRetorno
     ? `${formatDateBR(form.dataSaida)} a ${formatDateBR(form.dataRetorno)}`
     : (formatDateBR(form.dataSaida) || formatDateBR(form.dataRetorno) || "—");
@@ -2380,27 +2445,27 @@ function ReportPreview({ form }) {
   if (form.anexos?.comprobatorio?.length) docsPreview.push({ nome: "Outros documentos comprobatórios" });
   const atestoPreview = "Atesto e certifico que as informações constantes no presente documento demonstram efetivamente a realização e a efetividade da viagem, e que os comprovantes de despesa anexos a esta prestação de contas foram efetivamente realizados no estrito interesse da administração pública, conforme o Decreto Estadual n.º 6.358/2024.";
   return (
-    <div className="report-preview">
+    <div className={"report-preview" + (modoPdf ? " rp-a4" : "")}>
+      {modoPdf && <div className="rp-topbar" />}
       <div className="rp-logos">
         <img src={DETRAN_LOGO} alt="DetranPR" />
         <div className="rp-logo-col">
           <img src={PARANA_LOGO} alt="Governo do Paraná" />
-          <span className="rp-pagina">Página 1</span>
         </div>
       </div>
       <div className="rp-title">RELATÓRIO TÉCNICO DE VIAGEM</div>
-      <div className="rp-kicker">Prestação de Contas</div>
-      <div className="rp-subtitle">S.V. Nº {form.numeroSolicitacao || "________"}</div>
+      <div className="rp-kicker"><i />PRESTAÇÃO DE CONTAS<i /></div>
+      <div className="rp-subtitle"><span className="rp-sv-box">S.V. &nbsp;Nº&nbsp; {form.numeroSolicitacao || "________"}</span></div>
 
       <div className="rp-card">
         <div className="rp-card-tab"><Icon name="maleta" size={14} /> RESUMO DA VIAGEM</div>
         <div className="rp-resumo-grid">
-          <div className="rp-resumo-item"><span>Viajante:</span><strong>{form.nomeViajante || "—"}</strong></div>
-          <div className="rp-resumo-item"><span>Tipo de viagem:</span><strong>{tipoViagem}</strong></div>
-          <div className="rp-resumo-item"><span>Destino:</span><strong>{form.destino || "—"}</strong></div>
-          <div className="rp-resumo-item"><span>Situação do roteiro:</span><span className={"rp-selo " + (form.tipoPrestacao === "roteiro_sem_alteracao" ? "ok" : "warn")}><Icon name="check" size={12} /> {tipoPrestacao}</span></div>
-          <div className="rp-resumo-item"><span>Período:</span><strong>{periodo}</strong></div>
-          <div className="rp-resumo-item"><span>Solicitação:</span><strong>{form.numeroSolicitacao || "—"}</strong></div>
+          <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="pessoa" size={15} /></span><span>Viajante:</span><strong>{form.nomeViajante || "—"}</strong></div>
+          <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="maleta" size={15} /></span><span>Tipo de viagem:</span><strong>{tipoViagem}</strong></div>
+          <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="pin" size={15} /></span><span>Destino:</span><strong>{form.destino || "—"}</strong></div>
+          <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="alvo" size={15} /></span><span>Situação do roteiro:</span><span className={"rp-selo " + (form.tipoPrestacao === "roteiro_sem_alteracao" ? "ok" : "warn")}><Icon name="check" size={12} /> {tipoPrestacao}</span></div>
+          <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="calendario" size={15} /></span><span>Período:</span><strong>{periodo}</strong></div>
+          <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="doc" size={15} /></span><span>Solicitação:</span><strong>{form.numeroSolicitacao || "—"}</strong></div>
         </div>
       </div>
 
@@ -2440,7 +2505,7 @@ function ReportPreview({ form }) {
       </div>
 
       <div className="rp-declaracao">
-        <div className="rp-declaracao-icon"><Icon name="check" size={20} /></div>
+        <div className="rp-declaracao-icon"><SvgEscudo size={38} /></div>
         <div>
           <div className="rp-declaracao-title">DECLARAÇÃO DO VIAJANTE</div>
           <div className="rp-declaracao-text">{atestoPreview}</div>
@@ -2448,18 +2513,183 @@ function ReportPreview({ form }) {
       </div>
 
       <div className="rp-sign">
+        <span className="rp-sign-clip"><Icon name="paperclip" size={16} /></span>
         <div className="rp-sign-note">Assinado eletronicamente por</div>
-        <div className="rp-sign-name">{form.nomeViajante || "Nome do viajante"}</div>
+        <div className="rp-sign-line" />
+        <div className="rp-sign-name">{(form.nomeViajante || "Nome do viajante").toUpperCase()}</div>
         <div className="rp-sign-role">{cargoLinha || "Cargo/Função — Setor"}</div>
       </div>
 
       <div className="rp-footer">
-        <div className="rp-footer-text">
-          <span>DETRAN-PR — Av. Victor Ferreira do Amaral, 2940 — Tarumã — 82800-900 — Curitiba — PR — 41 3361-1212</span>
-          <span className="rp-footer-right">www.detran.pr.gov.br</span>
+        <div className="rp-foot">
+          <div className="rp-foot-seg">
+            <span className="rp-foot-ic"><Icon name="pin" size={14} /></span>
+            <span><b>DETRAN-PR</b> — Av. Victor Ferreira do Amaral, 2940 — Tarumã<br/>82800-900 — Curitiba — PR</span>
+          </div>
+          <div className="rp-foot-seg"><span className="rp-foot-ic"><SvgFone size={13} /></span><span>41 3361-1212</span></div>
+          <div className="rp-foot-seg"><span className="rp-foot-ic"><SvgGlobo size={14} /></span><span>www.detran.pr.gov.br</span></div>
+          <div className="rp-foot-seg">{paginaTexto || "Página 1"}</div>
         </div>
         <div className="rp-footer-bar"><span className="faixa-verde" /></div>
       </div>
+    </div>
+  );
+}
+
+const SvgCarro = ({ size = 28 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 15l1.4-4.4A2 2 0 0 1 7.3 9.2h9.4a2 2 0 0 1 1.9 1.4L20 15" />
+    <path d="M3.5 15h17a1 1 0 0 1 1 1v2.4h-2.4" />
+    <path d="M4.9 18.4H2.5V16a1 1 0 0 1 1-1" />
+    <circle cx="7.6" cy="18.2" r="1.7" />
+    <circle cx="16.4" cy="18.2" r="1.7" />
+  </svg>
+);
+
+const SvgEscudo = ({ size = 36 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2.6l7.4 2.8v5.5c0 4.8-3.2 8.1-7.4 9.5-4.2-1.4-7.4-4.7-7.4-9.5V5.4z" />
+    <polyline points="8.6 12 11 14.4 15.4 9.6" />
+  </svg>
+);
+
+const SvgFone = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2z" />
+  </svg>
+);
+
+const SvgGlobo = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M2 12h20" />
+    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+  </svg>
+);
+
+function iconeDoAnexo(titulo) {
+  const t = (titulo || "").toLowerCase();
+  if (t.includes("veículo") || t.includes("diário") || t.includes("translado")) return <SvgCarro size={30} />;
+  if (t.includes("embarque") || t.includes("bilhete")) return <Icon name="plane" size={28} />;
+  return <Icon name="doc" size={28} />;
+}
+
+function AxCabecalho() {
+  return (
+    <>
+      <div className="ax-logos">
+        <img className="detran" src={DETRAN_LOGO} alt="DetranPR" />
+        <img className="parana" src={PARANA_LOGO} alt="Governo do Paraná" />
+      </div>
+      <div className="ax-bar" />
+    </>
+  );
+}
+
+function AxContexto({ form, tipoViagem }) {
+  const periodo = form.dataSaida && form.dataRetorno
+    ? `${formatDateBR(form.dataSaida)} a ${formatDateBR(form.dataRetorno)}`
+    : (formatDateBR(form.dataSaida) || formatDateBR(form.dataRetorno) || "—");
+  return (
+    <div className="ax-contexto">
+      {tipoViagem && (
+        <div className="ax-ctx-item">
+          <span className="ax-ctx-ic"><Icon name="maleta" size={19} /></span>
+          <div><b>Tipo de viagem</b><span>{tipoViagem}</span></div>
+        </div>
+      )}
+      <div className="ax-ctx-item">
+        <span className="ax-ctx-ic"><Icon name="calendario" size={19} /></span>
+        <div><b>Período da viagem</b><span>{periodo}</span></div>
+      </div>
+      <div className="ax-ctx-item">
+        <span className="ax-ctx-ic"><Icon name="pin" size={19} /></span>
+        <div><b>Destino</b><span>{form.destino || "—"}</span></div>
+      </div>
+      <div className="ax-ctx-item">
+        <span className="ax-ctx-ic"><Icon name="doc" size={19} /></span>
+        <div><b>Solicitação</b><span>{form.numeroSolicitacao || "—"}</span></div>
+      </div>
+    </div>
+  );
+}
+
+function AxRodape({ form, numero, total }) {
+  return (
+    <div className="ax-footer">
+      <div className="ax-footer-line">
+        <span><b>DETRAN/PR</b> &nbsp;|&nbsp; Sistema de Prestação de Contas de Viagem</span>
+        <span>Solicitação: <b>{form.numeroSolicitacao || "—"}</b></span>
+        <span>Anexo <b>{numero}</b> de <b>{total}</b></span>
+      </div>
+      <div className="ax-footer-bar" />
+    </div>
+  );
+}
+
+function AnexoDocPage({ form, numero, total, titulo, imagem, continuacao, redigido }) {
+  return (
+    <div className="ax-page">
+      <AxCabecalho />
+      <div className="ax-title-row">
+        <div className="ax-title-icon">{iconeDoAnexo(titulo)}</div>
+        <div>
+          <div className="ax-anexo-num">ANEXO {String(numero).padStart(2, "0")}</div>
+          <div className="ax-anexo-titulo">{(titulo || "").toUpperCase()}{continuacao ? " (CONTINUAÇÃO)" : ""}</div>
+        </div>
+      </div>
+      {!continuacao && <AxContexto form={form} />}
+      <div className="ax-frame">
+        {imagem ? <img src={imagem} alt="" /> : <div className="ax-frame-vazio">Conteúdo do arquivo não disponível nesta sessão — reanexe o documento.</div>}
+      </div>
+      {redigido && <div className="ax-pill"><Icon name="info" size={15} /> Documento com dados pessoais ocultados para publicação.</div>}
+      <AxRodape form={form} numero={numero} total={total} />
+    </div>
+  );
+}
+
+function AnexoTransladosPage({ form, numero, total, itens, indiceInicial, mostrarResumo, totalItens, valorTotal, redigido }) {
+  const tipoViagem = TRANSPORTES.find(t => t.id === form.transporte)?.label || "—";
+  return (
+    <div className="ax-page">
+      <AxCabecalho />
+      <div className="ax-title-row">
+        <div className="ax-title-icon"><SvgCarro size={30} /></div>
+        <div>
+          <div className="ax-anexo-num">ANEXO {String(numero).padStart(2, "0")}</div>
+          <div className="ax-anexo-titulo">COMPROVANTE DE TRANSLADO</div>
+        </div>
+      </div>
+      <AxContexto form={form} tipoViagem={tipoViagem} />
+      {itens.map((t, i) => {
+        const seq = String(indiceInicial + i + 1).padStart(2, "0");
+        return (
+          <div className="ax-tcard" key={i}>
+            <div className="ax-tcard-head"><span className="ax-tnum">{seq}</span><span className="ax-tcard-title">TRANSLADO {seq}</span></div>
+            <div className="ax-tfields">
+              <div className="ax-tfield"><span className="ax-ctx-ic"><Icon name="pin" size={17} /></span><div><b>Origem</b><span>{t.de || "—"}</span></div></div>
+              <div className="ax-tfield"><span className="ax-ctx-ic"><Icon name="pin" size={17} /></span><div><b>Destino</b><span>{t.para || "—"}</span></div></div>
+              <div className="ax-tfield"><span className="ax-ctx-ic"><Icon name="calendario" size={17} /></span><div><b>Data do translado</b><span>{formatDateBR(t.data) || "—"}</span></div></div>
+              <div className="ax-tfield"><span className="ax-ctx-ic"><Icon name="doc" size={17} /></span><div><b>Valor do comprovante</b><span>{t.valor || "—"}</span></div></div>
+            </div>
+            <div className="ax-treceipt">
+              {t.imagem ? <img src={t.imagem} alt="" /> : <div className="ax-frame-vazio">Comprovante não disponível nesta sessão — reanexe o documento.</div>}
+            </div>
+          </div>
+        );
+      })}
+      {mostrarResumo && (
+        <div className="ax-tsummary">
+          <div className="ax-tsummary-icon"><Icon name="list" size={22} /></div>
+          <div>
+            <div className="ax-tsummary-title">Resumo dos translados</div>
+            <div><span>{totalItens} comprovante{totalItens > 1 ? "s" : ""} apresentado{totalItens > 1 ? "s" : ""}</span></div>
+            <div><span><b>Valor total:</b> <span className="ax-verde">{moedaBR(valorTotal)}</span></span></div>
+          </div>
+        </div>
+      )}
+      {redigido && <div className="ax-pill"><Icon name="info" size={15} /> Documento com dados pessoais ocultados para publicação.</div>}
+      <AxRodape form={form} numero={numero} total={total} />
     </div>
   );
 }
@@ -3386,25 +3616,32 @@ function App() {
         y += altura + 9;
       }
 
-      // ---- Relatório técnico: o PDF usa exatamente o mesmo layout da visualização ----
-      if (!window.html2canvas || !pdfPreviewRef.current) throw new Error("Visualização do relatório indisponível");
-      await new Promise(resolve => setTimeout(resolve, 80));
-      const canvasRelatorio = await window.html2canvas(pdfPreviewRef.current, {
-        scale: 2,
-        backgroundColor: "#ffffff",
-        useCORS: true,
-        logging: false,
-        windowWidth: 794,
-      });
-      const imagemRelatorio = canvasRelatorio.toDataURL("image/png");
-      const proporcao = canvasRelatorio.width / canvasRelatorio.height;
-      let relW = PAGE_W;
-      let relH = relW / proporcao;
-      if (relH > PAGE_H) { relH = PAGE_H; relW = relH * proporcao; }
-      const relX = (PAGE_W - relW) / 2;
-      const relY = (PAGE_H - relH) / 2;
-      doc.addImage(imagemRelatorio, "PNG", relX, relY, relW, relH);
-      paginaAtualJaTemRodape = true;
+      // ---- Renderização em HTML: todas as páginas do PDF usam o mesmo visual do sistema ----
+      if (!window.html2canvas) throw new Error("Gerador visual indisponível");
+
+      async function htmlParaImagem(elemento) {
+        const container = document.createElement("div");
+        container.style.cssText = "position:fixed;left:-12000px;top:0;width:794px;background:#ffffff;z-index:-1;";
+        document.body.appendChild(container);
+        const raiz = ReactDOM.createRoot(container);
+        raiz.render(elemento);
+        await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 70)));
+        const imagens = Array.from(container.querySelectorAll("img"));
+        await Promise.all(imagens.map(im => im.complete ? Promise.resolve() : new Promise(res => { im.onload = im.onerror = res; })));
+        const canvas = await window.html2canvas(container, { scale: 2, backgroundColor: "#ffffff", useCORS: true, logging: false, windowWidth: 794 });
+        raiz.unmount();
+        container.remove();
+        return canvas.toDataURL("image/png");
+      }
+
+      function adicionarPaginaImagem(imgData, primeira) {
+        if (!primeira) doc.addPage();
+        const props = doc.getImageProperties(imgData);
+        const prop = props.width / props.height;
+        let w = PAGE_W, h = w / prop;
+        if (h > PAGE_H) { h = PAGE_H; w = h * prop; }
+        doc.addImage(imgData, "PNG", (PAGE_W - w) / 2, (PAGE_H - h) / 2, w, h);
+      }
 
       // ---- Páginas de comprovante (uma para cada arquivo anexado) ----
       async function obterPaginasComoImagens(meta, contentDataUrl) {
@@ -3427,135 +3664,83 @@ function App() {
         return paginas;
       }
 
-      const periodoAnexos = form.dataSaida && form.dataRetorno
-        ? `${formatDateBR(form.dataSaida)} a ${formatDateBR(form.dataRetorno)}`
-        : (formatDateBR(form.dataSaida) || formatDateBR(form.dataRetorno) || "—");
-
-      function faixaContextoAnexo() {
-        const itens = [
-          ["Período da viagem", periodoAnexos],
-          ["Destino", form.destino || "—"],
-          ["Solicitação", form.numeroSolicitacao || "—"],
-        ];
-        const h = 42;
-        garantirEspaco(h + 12);
-        doc.setFillColor(...COR.cinzaClaro);
-        doc.roundedRect(margin, y, contentW, h, 5, 5, "F");
-        const colW = contentW / itens.length;
-        itens.forEach(([l, v], i) => {
-          const x = margin + colW * i + 14;
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(8.5);
-          doc.setTextColor(...COR.cinza);
-          doc.text(l.toUpperCase(), x, y + 16);
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(10.5);
-          doc.setTextColor(...COR.texto);
-          const vv = doc.splitTextToSize(String(v), colW - 24)[0] || "—";
-          doc.text(vv, x, y + 31);
-        });
-        y += h + 12;
-      }
-
-      function rodapeAnexo(numeroAnexo, totalAnexos, redigido) {
-        doc.setFont("helvetica", "italic");
-        doc.setFontSize(8.5);
-        doc.setTextColor(...COR.cinza);
-        if (redigido) {
-          doc.text("Documento com dados pessoais ocultados para publicação.", margin, PAGE_H - 56);
-        }
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(...COR.azul);
-        doc.text(`Anexo ${numeroAnexo} de ${totalAnexos}`, PAGE_W - margin, PAGE_H - 56, { align: "right" });
-      }
-
-      async function paginaComprovante(numeroAnexo, totalAnexos, tituloDoc, camposSubtitulo, contentDataUrl, meta) {
-        novaPagina(true);
-        tituloComIcone("doc", `ANEXO ${String(numeroAnexo).padStart(2, "0")} — ${tituloDoc.toUpperCase()}`);
-        faixaContextoAnexo();
-        if (camposSubtitulo && camposSubtitulo.length) {
-          tabelaCampos(camposSubtitulo);
-        }
-        rodapeAnexo(numeroAnexo, totalAnexos, meta && meta.redigido);
-
-        const frameTop = y;
-        const frameBottom = PAGE_H - 84;
-        const frameH = frameBottom - frameTop;
-        doc.setDrawColor(...COR.borda);
-        doc.setLineWidth(1);
-        doc.roundedRect(margin, frameTop, contentW, frameH, 6, 6, "S");
-
-        if (!contentDataUrl) {
-          doc.setFont("helvetica", "italic");
-          doc.setFontSize(11);
-          doc.setTextColor(...COR.cinza);
-          doc.text("Conteúdo do arquivo não disponível nesta sessão — reanexe o documento.", margin + 16, frameTop + 24);
-        } else {
-          try {
-            const paginasImagem = await obterPaginasComoImagens(meta, contentDataUrl);
-            for (let pi = 0; pi < paginasImagem.length; pi++) {
-              if (pi > 0) {
-                novaPagina(true);
-                tituloComIcone("doc", `ANEXO ${String(numeroAnexo).padStart(2, "0")} — ${tituloDoc.toUpperCase()} (CONTINUAÇÃO)`);
-                rodapeAnexo(numeroAnexo, totalAnexos, meta && meta.redigido);
-                doc.setDrawColor(...COR.borda);
-                doc.roundedRect(margin, y, contentW, PAGE_H - 84 - y, 6, 6, "S");
-              }
-              const ft = pi > 0 ? y : frameTop;
-              const fb = pi > 0 ? PAGE_H - 84 : frameBottom;
-              const fh = fb - ft;
-              const props = doc.getImageProperties(paginasImagem[pi]);
-              const maxW = contentW - 24, maxH = fh - 24;
-              const escala = Math.min(maxW / props.width, maxH / props.height, 1);
-              const w = props.width * escala, h = props.height * escala;
-              const fx = margin + (contentW - w) / 2, fy = ft + (fh - h) / 2;
-              doc.addImage(paginasImagem[pi], fx, fy, w, h);
-            }
-          } catch (e) {
-            doc.setFont("helvetica", "italic");
-            doc.setFontSize(11);
-            doc.setTextColor(...COR.cinza);
-            doc.text(`Não foi possível incorporar o anexo: ${meta.nome}`, margin + 16, frameTop + 24);
-          }
-        }
-        y = frameBottom + 14;
-      }
-
-      const transladosParaAnexar = (mostraTranslado && form.usouTranslado === "sim") ? translados.filter(t => t.arquivo) : [];
-      const totalAnexosPdf = docs.reduce((acc, d) => acc + ((form.anexos[d.id] || []).length), 0) + transladosParaAnexar.length;
-      let anexoAtual = 0;
-
-      async function anexarPaginasDosDocs(listaDocs) {
+      // ---- Preparar anexos (converte cada arquivo em imagens de página) ----
+      const anexosPreparados = [];
+      async function prepararDocs(listaDocs) {
         for (const d of listaDocs) {
           const arquivos = form.anexos[d.id] || [];
           for (let i = 0; i < arquivos.length; i++) {
             const meta = arquivos[i];
-            const tituloDoc = arquivos.length > 1 ? `${d.nome} (${i + 1}/${arquivos.length})` : d.nome;
-            anexoAtual += 1;
-            await paginaComprovante(anexoAtual, totalAnexosPdf, tituloDoc, null, anexosContent[meta.id], meta);
+            const titulo = arquivos.length > 1 ? `${d.nome} (${i + 1}/${arquivos.length})` : d.nome;
+            let imagens = [];
+            if (anexosContent[meta.id]) {
+              try { imagens = await obterPaginasComoImagens(meta, anexosContent[meta.id]); } catch (e) { imagens = []; }
+            }
+            anexosPreparados.push({ tipo: "doc", titulo, imagens, redigido: !!meta.redigido });
           }
         }
       }
-      await anexarPaginasDosDocs(docs.filter(d => d.id !== "comprobatorio"));
-      for (let i = 0; i < transladosParaAnexar.length; i++) {
-        const t = transladosParaAnexar[i];
-        anexoAtual += 1;
-        await paginaComprovante(
-          anexoAtual, totalAnexosPdf,
-          `Comprovante de translado ${i + 1}`,
-          [
-            { label: "Origem", valor: t.de || "—", icone: "pin" },
-            { label: "Destino", valor: t.para || "—", icone: "pin" },
-            { label: "Data do translado", valor: formatDateBR(t.data), icone: "calendario" },
-            { label: "Valor do comprovante", valor: t.valor || "—", icone: "doc" },
-          ],
-          anexosContent[t.arquivo.id],
-          t.arquivo
-        );
+      await prepararDocs(docs.filter(d => d.id !== "comprobatorio"));
+      const transladosParaAnexar = (mostraTranslado && form.usouTranslado === "sim") ? translados.filter(t => t.arquivo) : [];
+      if (transladosParaAnexar.length) {
+        const itens = [];
+        for (const t of transladosParaAnexar) {
+          let imgs = [];
+          if (anexosContent[t.arquivo.id]) {
+            try { imgs = await obterPaginasComoImagens(t.arquivo, anexosContent[t.arquivo.id]); } catch (e) { imgs = []; }
+          }
+          itens.push({ de: t.de, para: t.para, data: t.data, valor: t.valor, imagem: imgs[0] || null, extras: imgs.slice(1), redigido: !!t.arquivo.redigido });
+        }
+        anexosPreparados.push({ tipo: "translados", itens });
       }
-      await anexarPaginasDosDocs(docs.filter(d => d.id === "comprobatorio"));
+      await prepararDocs(docs.filter(d => d.id === "comprobatorio"));
 
-      if (!paginaAtualJaTemRodape) desenharRodape();
+      const totalAnexosPdf = anexosPreparados.length;
+      let totalPaginasPdf = 1;
+      anexosPreparados.forEach(a => {
+        if (a.tipo === "doc") totalPaginasPdf += Math.max(1, a.imagens.length);
+        else totalPaginasPdf += Math.max(1, Math.ceil(a.itens.length / 2)) + a.itens.reduce((acc, t) => acc + t.extras.length, 0);
+      });
+
+      // ---- Página 1 ----
+      const imgPagina1 = await htmlParaImagem(<ReportPreview form={form} modoPdf paginaTexto={`Página 1 de ${totalPaginasPdf}`} />);
+      adicionarPaginaImagem(imgPagina1, true);
+
+      // ---- Páginas de anexo ----
+      for (let n = 0; n < anexosPreparados.length; n++) {
+        const a = anexosPreparados[n];
+        const numero = n + 1;
+        if (a.tipo === "doc") {
+          const paginas = a.imagens.length ? a.imagens : [null];
+          for (let pi = 0; pi < paginas.length; pi++) {
+            const img = await htmlParaImagem(
+              <AnexoDocPage form={form} numero={numero} total={totalAnexosPdf} titulo={a.titulo} imagem={paginas[pi]} continuacao={pi > 0} redigido={a.redigido} />
+            );
+            adicionarPaginaImagem(img, false);
+          }
+        } else {
+          const grupos = [];
+          for (let i = 0; i < a.itens.length; i += 2) grupos.push(a.itens.slice(i, i + 2));
+          const algumRedigido = a.itens.some(t => t.redigido);
+          const valorTotal = a.itens.reduce((acc, t) => acc + parseMoeda(t.valor), 0);
+          for (let g = 0; g < grupos.length; g++) {
+            const img = await htmlParaImagem(
+              <AnexoTransladosPage form={form} numero={numero} total={totalAnexosPdf} itens={grupos[g]} indiceInicial={g * 2}
+                mostrarResumo={g === grupos.length - 1} totalItens={a.itens.length} valorTotal={valorTotal}
+                redigido={g === grupos.length - 1 && algumRedigido} />
+            );
+            adicionarPaginaImagem(img, false);
+          }
+          for (const t of a.itens) {
+            for (const extra of t.extras) {
+              const img = await htmlParaImagem(
+                <AnexoDocPage form={form} numero={numero} total={totalAnexosPdf} titulo="Comprovante de translado" imagem={extra} continuacao redigido={t.redigido} />
+              );
+              adicionarPaginaImagem(img, false);
+            }
+          }
+        }
+      }
 
       const finalBytes = doc.output("arraybuffer");
       downloadBytes(new Uint8Array(finalBytes), `prestacao_contas_${form.numeroSolicitacao || "sem_numero"}.pdf`);
