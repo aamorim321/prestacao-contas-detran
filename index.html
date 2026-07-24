@@ -2567,133 +2567,6 @@ const SvgGlobo = ({ size = 14 }) => (
   </svg>
 );
 
-function iconeDoAnexo(titulo) {
-  const t = (titulo || "").toLowerCase();
-  if (t.includes("veículo") || t.includes("diário") || t.includes("translado")) return <SvgCarro size={30} />;
-  if (t.includes("embarque") || t.includes("bilhete")) return <Icon name="plane" size={28} />;
-  return <Icon name="doc" size={28} />;
-}
-
-function AxCabecalho() {
-  return (
-    <>
-      <div className="ax-logos">
-        <img className="detran" src={DETRAN_LOGO} alt="DetranPR" />
-        <img className="parana" src={PARANA_LOGO} alt="Governo do Paraná" />
-      </div>
-      <div className="ax-bar" />
-    </>
-  );
-}
-
-function AxContexto({ form, tipoViagem }) {
-  const periodo = form.dataSaida && form.dataRetorno
-    ? `${formatDateBR(form.dataSaida)} a ${formatDateBR(form.dataRetorno)}`
-    : (formatDateBR(form.dataSaida) || formatDateBR(form.dataRetorno) || "—");
-  return (
-    <div className="ax-contexto">
-      {tipoViagem && (
-        <div className="ax-ctx-item">
-          <span className="ax-ctx-ic"><Icon name="maleta" size={19} /></span>
-          <div><b>Tipo de viagem</b><span>{tipoViagem}</span></div>
-        </div>
-      )}
-      <div className="ax-ctx-item">
-        <span className="ax-ctx-ic"><Icon name="calendario" size={19} /></span>
-        <div><b>Período da viagem</b><span>{periodo}</span></div>
-      </div>
-      <div className="ax-ctx-item">
-        <span className="ax-ctx-ic"><Icon name="pin" size={19} /></span>
-        <div><b>Destino</b><span>{form.destino || "—"}</span></div>
-      </div>
-      <div className="ax-ctx-item">
-        <span className="ax-ctx-ic"><Icon name="doc" size={19} /></span>
-        <div><b>Solicitação</b><span>{form.numeroSolicitacao || "—"}</span></div>
-      </div>
-    </div>
-  );
-}
-
-function AxRodape({ form, numero, total }) {
-  return (
-    <div className="ax-footer">
-      <div className="ax-footer-line">
-        <span><b>DETRAN/PR</b> &nbsp;|&nbsp; Sistema de Prestação de Contas de Viagem</span>
-        <span>Solicitação: <b>{form.numeroSolicitacao || "—"}</b></span>
-        <span>Anexo <b>{numero}</b> de <b>{total}</b></span>
-      </div>
-      <div className="ax-footer-bar" />
-    </div>
-  );
-}
-
-function AnexoDocPage({ form, numero, total, titulo, imagem, continuacao, redigido }) {
-  return (
-    <div className="ax-page">
-      <AxCabecalho />
-      <div className="ax-title-row">
-        <div className="ax-title-icon">{iconeDoAnexo(titulo)}</div>
-        <div>
-          <div className="ax-anexo-num">ANEXO {String(numero).padStart(2, "0")}</div>
-          <div className="ax-anexo-titulo">{(titulo || "").toUpperCase()}{continuacao ? " (CONTINUAÇÃO)" : ""}</div>
-        </div>
-      </div>
-      {!continuacao && <AxContexto form={form} />}
-      <div className="ax-frame">
-        {imagem ? <img src={imagem} alt="" /> : <div className="ax-frame-vazio">Conteúdo do arquivo não disponível nesta sessão — reanexe o documento.</div>}
-      </div>
-      {redigido && <div className="ax-pill"><Icon name="info" size={15} /> Documento com dados pessoais ocultados para publicação.</div>}
-      <AxRodape form={form} numero={numero} total={total} />
-    </div>
-  );
-}
-
-function AnexoTransladosPage({ form, numero, total, itens, indiceInicial, mostrarResumo, totalItens, valorTotal, redigido }) {
-  const tipoViagem = TRANSPORTES.find(t => t.id === form.transporte)?.label || "—";
-  return (
-    <div className="ax-page">
-      <AxCabecalho />
-      <div className="ax-title-row">
-        <div className="ax-title-icon"><SvgCarro size={30} /></div>
-        <div>
-          <div className="ax-anexo-num">ANEXO {String(numero).padStart(2, "0")}</div>
-          <div className="ax-anexo-titulo">COMPROVANTE DE TRANSLADO</div>
-        </div>
-      </div>
-      <AxContexto form={form} tipoViagem={tipoViagem} />
-      {itens.map((t, i) => {
-        const seq = String(indiceInicial + i + 1).padStart(2, "0");
-        return (
-          <div className="ax-tcard" key={i}>
-            <div className="ax-tcard-head"><span className="ax-tnum">{seq}</span><span className="ax-tcard-title">TRANSLADO {seq}</span></div>
-            <div className="ax-tfields">
-              <div className="ax-tfield"><span className="ax-ctx-ic"><Icon name="pin" size={17} /></span><div><b>Origem</b><span>{t.de || "—"}</span></div></div>
-              <div className="ax-tfield"><span className="ax-ctx-ic"><Icon name="pin" size={17} /></span><div><b>Destino</b><span>{t.para || "—"}</span></div></div>
-              <div className="ax-tfield"><span className="ax-ctx-ic"><Icon name="calendario" size={17} /></span><div><b>Data do translado</b><span>{formatDateBR(t.data) || "—"}</span></div></div>
-              <div className="ax-tfield"><span className="ax-ctx-ic"><Icon name="doc" size={17} /></span><div><b>Valor do comprovante</b><span>{t.valor || "—"}</span></div></div>
-            </div>
-            <div className="ax-treceipt">
-              {t.imagem ? <img src={t.imagem} alt="" /> : <div className="ax-frame-vazio">Comprovante não disponível nesta sessão — reanexe o documento.</div>}
-            </div>
-          </div>
-        );
-      })}
-      {mostrarResumo && (
-        <div className="ax-tsummary">
-          <div className="ax-tsummary-icon"><Icon name="list" size={22} /></div>
-          <div>
-            <div className="ax-tsummary-title">Resumo dos translados</div>
-            <div><span>{totalItens} comprovante{totalItens > 1 ? "s" : ""} apresentado{totalItens > 1 ? "s" : ""}</span></div>
-            <div><span><b>Valor total:</b> <span className="ax-verde">{moedaBR(valorTotal)}</span></span></div>
-          </div>
-        </div>
-      )}
-      {redigido && <div className="ax-pill"><Icon name="info" size={15} /> Documento com dados pessoais ocultados para publicação.</div>}
-      <AxRodape form={form} numero={numero} total={total} />
-    </div>
-  );
-}
-
 function App() {
   const token = useDraftToken();
   const [step, setStep] = useState(1);
@@ -3706,17 +3579,289 @@ function App() {
       const imgPagina1 = await htmlParaImagem(<ReportPreview form={form} modoPdf paginaTexto={`Página 1 de ${totalPaginasPdf}`} />);
       adicionarPaginaImagem(imgPagina1, true);
 
-      // ---- Páginas de anexo ----
+      // ---- Páginas de anexo (desenhadas diretamente no PDF — rápido) ----
+      const periodoAnexos = form.dataSaida && form.dataRetorno
+        ? `${formatDateBR(form.dataSaida)} a ${formatDateBR(form.dataRetorno)}`
+        : (formatDateBR(form.dataSaida) || formatDateBR(form.dataRetorno) || "—");
+      const tipoViagemRotulo = TRANSPORTES.find(x => x.id === form.transporte)?.label || "—";
+
+      // Paleta aproximada do layout aprovado
+      const MX = {
+        navy: [2, 53, 110],
+        verdeIcone: [63, 155, 47],
+        verdeVivo: [100, 183, 69],
+        verdeClaro: [243, 250, 238],
+        verdeBorda: [191, 224, 174],
+        verdeTexto: [44, 110, 28],
+        verdeValor: [44, 138, 18],
+        cinzaFundo: [242, 244, 246],
+        cinzaBorda: [227, 232, 236],
+        texto: [49, 66, 79],
+        cinzaTxt: [106, 119, 130],
+        azulPill: [0, 81, 134],
+        azulPillFundo: [238, 244, 250],
+        azulPillBorda: [216, 230, 242],
+      };
+
+      function cabecalhoAnexo() {
+        doc.addPage();
+        const logoY = 30;
+        const detranH = 30, detranW = detranH / (575 / 2123);
+        const paranaH = 33, paranaW = paranaH / (129 / 297);
+        try { doc.addImage(DETRAN_LOGO, "PNG", margin, logoY, detranW, detranH); } catch (e) {}
+        try { doc.addImage(PARANA_LOGO, "PNG", PAGE_W - margin - paranaW, logoY + (detranH - paranaH) / 2, paranaW, paranaH); } catch (e) {}
+        const barY = logoY + detranH + 14;
+        doc.setFillColor(...MX.navy);
+        doc.roundedRect(margin, barY, contentW, 3.5, 1.75, 1.75, "F");
+        doc.setFillColor(...MX.verdeVivo);
+        doc.roundedRect(margin + contentW * 0.86, barY, contentW * 0.14, 3.5, 1.75, 1.75, "F");
+        y = barY + 3.5 + 24;
+      }
+
+      function desenharIconeCarroBranco(cx, cy, s) {
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(cx - s * 0.30, cy - s * 0.28, s * 0.60, s * 0.26, s * 0.07, s * 0.07, "F");
+        doc.roundedRect(cx - s * 0.46, cy - s * 0.10, s * 0.92, s * 0.30, s * 0.07, s * 0.07, "F");
+        doc.circle(cx - s * 0.24, cy + s * 0.30, s * 0.10, "F");
+        doc.circle(cx + s * 0.24, cy + s * 0.30, s * 0.10, "F");
+      }
+
+      function desenharIconeDocBranco(cx, cy, s) {
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(cx - s * 0.26, cy - s * 0.36, s * 0.52, s * 0.72, s * 0.05, s * 0.05, "F");
+        doc.setDrawColor(...MX.verdeIcone);
+        doc.setLineWidth(1.3);
+        for (let li = -1; li <= 1; li++) doc.line(cx - s * 0.14, cy + li * s * 0.15, cx + s * 0.14, cy + li * s * 0.15);
+      }
+
+      function tituloAnexo(numero, titulo, tipoIcone) {
+        const boxS = 44;
+        doc.setFillColor(...MX.verdeIcone);
+        doc.roundedRect(margin, y, boxS, boxS, 11, 11, "F");
+        if (tipoIcone === "carro") desenharIconeCarroBranco(margin + boxS / 2, y + boxS / 2, 26);
+        else desenharIconeDocBranco(margin + boxS / 2, y + boxS / 2, 25);
+        const tx = margin + boxS + 14;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(13);
+        doc.setTextColor(...MX.verdeIcone);
+        doc.text(`ANEXO ${String(numero).padStart(2, "0")}`, tx, y + 16);
+        doc.setFontSize(18.5);
+        doc.setTextColor(...MX.navy);
+        const linhasTitulo = doc.splitTextToSize(String(titulo || "").toUpperCase(), contentW - boxS - 14);
+        doc.text(linhasTitulo[0], tx, y + 37);
+        y += boxS + 18;
+      }
+
+      function faixaContexto(campos) {
+        const h = 46;
+        doc.setFillColor(...MX.cinzaFundo);
+        doc.setDrawColor(...MX.cinzaBorda);
+        doc.setLineWidth(1);
+        doc.roundedRect(margin, y, contentW, h, 10, 10, "FD");
+        const colW = contentW / campos.length;
+        campos.forEach(([rotulo, valor], i) => {
+          const x0 = margin + colW * i;
+          if (i > 0) { doc.setDrawColor(...MX.cinzaBorda); doc.line(x0, y + 9, x0, y + h - 9); }
+          const tx = x0 + 14;
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(9);
+          doc.setTextColor(...MX.texto);
+          doc.text(rotulo, tx, y + 19);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(9.5);
+          doc.setTextColor(...MX.cinzaTxt);
+          const vv = doc.splitTextToSize(String(valor || "—"), colW - 24)[0] || "—";
+          doc.text(vv, tx, y + 33);
+        });
+        y += h + 16;
+      }
+
+      function pilulaDadosOcultados(baseY) {
+        const txt = "Documento com dados pessoais ocultados para publicação.";
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9.5);
+        const tw = doc.getTextWidth(txt);
+        const pw = tw + 48, ph = 24;
+        const px = (PAGE_W - pw) / 2;
+        doc.setFillColor(...MX.azulPillFundo);
+        doc.setDrawColor(...MX.azulPillBorda);
+        doc.setLineWidth(1);
+        doc.roundedRect(px, baseY, pw, ph, 9, 9, "FD");
+        doc.setDrawColor(...MX.azulPill);
+        doc.setLineWidth(1.1);
+        doc.circle(px + 17, baseY + ph / 2, 6, "S");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8);
+        doc.setTextColor(...MX.azulPill);
+        doc.text("i", px + 17, baseY + ph / 2 + 2.6, { align: "center" });
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9.5);
+        doc.text(txt, px + 30, baseY + ph / 2 + 3.2);
+      }
+
+      function rodapePaginaAnexo(numero) {
+        const linhaY = PAGE_H - 40;
+        doc.setDrawColor(...MX.cinzaBorda);
+        doc.setLineWidth(0.8);
+        doc.line(margin, linhaY - 13, PAGE_W - margin, linhaY - 13);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(...MX.texto);
+        doc.text("DETRAN/PR", margin, linhaY);
+        const wDet = doc.getTextWidth("DETRAN/PR");
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(...MX.cinzaTxt);
+        doc.text("  |  Sistema de Prestação de Contas de Viagem", margin + wDet, linhaY);
+        doc.text(`Solicitação: ${form.numeroSolicitacao || "—"}`, PAGE_W / 2 + 46, linhaY, { align: "center" });
+        doc.setTextColor(...MX.texto);
+        doc.text(`Anexo ${numero} de ${totalAnexosPdf}`, PAGE_W - margin, linhaY, { align: "right" });
+        const bh = 12;
+        doc.setFillColor(...MX.navy);
+        doc.rect(0, PAGE_H - bh, PAGE_W, bh, "F");
+        doc.setFillColor(...MX.verdeVivo);
+        doc.rect(PAGE_W * 0.86, PAGE_H - bh, PAGE_W * 0.14, bh, "F");
+      }
+
+      function paginaAnexoDoc(numero, titulo, imagem, continuacao, redigido, tipoIcone) {
+        cabecalhoAnexo();
+        tituloAnexo(numero, titulo + (continuacao ? " (CONTINUAÇÃO)" : ""), tipoIcone);
+        if (!continuacao) faixaContexto([
+          ["Período da viagem", periodoAnexos],
+          ["Destino", form.destino],
+          ["Solicitação", form.numeroSolicitacao],
+        ]);
+        const pilulaH = redigido ? 34 : 0;
+        const frameTop = y;
+        const frameBottom = PAGE_H - 72 - pilulaH;
+        const frameH = frameBottom - frameTop;
+        doc.setDrawColor(...MX.cinzaBorda);
+        doc.setLineWidth(1);
+        doc.roundedRect(margin, frameTop, contentW, frameH, 10, 10, "S");
+        if (!imagem) {
+          doc.setFont("helvetica", "italic");
+          doc.setFontSize(10.5);
+          doc.setTextColor(...MX.cinzaTxt);
+          doc.text("Conteúdo do arquivo não disponível nesta sessão — reanexe o documento.", PAGE_W / 2, frameTop + frameH / 2, { align: "center" });
+        } else {
+          try {
+            const props = doc.getImageProperties(imagem);
+            const maxW = contentW - 28, maxH = frameH - 28;
+            const esc = Math.min(maxW / props.width, maxH / props.height);
+            const w = props.width * esc, h = props.height * esc;
+            doc.addImage(imagem, margin + (contentW - w) / 2, frameTop + (frameH - h) / 2, w, h);
+          } catch (e) {}
+        }
+        if (redigido) pilulaDadosOcultados(frameBottom + 6);
+        rodapePaginaAnexo(numero);
+      }
+
+      function cardTranslado(seq, t, cardY, cardH) {
+        doc.setDrawColor(...MX.cinzaBorda);
+        doc.setLineWidth(1);
+        doc.roundedRect(margin, cardY, contentW, cardH, 10, 10, "S");
+        const hx = margin + 14, hy = cardY + 13;
+        doc.setFillColor(...MX.verdeIcone);
+        doc.roundedRect(hx, hy, 20, 20, 5, 5, "F");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9.5);
+        doc.setTextColor(255, 255, 255);
+        doc.text(seq, hx + 10, hy + 13.5, { align: "center" });
+        doc.setFontSize(12.5);
+        doc.setTextColor(...MX.navy);
+        doc.text(`TRANSLADO ${seq}`, hx + 28, hy + 14.5);
+        const fy = cardY + 44;
+        const camposT = [["Origem", t.de], ["Destino", t.para], ["Data do translado", formatDateBR(t.data)], ["Valor do comprovante", t.valor]];
+        const colW = (contentW - 28) / 4;
+        camposT.forEach(([rotulo, valor], i) => {
+          const x0 = margin + 14 + colW * i;
+          if (i > 0) { doc.setDrawColor(...MX.cinzaBorda); doc.line(x0, fy, x0, fy + 25); }
+          const tx = i > 0 ? x0 + 10 : x0;
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(8.5);
+          doc.setTextColor(...MX.texto);
+          doc.text(rotulo, tx, fy + 8);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(9);
+          doc.setTextColor(...MX.cinzaTxt);
+          const vv = doc.splitTextToSize(String(valor || "—"), colW - 14)[0] || "—";
+          doc.text(vv, tx, fy + 20);
+        });
+        doc.setDrawColor(...MX.cinzaBorda);
+        doc.line(margin + 14, fy + 31, PAGE_W - margin - 14, fy + 31);
+        const imgTop = fy + 39, imgBottom = cardY + cardH - 12;
+        if (t.imagem) {
+          try {
+            const props = doc.getImageProperties(t.imagem);
+            const maxW = contentW * 0.62, maxH = imgBottom - imgTop;
+            const esc = Math.min(maxW / props.width, maxH / props.height);
+            const w = props.width * esc, h = props.height * esc;
+            doc.addImage(t.imagem, margin + (contentW - w) / 2, imgTop + (maxH - h) / 2, w, h);
+          } catch (e) {}
+        } else {
+          doc.setFont("helvetica", "italic");
+          doc.setFontSize(9.5);
+          doc.setTextColor(...MX.cinzaTxt);
+          doc.text("Comprovante não disponível nesta sessão — reanexe o documento.", PAGE_W / 2, (imgTop + imgBottom) / 2, { align: "center" });
+        }
+      }
+
+      function resumoTranslados(baseY, qtd, valorTotal) {
+        const h = 56;
+        doc.setFillColor(...MX.verdeClaro);
+        doc.setDrawColor(...MX.verdeBorda);
+        doc.setLineWidth(1.2);
+        doc.roundedRect(margin, baseY, contentW, h, 10, 10, "FD");
+        doc.setFillColor(...MX.verdeIcone);
+        doc.roundedRect(margin + 14, baseY + h / 2 - 16, 32, 32, 8, 8, "F");
+        desenharIconeDocBranco(margin + 30, baseY + h / 2, 18);
+        const tx = margin + 58;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.setTextColor(...MX.verdeTexto);
+        doc.text("Resumo dos translados", tx, baseY + 18);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9.5);
+        doc.setTextColor(...MX.texto);
+        doc.text(`${qtd} comprovante${qtd > 1 ? "s" : ""} apresentado${qtd > 1 ? "s" : ""}`, tx, baseY + 32);
+        doc.setFont("helvetica", "bold");
+        doc.text("Valor total: ", tx, baseY + 45);
+        const wl = doc.getTextWidth("Valor total: ");
+        doc.setTextColor(...MX.verdeValor);
+        doc.text(moedaBR(valorTotal), tx + wl, baseY + 45);
+      }
+
+      function paginaTranslados(numero, grupo, indiceInicial, mostrarResumo, totalItens, valorTotal, mostrarPilula) {
+        cabecalhoAnexo();
+        tituloAnexo(numero, "COMPROVANTE DE TRANSLADO", "carro");
+        faixaContexto([
+          ["Tipo de viagem", tipoViagemRotulo],
+          ["Período da viagem", periodoAnexos],
+          ["Destino", form.destino],
+          ["Solicitação", form.numeroSolicitacao],
+        ]);
+        const resumoH = mostrarResumo ? 56 + 12 : 0;
+        const pilulaH = mostrarPilula ? 34 : 0;
+        const areaBottom = PAGE_H - 72 - pilulaH;
+        const gap = 14;
+        const areaH = areaBottom - y - resumoH;
+        const cardH = (areaH - gap * (grupo.length - 1)) / grupo.length;
+        grupo.forEach((t, i) => {
+          cardTranslado(String(indiceInicial + i + 1).padStart(2, "0"), t, y, cardH);
+          y += cardH + gap;
+        });
+        if (mostrarResumo) resumoTranslados(areaBottom - 56, totalItens, valorTotal);
+        if (mostrarPilula) pilulaDadosOcultados(areaBottom + 6);
+        rodapePaginaAnexo(numero);
+      }
+
       for (let n = 0; n < anexosPreparados.length; n++) {
         const a = anexosPreparados[n];
         const numero = n + 1;
         if (a.tipo === "doc") {
+          const tipoIcone = /ve[íi]cul|di[áa]rio/i.test(a.titulo) ? "carro" : "doc";
           const paginas = a.imagens.length ? a.imagens : [null];
           for (let pi = 0; pi < paginas.length; pi++) {
-            const img = await htmlParaImagem(
-              <AnexoDocPage form={form} numero={numero} total={totalAnexosPdf} titulo={a.titulo} imagem={paginas[pi]} continuacao={pi > 0} redigido={a.redigido} />
-            );
-            adicionarPaginaImagem(img, false);
+            paginaAnexoDoc(numero, a.titulo, paginas[pi], pi > 0, a.redigido, tipoIcone);
           }
         } else {
           const grupos = [];
@@ -3724,19 +3869,12 @@ function App() {
           const algumRedigido = a.itens.some(t => t.redigido);
           const valorTotal = a.itens.reduce((acc, t) => acc + parseMoeda(t.valor), 0);
           for (let g = 0; g < grupos.length; g++) {
-            const img = await htmlParaImagem(
-              <AnexoTransladosPage form={form} numero={numero} total={totalAnexosPdf} itens={grupos[g]} indiceInicial={g * 2}
-                mostrarResumo={g === grupos.length - 1} totalItens={a.itens.length} valorTotal={valorTotal}
-                redigido={g === grupos.length - 1 && algumRedigido} />
-            );
-            adicionarPaginaImagem(img, false);
+            const ultimo = g === grupos.length - 1;
+            paginaTranslados(numero, grupos[g], g * 2, ultimo, a.itens.length, valorTotal, ultimo && algumRedigido);
           }
           for (const t of a.itens) {
             for (const extra of t.extras) {
-              const img = await htmlParaImagem(
-                <AnexoDocPage form={form} numero={numero} total={totalAnexosPdf} titulo="Comprovante de translado" imagem={extra} continuacao redigido={t.redigido} />
-              );
-              adicionarPaginaImagem(img, false);
+              paginaAnexoDoc(numero, "Comprovante de translado", extra, true, t.redigido, "carro");
             }
           }
         }
