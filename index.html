@@ -292,6 +292,29 @@
   .rp-footer-bar{ position: relative; height: 5px; border-radius: 2px; overflow: hidden; background: var(--azul); }
   .rp-footer-bar .faixa-verde{ position: absolute; top: 0; right: 0; height: 100%; width: 20%; background: var(--verde-vivo); clip-path: polygon(28% 0, 100% 0, 100% 100%, 0% 100%); }
 
+  /* ===== Relatório — layout "institucional contemporâneo" ===== */
+  .rp-card{ border: 1px solid var(--linha); border-radius: 12px; margin-bottom: 18px; overflow: hidden; background: #fff; }
+  .rp-card-tab{ display: inline-flex; align-items: center; gap: 8px; background: var(--azul-escuro); color: #fff; font-size: 12px; font-weight: 800; letter-spacing: .07em; padding: 8px 18px; border-radius: 0 0 12px 0; }
+  .rp-resumo-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 0 26px; padding: 12px 18px 14px; }
+  .rp-resumo-item{ display: flex; align-items: baseline; gap: 10px; padding: 9px 0; border-bottom: 1px solid #eef1f3; font-size: 14.5px; flex-wrap: wrap; }
+  .rp-resumo-item span{ font-weight: 700; color: var(--grafite); flex-shrink: 0; }
+  .rp-resumo-item strong{ font-weight: 400; color: #43525c; word-break: break-word; }
+  .rp-selo{ display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800; letter-spacing: .04em; padding: 4px 12px; border-radius: var(--r-pill); }
+  .rp-selo.ok{ background: var(--verde-tint); color: var(--verde-escuro); }
+  .rp-selo.warn{ background: var(--amarelo-bg); color: var(--amarelo); }
+  .rp-sec{ display: flex; gap: 16px; border: 1px solid var(--linha); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; align-items: flex-start; background: #fff; }
+  .rp-sec-icon{ width: 36px; height: 36px; border-radius: 10px; background: var(--verde); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .rp-sec-title{ flex: 0 0 190px; font-size: 13px; font-weight: 800; color: var(--azul-escuro); letter-spacing: .02em; line-height: 1.45; padding-top: 2px; }
+  .rp-sec-body{ flex: 1; font-size: 14.5px; color: #31424f; white-space: pre-wrap; word-break: break-word; padding-top: 2px; }
+  .rp-doclist{ display: grid; grid-template-columns: 1fr 1fr; gap: 0 26px; padding: 10px 18px 14px; }
+  .rp-doc-check{ display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid #eef1f3; font-size: 14px; color: #31424f; }
+  .rp-doc-check .rp-check-dot{ width: 20px; height: 20px; border-radius: 50%; background: var(--verde-tint); color: var(--verde); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .rp-doc-detalhe{ font-style: italic; opacity: .8; font-size: .92em; margin-top: 2px; }
+  .rp-declaracao{ border: 1.5px solid var(--verde); border-radius: 12px; background: #f6fbf3; padding: 16px 18px; display: flex; gap: 14px; margin: 20px 0 18px; align-items: flex-start; }
+  .rp-declaracao-icon{ width: 40px; height: 40px; border-radius: 50%; background: var(--verde); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .rp-declaracao-title{ font-size: 13.5px; font-weight: 800; color: var(--verde-escuro); margin-bottom: 6px; letter-spacing: .04em; }
+  .rp-declaracao-text{ font-size: 13.5px; color: #31424f; text-align: justify; line-height: 1.6; }
+
   /* ================= FOOTER ================= */
   .footer-links-bar{ background: var(--azul); }
   .footer-links-bar .band-inner{ padding-top: 14px; padding-bottom: 14px; display:flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
@@ -2340,14 +2363,20 @@ function ReportPreview({ form }) {
     : (formatDateBR(form.dataSaida) || formatDateBR(form.dataRetorno) || "—");
   const tipoViagem = (TRANSPORTES.find(t => t.id === form.transporte)?.label || "—").toUpperCase();
   const cargoLinha = [form.cargoFuncao, form.siglaSetor].filter(Boolean).join(" — ");
-  const tipoPrestacao = (form.tipoPrestacao === "roteiro_reduzido" ? "Roteiro reduzido" : form.tipoPrestacao === "roteiro_sem_alteracao" ? "Roteiro sem alteração" : "—").toUpperCase();
+  const tipoPrestacao = form.tipoPrestacao === "roteiro_reduzido" ? "ROTEIRO REDUZIDO" : form.tipoPrestacao === "roteiro_sem_alteracao" ? "ROTEIRO SEM ALTERAÇÃO" : "—";
+  const transladosComArquivo = (form.translados || []).filter(t => t.arquivo);
+  const totalTranslados = transladosComArquivo.reduce((a, t) => a + parseMoeda(t.valor), 0);
   const docsPreview = [];
+  if (form.anexos?.solicitacao_veiculo?.length) docsPreview.push({ nome: "Solicitação de veículo" });
+  if (form.anexos?.diario_bordo?.length) docsPreview.push({ nome: "Diário de bordo" });
+  if (form.anexos?.embarque?.length) docsPreview.push({ nome: "Cartão de embarque ou declaração de embarque" });
+  if (form.anexos?.bilhete?.length) docsPreview.push({ nome: "Bilhete, BPE ou declaração de embarque" });
+  if (form.anexos?.termo_ciencia?.length) docsPreview.push({ nome: "Termo de Ciência e Responsabilidade" });
   if (form.anexos?.saque?.length) docsPreview.push({ nome: "Comprovante de saque ou transferência" });
-  else if (form.saqueComprovante === "nao" && form.justificativas?.saque) docsPreview.push({ nome: "Comprovante de saque ou transferência", detalhe: `Justificativa: ${form.justificativas.saque}` });
+  else if (form.saqueComprovante === "nao" && form.justificativas?.saque) docsPreview.push({ nome: "Justificativa registrada", detalhe: form.justificativas.saque });
+  if (transladosComArquivo.length) docsPreview.push({ nome: "Comprovantes de translado", detalhe: `${transladosComArquivo.length} comprovante(s) — Total: ${moedaBR(totalTranslados)}` });
   if (form.anexos?.devolucao_roteiro?.length) docsPreview.push({ nome: "Devolução de diária — roteiro reduzido" });
   if (form.anexos?.devolucao_translado?.length) docsPreview.push({ nome: "Devolução do saldo de translado" });
-  if (form.anexos?.embarque?.length) docsPreview.push({ nome: "Cartão de embarque ou declaração de embarque" });
-  (form.translados || []).forEach((_, i) => docsPreview.push({ nome: `Translado ${i + 1}` }));
   if (form.anexos?.comprobatorio?.length) docsPreview.push({ nome: "Outros documentos comprobatórios" });
   const atestoPreview = "Atesto e certifico que as informações constantes no presente documento demonstram efetivamente a realização e a efetividade da viagem, e que os comprovantes de despesa anexos a esta prestação de contas foram efetivamente realizados no estrito interesse da administração pública, conforme o Decreto Estadual n.º 6.358/2024.";
   return (
@@ -2363,88 +2392,63 @@ function ReportPreview({ form }) {
       <div className="rp-kicker">Prestação de Contas</div>
       <div className="rp-subtitle">S.V. Nº {form.numeroSolicitacao || "________"}</div>
 
-      <div className="rp-section-title">
-        <div className="rp-icon-badge azul"><Icon name="pin" size={17} /></div>
-        <span>IDENTIFICAÇÃO DA VIAGEM</span>
-        <div className="rp-dash" />
-        <Icon name="plane" size={16} className="rp-send" />
-      </div>
-      <div className="rp-table">
-        <div className="rp-row">
-          <div className="rp-icon-badge azul"><Icon name="pessoa" size={15} /></div>
-          <span className="rp-label">Viajante:</span><span className="rp-value">{form.nomeViajante || "—"}</span>
-        </div>
-        <div className="rp-row">
-          <div className="rp-icon-badge azul"><Icon name="pin" size={15} /></div>
-          <span className="rp-label">Destino:</span><span className="rp-value">{form.destino || "—"}</span>
-        </div>
-        <div className="rp-row">
-          <div className="rp-icon-badge azul"><Icon name="calendario" size={15} /></div>
-          <span className="rp-label">Período:</span><span className="rp-value">{periodo}</span>
-        </div>
-        <div className="rp-row">
-          <div className="rp-icon-badge azul"><Icon name="maleta" size={15} /></div>
-          <span className="rp-label">Tipo de viagem:</span><span className="rp-value">{tipoViagem}</span>
-        </div>
-        <div className="rp-row">
-          <div className="rp-icon-badge azul"><Icon name="list" size={15} /></div>
-          <span className="rp-label">Prestação de contas:</span><span className="rp-value">{tipoPrestacao}</span>
+      <div className="rp-card">
+        <div className="rp-card-tab"><Icon name="maleta" size={14} /> RESUMO DA VIAGEM</div>
+        <div className="rp-resumo-grid">
+          <div className="rp-resumo-item"><span>Viajante:</span><strong>{form.nomeViajante || "—"}</strong></div>
+          <div className="rp-resumo-item"><span>Tipo de viagem:</span><strong>{tipoViagem}</strong></div>
+          <div className="rp-resumo-item"><span>Destino:</span><strong>{form.destino || "—"}</strong></div>
+          <div className="rp-resumo-item"><span>Situação do roteiro:</span><span className={"rp-selo " + (form.tipoPrestacao === "roteiro_sem_alteracao" ? "ok" : "warn")}><Icon name="check" size={12} /> {tipoPrestacao}</span></div>
+          <div className="rp-resumo-item"><span>Período:</span><strong>{periodo}</strong></div>
+          <div className="rp-resumo-item"><span>Solicitação:</span><strong>{form.numeroSolicitacao || "—"}</strong></div>
         </div>
       </div>
 
-      <div className="rp-block">
-        <div className="rp-icon-badge verde"><Icon name="doc" size={15} /></div>
-        <div className="rp-block-content">
-          <div className="rp-block-label">Descrição do evento:</div>
-          <div className="rp-block-value">{form.nomeEvento || "—"}</div>
-        </div>
+      <div className="rp-sec">
+        <div className="rp-sec-icon"><Icon name="doc" size={17} /></div>
+        <div className="rp-sec-title">1. DESCRIÇÃO DA ATIVIDADE REALIZADA</div>
+        <div className="rp-sec-body">{form.nomeEvento || "—"}</div>
       </div>
-      <div className="rp-block">
-        <div className="rp-icon-badge verde"><Icon name="alvo" size={15} /></div>
-        <div className="rp-block-content">
-          <div className="rp-block-label">Objetivo da participação:</div>
-          <div className="rp-block-value">{form.motivo || "—"}</div>
-        </div>
+      <div className="rp-sec">
+        <div className="rp-sec-icon"><Icon name="alvo" size={17} /></div>
+        <div className="rp-sec-title">2. OBJETIVO DA PARTICIPAÇÃO</div>
+        <div className="rp-sec-body">{form.motivo || "—"}</div>
       </div>
-      <div className="rp-block">
-        <div className="rp-icon-badge verde"><Icon name="check" size={15} /></div>
-        <div className="rp-block-content">
-          <div className="rp-block-label">Conclusão:</div>
-          <div className="rp-block-value">{form.conclusao || "—"}</div>
-        </div>
+      <div className="rp-sec">
+        <div className="rp-sec-icon"><Icon name="check" size={17} /></div>
+        <div className="rp-sec-title">3. CONCLUSÃO E RESULTADOS</div>
+        <div className="rp-sec-body">{form.conclusao || "—"}</div>
       </div>
-      <div className="rp-block">
-        <div className="rp-icon-badge verde"><Icon name="info" size={15} /></div>
-        <div className="rp-block-content">
-          <div className="rp-block-label">Informações complementares:</div>
-          <div className="rp-block-value">{form.infoComplementares || "—"}</div>
+      {String(form.infoComplementares || "").trim() && (
+        <div className="rp-sec">
+          <div className="rp-sec-icon"><Icon name="info" size={17} /></div>
+          <div className="rp-sec-title">4. INFORMAÇÕES COMPLEMENTARES</div>
+          <div className="rp-sec-body">{form.infoComplementares}</div>
         </div>
-      </div>
-      <div className="rp-block">
-        <div className="rp-icon-badge verde"><Icon name="list" size={15} /></div>
-        <div className="rp-block-content">
-          <div className="rp-block-label">Documentos anexados:</div>
-          <div className="rp-block-value">
-            {docsPreview.length ? docsPreview.map((item, i) => (
-              <div key={i} style={{ marginBottom: i < docsPreview.length - 1 ? 8 : 0 }}>
-                {item.nome}
-                {item.detalhe && <div style={{ fontStyle: "italic", opacity: .82, fontSize: "0.92em", marginTop: 2 }}>{item.detalhe}</div>}
-              </div>
-            )) : "—"}
-          </div>
+      )}
+
+      <div className="rp-card">
+        <div className="rp-card-tab"><Icon name="paperclip" size={14} /> DOCUMENTOS ANEXADOS</div>
+        <div className="rp-doclist">
+          {docsPreview.length ? docsPreview.map((item, i) => (
+            <div className="rp-doc-check" key={i}>
+              <span className="rp-check-dot"><Icon name="check" size={12} /></span>
+              <span>{item.nome}{item.detalhe && <div className="rp-doc-detalhe">{item.detalhe}</div>}</span>
+            </div>
+          )) : <div className="rp-doc-check"><span>—</span></div>}
         </div>
       </div>
 
-      <div className="rp-attest">{atestoPreview}</div>
-
-      <div className="rp-divider">
-        <div className="rp-dash" />
-        <Icon name="pin" size={16} />
-        <div className="rp-dash" />
+      <div className="rp-declaracao">
+        <div className="rp-declaracao-icon"><Icon name="check" size={20} /></div>
+        <div>
+          <div className="rp-declaracao-title">DECLARAÇÃO DO VIAJANTE</div>
+          <div className="rp-declaracao-text">{atestoPreview}</div>
+        </div>
       </div>
 
       <div className="rp-sign">
-        <div className="rp-sign-note">Datado e assinado eletronicamente</div>
+        <div className="rp-sign-note">Assinado eletronicamente por</div>
         <div className="rp-sign-name">{form.nomeViajante || "Nome do viajante"}</div>
         <div className="rp-sign-role">{cargoLinha || "Cargo/Função — Setor"}</div>
       </div>
@@ -3423,15 +3427,59 @@ function App() {
         return paginas;
       }
 
-      async function paginaComprovante(tituloDoc, camposSubtitulo, contentDataUrl, meta) {
+      const periodoAnexos = form.dataSaida && form.dataRetorno
+        ? `${formatDateBR(form.dataSaida)} a ${formatDateBR(form.dataRetorno)}`
+        : (formatDateBR(form.dataSaida) || formatDateBR(form.dataRetorno) || "—");
+
+      function faixaContextoAnexo() {
+        const itens = [
+          ["Período da viagem", periodoAnexos],
+          ["Destino", form.destino || "—"],
+          ["Solicitação", form.numeroSolicitacao || "—"],
+        ];
+        const h = 42;
+        garantirEspaco(h + 12);
+        doc.setFillColor(...COR.cinzaClaro);
+        doc.roundedRect(margin, y, contentW, h, 5, 5, "F");
+        const colW = contentW / itens.length;
+        itens.forEach(([l, v], i) => {
+          const x = margin + colW * i + 14;
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(8.5);
+          doc.setTextColor(...COR.cinza);
+          doc.text(l.toUpperCase(), x, y + 16);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(10.5);
+          doc.setTextColor(...COR.texto);
+          const vv = doc.splitTextToSize(String(v), colW - 24)[0] || "—";
+          doc.text(vv, x, y + 31);
+        });
+        y += h + 12;
+      }
+
+      function rodapeAnexo(numeroAnexo, totalAnexos, redigido) {
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(8.5);
+        doc.setTextColor(...COR.cinza);
+        if (redigido) {
+          doc.text("Documento com dados pessoais ocultados para publicação.", margin, PAGE_H - 56);
+        }
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(...COR.azul);
+        doc.text(`Anexo ${numeroAnexo} de ${totalAnexos}`, PAGE_W - margin, PAGE_H - 56, { align: "right" });
+      }
+
+      async function paginaComprovante(numeroAnexo, totalAnexos, tituloDoc, camposSubtitulo, contentDataUrl, meta) {
         novaPagina(true);
-        tituloComIcone("doc", tituloDoc.toUpperCase());
+        tituloComIcone("doc", `ANEXO ${String(numeroAnexo).padStart(2, "0")} — ${tituloDoc.toUpperCase()}`);
+        faixaContextoAnexo();
         if (camposSubtitulo && camposSubtitulo.length) {
           tabelaCampos(camposSubtitulo);
         }
+        rodapeAnexo(numeroAnexo, totalAnexos, meta && meta.redigido);
 
         const frameTop = y;
-        const frameBottom = PAGE_H - 70;
+        const frameBottom = PAGE_H - 84;
         const frameH = frameBottom - frameTop;
         doc.setDrawColor(...COR.borda);
         doc.setLineWidth(1);
@@ -3448,12 +3496,13 @@ function App() {
             for (let pi = 0; pi < paginasImagem.length; pi++) {
               if (pi > 0) {
                 novaPagina(true);
-                tituloComIcone("doc", `${tituloDoc.toUpperCase()} (CONTINUAÇÃO)`);
+                tituloComIcone("doc", `ANEXO ${String(numeroAnexo).padStart(2, "0")} — ${tituloDoc.toUpperCase()} (CONTINUAÇÃO)`);
+                rodapeAnexo(numeroAnexo, totalAnexos, meta && meta.redigido);
                 doc.setDrawColor(...COR.borda);
-                doc.roundedRect(margin, y, contentW, PAGE_H - 70 - y, 6, 6, "S");
+                doc.roundedRect(margin, y, contentW, PAGE_H - 84 - y, 6, 6, "S");
               }
               const ft = pi > 0 ? y : frameTop;
-              const fb = pi > 0 ? PAGE_H - 70 : frameBottom;
+              const fb = pi > 0 ? PAGE_H - 84 : frameBottom;
               const fh = fb - ft;
               const props = doc.getImageProperties(paginasImagem[pi]);
               const maxW = contentW - 24, maxH = fh - 24;
@@ -3472,32 +3521,37 @@ function App() {
         y = frameBottom + 14;
       }
 
+      const transladosParaAnexar = (mostraTranslado && form.usouTranslado === "sim") ? translados.filter(t => t.arquivo) : [];
+      const totalAnexosPdf = docs.reduce((acc, d) => acc + ((form.anexos[d.id] || []).length), 0) + transladosParaAnexar.length;
+      let anexoAtual = 0;
+
       async function anexarPaginasDosDocs(listaDocs) {
         for (const d of listaDocs) {
           const arquivos = form.anexos[d.id] || [];
           for (let i = 0; i < arquivos.length; i++) {
             const meta = arquivos[i];
             const tituloDoc = arquivos.length > 1 ? `${d.nome} (${i + 1}/${arquivos.length})` : d.nome;
-            await paginaComprovante(tituloDoc, null, anexosContent[meta.id], meta);
+            anexoAtual += 1;
+            await paginaComprovante(anexoAtual, totalAnexosPdf, tituloDoc, null, anexosContent[meta.id], meta);
           }
         }
       }
       await anexarPaginasDosDocs(docs.filter(d => d.id !== "comprobatorio"));
-      if (mostraTranslado && form.usouTranslado === "sim") {
-        for (let i = 0; i < translados.length; i++) {
-          const t = translados[i];
-          if (!t.arquivo) continue;
-          await paginaComprovante(
-            `Comprovante de translado ${i + 1}`,
-            [
-              { label: "Data", valor: formatDateBR(t.data) },
-              { label: "Valor", valor: t.valor || "—" },
-              { label: "Trajeto", valor: `${t.de || "—"}  →  ${t.para || "—"}` },
-            ],
-            anexosContent[t.arquivo.id],
-            t.arquivo
-          );
-        }
+      for (let i = 0; i < transladosParaAnexar.length; i++) {
+        const t = transladosParaAnexar[i];
+        anexoAtual += 1;
+        await paginaComprovante(
+          anexoAtual, totalAnexosPdf,
+          `Comprovante de translado ${i + 1}`,
+          [
+            { label: "Origem", valor: t.de || "—", icone: "pin" },
+            { label: "Destino", valor: t.para || "—", icone: "pin" },
+            { label: "Data do translado", valor: formatDateBR(t.data), icone: "calendario" },
+            { label: "Valor do comprovante", valor: t.valor || "—", icone: "doc" },
+          ],
+          anexosContent[t.arquivo.id],
+          t.arquivo
+        );
       }
       await anexarPaginasDosDocs(docs.filter(d => d.id === "comprobatorio"));
 
