@@ -125,9 +125,18 @@
     font-family: var(--font-corpo); font-size: 16.5px; background: #fff; color: var(--grafite);
     transition: border-color .12s, box-shadow .12s;
   }
+  .field input[type=date]{ min-width: 0; max-width: 100%; box-sizing: border-box; }
+  @media (max-width: 480px){ .field input[type=date]{ font-size: 14.5px; padding: 13px 10px; } }
   .field input:focus, .field textarea:focus, .field select:focus{ outline: none; border-color: var(--azul); box-shadow: 0 0 0 3.5px rgba(0,81,134,.13); }
   .field textarea{ resize: vertical; min-height: 76px; }
   .field .char-hint{ font-size: 13px; color: var(--cinza); margin-top: 6px; }
+
+  .field-invalido input, .field-invalido select, .field-invalido textarea{ border-color: var(--vermelho) !important; box-shadow: 0 0 0 3.5px rgba(150,34,47,.1) !important; }
+  .campo-erro-msg{ color: var(--vermelho); font-size: 13.5px; font-weight: 600; margin-top: 6px; }
+  .erro-resumo ul.erro-resumo-lista{ margin: 8px 0 0; padding-left: 0; list-style: none; }
+  .erro-resumo-lista li{ margin-bottom: 2px; }
+  .erro-resumo-link{ background: none; border: none; padding: 5px 0; color: inherit; font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; text-align: left; }
+  .erro-resumo-link:hover{ opacity: .8; }
 
   .localidade-select{ display:flex; gap: 10px; }
   .localidade-select select{ flex: 1; min-width: 0; }
@@ -2457,6 +2466,8 @@ function ReportPreview({ form }) {
 function App() {
   const token = useDraftToken();
   const [step, setStep] = useState(1);
+  const [tentouAvancarEtapa1, setTentouAvancarEtapa1] = useState(false);
+  const [tentouAvancarEtapa2, setTentouAvancarEtapa2] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [createdAt, setCreatedAt] = useState(null);
   const [saveState, setSaveState] = useState("idle");
@@ -2972,6 +2983,34 @@ function App() {
   const datasValidas = !form.dataSaida || !form.dataRetorno || form.dataRetorno >= form.dataSaida;
   const step1Valid = form.tipoPrestacao && form.numeroSolicitacao && form.nomeViajante && form.cargoFuncao && form.siglaSetor && form.origem && form.destino &&
     form.dataSaida && form.dataRetorno && form.nomeEvento && form.motivo && form.conclusao && datasValidas;
+
+  const camposObrigatoriosEtapa1 = [
+    { id: "campo-tipoPrestacao", label: "Tipo de prestação de contas", ok: !!form.tipoPrestacao },
+    { id: "campo-numeroSolicitacao", label: "Número da solicitação de viagem", ok: !!form.numeroSolicitacao },
+    { id: "campo-nomeViajante", label: "Nome completo do viajante", ok: !!form.nomeViajante },
+    { id: "campo-cargoFuncao", label: "Cargo/Função", ok: !!form.cargoFuncao },
+    { id: "campo-siglaSetor", label: "Unidade de lotação", ok: !!form.siglaSetor },
+    { id: "campo-origem", label: "Origem", ok: !!form.origem },
+    { id: "campo-destino", label: "Destino", ok: !!form.destino },
+    { id: "campo-dataSaida", label: "Data de saída", ok: !!form.dataSaida },
+    { id: "campo-dataRetorno", label: "Data de retorno", ok: !!form.dataRetorno && datasValidas },
+    { id: "campo-nomeEvento", label: "Descrição do evento", ok: !!form.nomeEvento },
+    { id: "campo-motivo", label: "Objetivo da participação", ok: !!String(form.motivo || "").trim() },
+    { id: "campo-conclusao", label: "Conclusão", ok: !!String(form.conclusao || "").trim() },
+  ];
+  const camposFaltandoEtapa1 = camposObrigatoriosEtapa1.filter(c => !c.ok);
+  const invalidos1 = tentouAvancarEtapa1 ? new Set(camposFaltandoEtapa1.map(c => c.id)) : new Set();
+
+  function focarPrimeiroCampo(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setTimeout(() => {
+      const alvo = el.matches("input,select,textarea") ? el : el.querySelector("input,select,textarea");
+      if (alvo) alvo.focus();
+    }, 300);
+  }
+
   function renderTransladoPreview(meta) {
     if (!meta) return null;
     const src = anexosContent[meta.id];
@@ -2993,7 +3032,7 @@ function App() {
     const arquivos = form.anexos[docId] || [];
     const atendido = arquivos.length > 0;
     return (
-      <div className="inline-doc-card">
+      <div className="inline-doc-card" id={"doc-" + docId}>
         <div className="doc-item-head">
           <span className={"dot " + (atendido ? "ok" : "pend")}></span>
           <div className="doc-info">
@@ -3024,6 +3063,12 @@ function App() {
   }
 
   const step2Valid = form.transporte && (!mostraTranslado || !!form.usouTranslado) && pendingDocs.length === 0 && transladoOk && devolucaoOk;
+
+  const itensFaltandoEtapa2 = [];
+  if (!form.transporte) itensFaltandoEtapa2.push({ id: "campo-transporte", label: "Meio de transporte utilizado" });
+  if (mostraTranslado && !form.usouTranslado) itensFaltandoEtapa2.push({ id: "campo-usouTranslado", label: "Resposta sobre uso de táxi/aplicativo" });
+  if (mostraTranslado && form.usouTranslado === "sim" && !transladoOk) itensFaltandoEtapa2.push({ id: "campo-usouTranslado", label: "Dados do translado (trajeto, valor e comprovante)" });
+  pendingDocs.forEach(d => itensFaltandoEtapa2.push({ id: "doc-" + d.id, label: d.nome }));
   const conferenciaCompleta = Object.values(conferencia).every(Boolean);
   const step3Valid = !!form.atesto && conferenciaCompleta;
 
@@ -3761,7 +3806,7 @@ function App() {
                     <>
                   <div className="subsection-label">Dados da solicitação</div>
 
-                  <div className="field" style={{ marginBottom:18 }}>
+                  <div className={"field" + (invalidos1.has("campo-tipoPrestacao") ? " field-invalido" : "")} id="campo-tipoPrestacao" style={{ marginBottom:18 }}>
                     <label>Tipo de prestação de contas <span className="req">*</span></label>
                     <select value={form.tipoPrestacao} onChange={e => update({ tipoPrestacao:e.target.value, precisaDevolucao:e.target.value === "roteiro_reduzido" ? "sim" : "nao", valorDevolucao:e.target.value === "roteiro_reduzido" ? form.valorDevolucao : "" })}>
                       <option value="">Selecione</option>
@@ -3769,26 +3814,30 @@ function App() {
                       <option value="roteiro_reduzido">Roteiro reduzido</option>
                     </select>
                     <div className="char-hint">Viagem não realizada é tratada direto no SCV, por isso não aparece nesta lista.</div>
+                    {invalidos1.has("campo-tipoPrestacao") && <div className="campo-erro-msg">Selecione uma opção.</div>}
                   </div>
 
                   <div className="field-row">
-                    <div className="field">
+                    <div className={"field" + (invalidos1.has("campo-numeroSolicitacao") ? " field-invalido" : "")} id="campo-numeroSolicitacao">
                       <label>Número da solicitação de viagem <span className="req">*</span></label>
                       <CampoMaiusculo type="text" value={form.numeroSolicitacao} onChange={v => update({ numeroSolicitacao: v })} placeholder="Ex: 22680312-2" />
+                      {invalidos1.has("campo-numeroSolicitacao") && <div className="campo-erro-msg">Preencha o número da solicitação.</div>}
                     </div>
                   </div>
 
-                  <div className="field">
+                  <div className={"field" + (invalidos1.has("campo-nomeViajante") ? " field-invalido" : "")} id="campo-nomeViajante">
                     <label>Nome completo do viajante <span className="req">*</span></label>
                     <CampoMaiusculo type="text" value={form.nomeViajante} onChange={v => update({ nomeViajante: v })} placeholder="Nome completo" />
+                    {invalidos1.has("campo-nomeViajante") && <div className="campo-erro-msg">Preencha o nome do viajante.</div>}
                   </div>
 
                   <div className="field-row" style={{ marginTop: 16 }}>
-                    <div className="field">
+                    <div className={"field" + (invalidos1.has("campo-cargoFuncao") ? " field-invalido" : "")} id="campo-cargoFuncao">
                       <label>Cargo/Função <span className="req">*</span></label>
                       <CampoMaiusculo type="text" value={form.cargoFuncao} onChange={v => update({ cargoFuncao: v })} placeholder="Ex: Assessor/a" />
+                      {invalidos1.has("campo-cargoFuncao") && <div className="campo-erro-msg">Preencha o cargo/função.</div>}
                     </div>
-                    <div className="field lotacao-field">
+                    <div className={"field lotacao-field" + (invalidos1.has("campo-siglaSetor") ? " field-invalido" : "")} id="campo-siglaSetor">
                       <div className="lotacao-label-row">
                         <label htmlFor="unidade-lotacao">Unidade de lotação <span className="req">*</span></label>
                         <span className="field-help-icon" tabIndex="0" aria-describedby="ajuda-unidade-lotacao" aria-label="Ajuda sobre a unidade de lotação"><Icon name="info" size={15} /></span>
@@ -3807,18 +3856,21 @@ function App() {
                         ))}
                       </select>
                       <div id="ajuda-unidade-lotacao" className="field-tooltip" role="tooltip">Escolha o caminho completo até a unidade onde você trabalha. Ex.: <b>DAFI/DEAD/DISAD</b>. Se você trabalha diretamente no DEAD, escolha <b>DAFI/DEAD</b>.</div>
+                      {invalidos1.has("campo-siglaSetor") && <div className="campo-erro-msg">Selecione a unidade de lotação.</div>}
                     </div>
                   </div>
 
                   <div className="field-row" style={{ marginTop: 16 }}>
-                    <div className="field">
+                    <div className={"field" + (invalidos1.has("campo-origem") ? " field-invalido" : "")} id="campo-origem">
                       <label>Origem <span className="req">*</span></label>
                       <LocalidadeSelect value={form.origem} onChange={v => update({ origem: v })} estados={estados} estadosErro={estadosErro} municipiosCache={municipiosCache} garantirMunicipios={garantirMunicipios} />
+                      {invalidos1.has("campo-origem") && <div className="campo-erro-msg">Informe a origem.</div>}
                     </div>
-                    <div className="field">
+                    <div className={"field" + (invalidos1.has("campo-destino") ? " field-invalido" : "")} id="campo-destino">
                       <label>Destino <span className="req">*</span></label>
                       <CampoMaiusculo type="text" value={form.destino} onChange={v => update({ destino: v })} placeholder="Ex: CAMPO MOURÃO - PR" />
                       <div className="char-hint">Quando o roteiro tiver mais de uma cidade, todas aparecem aqui — pode editar livremente.</div>
+                      {invalidos1.has("campo-destino") && <div className="campo-erro-msg">Informe o destino.</div>}
                     </div>
                   </div>
                   {estadosErro && (
@@ -3829,13 +3881,15 @@ function App() {
                   )}
 
                   <div className="field-row">
-                    <div className="field">
+                    <div className={"field" + (invalidos1.has("campo-dataSaida") ? " field-invalido" : "")} id="campo-dataSaida">
                       <label>Data de saída <span className="req">*</span></label>
                       <input type="date" value={form.dataSaida} onChange={e => update({ dataSaida: e.target.value })} />
+                      {invalidos1.has("campo-dataSaida") && <div className="campo-erro-msg">Informe a data de saída.</div>}
                     </div>
-                    <div className="field">
+                    <div className={"field" + (invalidos1.has("campo-dataRetorno") ? " field-invalido" : "")} id="campo-dataRetorno">
                       <label>Data de retorno <span className="req">*</span></label>
                       <input type="date" value={form.dataRetorno} onChange={e => update({ dataRetorno: e.target.value })} />
+                      {invalidos1.has("campo-dataRetorno") && <div className="campo-erro-msg">Informe a data de retorno.</div>}
                     </div>
                   </div>
                   {!datasValidas && (
@@ -3845,19 +3899,22 @@ function App() {
                     </div>
                   )}
 
-                  <div className="field">
+                  <div className={"field" + (invalidos1.has("campo-nomeEvento") ? " field-invalido" : "")} id="campo-nomeEvento">
                     <label>Descrição do evento <span className="req">*</span></label>
                     <CampoMaiusculo type="text" value={form.nomeEvento} onChange={v => update({ nomeEvento: v })} placeholder="Ex: Seminário de Policiamento Rodoviário" />
+                    {invalidos1.has("campo-nomeEvento") && <div className="campo-erro-msg">Preencha a descrição do evento.</div>}
                   </div>
 
-                  <div className="field" style={{ marginTop: 16 }}>
+                  <div className={"field" + (invalidos1.has("campo-motivo") ? " field-invalido" : "")} id="campo-motivo" style={{ marginTop: 16 }}>
                     <label>Objetivo da participação <span className="req">*</span></label>
                     <CampoMaiusculo as="textarea" value={form.motivo} onChange={v => update({ motivo: v })} placeholder="Descreva a finalidade institucional e o objetivo da participação." />
+                    {invalidos1.has("campo-motivo") && <div className="campo-erro-msg">Descreva o objetivo da participação.</div>}
                   </div>
 
-                  <div className="field" style={{ marginTop: 16 }}>
+                  <div className={"field" + (invalidos1.has("campo-conclusao") ? " field-invalido" : "")} id="campo-conclusao" style={{ marginTop: 16 }}>
                     <label>Conclusão <span className="req">*</span></label>
                     <CampoMaiusculo as="textarea" value={form.conclusao} onChange={v => update({ conclusao: v })} placeholder="Descreva o resultado da viagem e o aproveitamento institucional." style={{ minHeight: 90 }} />
+                    {invalidos1.has("campo-conclusao") && <div className="campo-erro-msg">Descreva a conclusão.</div>}
                   </div>
 
                   <div className="field" style={{ marginTop: 16 }}>
@@ -3878,7 +3935,7 @@ function App() {
                   <h2 className="section-title"><span className="section-number">2</span> Transporte e comprovantes</h2>
                   <p className="section-hint">Confira ou selecione o meio de transporte utilizado.</p>
 
-                  <div className="transport-grid">
+                  <div className="transport-grid" id="campo-transporte">
                     {TRANSPORTES.map(t => (
                       <label key={t.id} className={"transport-opt " + (form.transporte === t.id ? "selected" : "")}>
                         <input type="radio" name="transporte" checked={form.transporte === t.id} onChange={() => handleSelectTransporte(t.id)} />
@@ -3907,7 +3964,7 @@ function App() {
                       )}
 
                       {mostraTranslado && (
-                      <div className="translado-block">
+                      <div className="translado-block" id="campo-usouTranslado">
                         <h3>Você utilizou táxi ou aplicativo de transporte durante a viagem?</h3>
                         <p className="section-hint" style={{ marginBottom: 12 }}>Considere os deslocamentos entre aeroporto, rodoviária, hospedagem, evento, local de trabalho ou residência.</p>
                         <div className="toggle-row">
@@ -4042,7 +4099,7 @@ function App() {
                           const statusTexto = d.id === "saque" && form.saqueComprovante === "nao" && saqueOk ? "✓ justificado" : arquivos.length ? "✓ anexado" : "";
                           const statusClass = d.id === "saque" && form.saqueComprovante === "nao" && saqueOk ? "justified" : arquivos.length ? "ok" : "neutral";
                           return (
-                            <div className={"doc-item-block " + (atendido ? "doc-done" : "")} key={d.id}>
+                            <div className={"doc-item-block " + (atendido ? "doc-done" : "")} id={"doc-" + d.id} key={d.id}>
                               <div className="doc-item-head">
                                 <span className={"dot " + (atendido ? "ok" : "pend")}></span>
                                 <div className="doc-info">
@@ -4190,16 +4247,49 @@ function App() {
               )}
 
               {(step !== 1 || podeExibirFormularioInicial) && (
+              <>
+                {tentouAvancarEtapa1 && step === 1 && camposFaltandoEtapa1.length > 0 && (
+                  <div className="banner error erro-resumo" role="alert" aria-live="assertive">
+                    <Icon name="alert" size={17} />
+                    <div>
+                      <b>Antes de continuar, preencha {camposFaltandoEtapa1.length === 1 ? "este campo" : "estes campos"}:</b>
+                      <ul className="erro-resumo-lista">
+                        {camposFaltandoEtapa1.map(c => (
+                          <li key={c.id}><button type="button" className="erro-resumo-link" onClick={() => focarPrimeiroCampo(c.id)}>{c.label}</button></li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+                {tentouAvancarEtapa2 && step === 2 && itensFaltandoEtapa2.length > 0 && (
+                  <div className="banner error erro-resumo" role="alert" aria-live="assertive">
+                    <Icon name="alert" size={17} />
+                    <div>
+                      <b>Antes de continuar, resolva {itensFaltandoEtapa2.length === 1 ? "este item" : "estes itens"}:</b>
+                      <ul className="erro-resumo-lista">
+                        {itensFaltandoEtapa2.map(c => (
+                          <li key={c.id}><button type="button" className="erro-resumo-link" onClick={() => focarPrimeiroCampo(c.id)}>{c.label}</button></li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
               <div className="nav-row">
                 <button className="btn btn-ghost" onClick={() => setStep(s => Math.max(1, s - 1))} style={{ visibility: step === 1 ? "hidden" : "visible" }}>
                   Voltar
                 </button>
                 {step < 3 ? (
-                  <button className="btn btn-primary" disabled={step === 1 ? !step1Valid : !step2Valid} onClick={() => setStep(s => s + 1)}>
+                  <button className="btn btn-primary" onClick={() => {
+                    const faltando = step === 1 ? camposFaltandoEtapa1 : itensFaltandoEtapa2;
+                    const setTentou = step === 1 ? setTentouAvancarEtapa1 : setTentouAvancarEtapa2;
+                    if (faltando.length > 0) { setTentou(true); focarPrimeiroCampo(faltando[0].id); return; }
+                    setStep(s => s + 1);
+                  }}>
                     Continuar
                   </button>
                 ) : <span />}
               </div>
+              </>
               )}
 
             </div>
