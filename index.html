@@ -2244,13 +2244,10 @@ function RedactModal({ meta, dataUrl, onSave, onClose }) {
   );
 }
 
-// Input/textarea que converte o texto para maiúsculas sem "chutar" o cursor pro final.
-// Por que isso é necessário: ao chamar onChange(valor.toUpperCase()) diretamente, o React
-// substitui o valor do campo pelo novo texto; como o navegador não sabe que só a caixa das
-// letras mudou, ele reposiciona o cursor no fim do campo a cada tecla digitada. Aqui a gente
-// guarda a posição do cursor no momento da digitação e a restaura logo depois do re-render
-// (useLayoutEffect roda antes da tela ser pintada, então o usuário não percebe o "pulo").
-function CampoMaiusculo({ as: Tag = "input", value, onChange, ...props }) {
+// Input/textarea que preserva a posição do cursor mesmo quando o valor é ajustado
+// no onChange (ex.: se algum dia precisarmos aplicar uma máscara/formatação). Hoje
+// não aplicamos nenhuma transformação — o texto fica exatamente como a pessoa digitou.
+function CampoTexto({ as: Tag = "input", value, onChange, ...props }) {
   const ref = useRef(null);
   const posicaoPendente = useRef(null);
 
@@ -2265,7 +2262,7 @@ function CampoMaiusculo({ as: Tag = "input", value, onChange, ...props }) {
   function handleChange(e) {
     const campo = e.target;
     posicaoPendente.current = { inicio: campo.selectionStart, fim: campo.selectionEnd };
-    onChange(campo.value.toUpperCase());
+    onChange(campo.value);
   }
 
   return <Tag ref={ref} value={value} onChange={handleChange} {...props} />;
@@ -2311,7 +2308,7 @@ function LocalidadeSelect({ value, onChange, estados, estadosErro, municipiosCac
   const municipioSelecionado = municipioDoValor ? (municipios.find(m => m.toUpperCase() === municipioDoValor) || "") : "";
 
   if (estadosErro) {
-    return <CampoMaiusculo type="text" value={value} onChange={onChange} placeholder="Ex: CURITIBA - PR" />;
+    return <CampoTexto type="text" value={value} onChange={onChange} placeholder="Ex: Curitiba - PR" />;
   }
 
   return (
@@ -2375,7 +2372,7 @@ function ReportPreview({ form }) {
       <div className="rp-table">
         <div className="rp-row">
           <div className="rp-icon-badge azul"><Icon name="pessoa" size={15} /></div>
-          <span className="rp-label">Funcionário(a):</span><span className="rp-value">{form.nomeViajante || "—"}</span>
+          <span className="rp-label">Viajante:</span><span className="rp-value">{form.nomeViajante || "—"}</span>
         </div>
         <div className="rp-row">
           <div className="rp-icon-badge azul"><Icon name="pin" size={15} /></div>
@@ -3426,19 +3423,11 @@ function App() {
         return paginas;
       }
 
-      async function paginaComprovante(tituloDoc, subtitulo, contentDataUrl, meta) {
+      async function paginaComprovante(tituloDoc, camposSubtitulo, contentDataUrl, meta) {
         novaPagina(true);
         tituloComIcone("doc", tituloDoc.toUpperCase());
-        if (subtitulo) {
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(11);
-          doc.setTextColor(...COR.texto);
-          doc.text(subtitulo, margin, y);
-          const w = doc.getTextWidth(subtitulo);
-          doc.setDrawColor(...COR.texto);
-          doc.setLineWidth(0.6);
-          doc.line(margin, y + 3, margin + w, y + 3);
-          y += 20;
+        if (camposSubtitulo && camposSubtitulo.length) {
+          tabelaCampos(camposSubtitulo);
         }
 
         const frameTop = y;
@@ -3498,7 +3487,16 @@ function App() {
         for (let i = 0; i < translados.length; i++) {
           const t = translados[i];
           if (!t.arquivo) continue;
-          await paginaComprovante(`Comprovante de translado ${i + 1}`, `${formatDateBR(t.data)} · ${t.valor || "—"} · De: ${t.de || "-"} · Para: ${t.para || "-"}`, anexosContent[t.arquivo.id], t.arquivo);
+          await paginaComprovante(
+            `Comprovante de translado ${i + 1}`,
+            [
+              { label: "Data", valor: formatDateBR(t.data) },
+              { label: "Valor", valor: t.valor || "—" },
+              { label: "Trajeto", valor: `${t.de || "—"}  →  ${t.para || "—"}` },
+            ],
+            anexosContent[t.arquivo.id],
+            t.arquivo
+          );
         }
       }
       await anexarPaginasDosDocs(docs.filter(d => d.id === "comprobatorio"));
@@ -3820,21 +3818,21 @@ function App() {
                   <div className="field-row">
                     <div className={"field" + (invalidos1.has("campo-numeroSolicitacao") ? " field-invalido" : "")} id="campo-numeroSolicitacao">
                       <label>Número da solicitação de viagem <span className="req">*</span></label>
-                      <CampoMaiusculo type="text" value={form.numeroSolicitacao} onChange={v => update({ numeroSolicitacao: v })} placeholder="Ex: 22680312-2" />
+                      <CampoTexto type="text" value={form.numeroSolicitacao} onChange={v => update({ numeroSolicitacao: v })} placeholder="Ex: 22680312-2" />
                       {invalidos1.has("campo-numeroSolicitacao") && <div className="campo-erro-msg">Preencha o número da solicitação.</div>}
                     </div>
                   </div>
 
                   <div className={"field" + (invalidos1.has("campo-nomeViajante") ? " field-invalido" : "")} id="campo-nomeViajante">
                     <label>Nome completo do viajante <span className="req">*</span></label>
-                    <CampoMaiusculo type="text" value={form.nomeViajante} onChange={v => update({ nomeViajante: v })} placeholder="Nome completo" />
+                    <CampoTexto type="text" value={form.nomeViajante} onChange={v => update({ nomeViajante: v })} placeholder="Nome completo" />
                     {invalidos1.has("campo-nomeViajante") && <div className="campo-erro-msg">Preencha o nome do viajante.</div>}
                   </div>
 
                   <div className="field-row" style={{ marginTop: 16 }}>
                     <div className={"field" + (invalidos1.has("campo-cargoFuncao") ? " field-invalido" : "")} id="campo-cargoFuncao">
                       <label>Cargo/Função <span className="req">*</span></label>
-                      <CampoMaiusculo type="text" value={form.cargoFuncao} onChange={v => update({ cargoFuncao: v })} placeholder="Ex: Assessor/a" />
+                      <CampoTexto type="text" value={form.cargoFuncao} onChange={v => update({ cargoFuncao: v })} placeholder="Ex: Assessor/a" />
                       {invalidos1.has("campo-cargoFuncao") && <div className="campo-erro-msg">Preencha o cargo/função.</div>}
                     </div>
                     <div className={"field lotacao-field" + (invalidos1.has("campo-siglaSetor") ? " field-invalido" : "")} id="campo-siglaSetor">
@@ -3868,7 +3866,7 @@ function App() {
                     </div>
                     <div className={"field" + (invalidos1.has("campo-destino") ? " field-invalido" : "")} id="campo-destino">
                       <label>Destino <span className="req">*</span></label>
-                      <CampoMaiusculo type="text" value={form.destino} onChange={v => update({ destino: v })} placeholder="Ex: CAMPO MOURÃO - PR" />
+                      <CampoTexto type="text" value={form.destino} onChange={v => update({ destino: v })} placeholder="Ex: Campo Mourão - PR" />
                       <div className="char-hint">Quando o roteiro tiver mais de uma cidade, todas aparecem aqui — pode editar livremente.</div>
                       {invalidos1.has("campo-destino") && <div className="campo-erro-msg">Informe o destino.</div>}
                     </div>
@@ -3901,25 +3899,25 @@ function App() {
 
                   <div className={"field" + (invalidos1.has("campo-nomeEvento") ? " field-invalido" : "")} id="campo-nomeEvento">
                     <label>Descrição do evento <span className="req">*</span></label>
-                    <CampoMaiusculo type="text" value={form.nomeEvento} onChange={v => update({ nomeEvento: v })} placeholder="Ex: Seminário de Policiamento Rodoviário" />
+                    <CampoTexto type="text" value={form.nomeEvento} onChange={v => update({ nomeEvento: v })} placeholder="Ex: Seminário de Policiamento Rodoviário" />
                     {invalidos1.has("campo-nomeEvento") && <div className="campo-erro-msg">Preencha a descrição do evento.</div>}
                   </div>
 
                   <div className={"field" + (invalidos1.has("campo-motivo") ? " field-invalido" : "")} id="campo-motivo" style={{ marginTop: 16 }}>
                     <label>Objetivo da participação <span className="req">*</span></label>
-                    <CampoMaiusculo as="textarea" value={form.motivo} onChange={v => update({ motivo: v })} placeholder="Descreva a finalidade institucional e o objetivo da participação." />
+                    <CampoTexto as="textarea" value={form.motivo} onChange={v => update({ motivo: v })} placeholder="Descreva a finalidade institucional e o objetivo da participação." />
                     {invalidos1.has("campo-motivo") && <div className="campo-erro-msg">Descreva o objetivo da participação.</div>}
                   </div>
 
                   <div className={"field" + (invalidos1.has("campo-conclusao") ? " field-invalido" : "")} id="campo-conclusao" style={{ marginTop: 16 }}>
                     <label>Conclusão <span className="req">*</span></label>
-                    <CampoMaiusculo as="textarea" value={form.conclusao} onChange={v => update({ conclusao: v })} placeholder="Descreva o resultado da viagem e o aproveitamento institucional." style={{ minHeight: 90 }} />
+                    <CampoTexto as="textarea" value={form.conclusao} onChange={v => update({ conclusao: v })} placeholder="Descreva o resultado da viagem e o aproveitamento institucional." style={{ minHeight: 90 }} />
                     {invalidos1.has("campo-conclusao") && <div className="campo-erro-msg">Descreva a conclusão.</div>}
                   </div>
 
                   <div className="field" style={{ marginTop: 16 }}>
                     <label>Informações complementares</label>
-                    <CampoMaiusculo as="textarea" value={form.infoComplementares} onChange={v => update({ infoComplementares: v })} placeholder="Se houver algo importante sobre esta viagem que ainda não foi dito acima, escreva aqui." />
+                    <CampoTexto as="textarea" value={form.infoComplementares} onChange={v => update({ infoComplementares: v })} placeholder="Se houver algo importante sobre esta viagem que ainda não foi dito acima, escreva aqui." />
                   </div>
 
                   <button type="button" className="btn btn-ghost" style={{ marginTop: 22 }} onClick={() => setMostrarPreview(true)}>
