@@ -248,7 +248,7 @@
 
   /* ================= REPORT PREVIEW ================= */
   .report-preview{ background: #fff; border: 1px solid var(--linha); border-radius: var(--r-lg); padding: 32px 32px 30px; font-family: var(--font-corpo); box-shadow: var(--shadow-card); }
-  .rp-logos{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom: 22px; }
+  .rp-logos{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom: 19px; }
   .rp-logos img:first-child{ height: 46px; }
   .rp-logo-col{ display:flex; flex-direction:column; align-items:flex-end; gap: 6px; }
   .rp-logo-col img{ height: 50px; }
@@ -316,9 +316,9 @@
   /* ===== Página 1 — refinamentos para o layout aprovado ===== */
   .rp-a4{ width: 794px; min-height: 1123px; display: flex; flex-direction: column; box-sizing: border-box; }
   .rp-a4 .rp-footer{ margin-top: auto; }
-  .report-preview .rp-logos img:first-child{ height: 42px; }
-  .report-preview .rp-logo-col img{ height: 46px; }
-  .rp-topbar{ height: 6px; border-radius: 3px; margin: -6px 0 20px; background: linear-gradient(90deg, var(--navy) 0%, var(--navy) 74%, var(--verde-vivo) 84%, var(--verde-vivo) 100%); }
+  .report-preview .rp-logos img:first-child{ height: 40px; }
+  .report-preview .rp-logo-col img{ height: 44px; }
+  .rp-topbar{ height: 5px; border-radius: 2.5px; margin: 0 0 32px; background: linear-gradient(90deg, var(--navy) 0%, var(--navy) 74%, var(--verde-vivo) 84%, var(--verde-vivo) 100%); }
   .rp-kicker{ display: flex; align-items: center; justify-content: center; gap: 12px; }
   .rp-kicker i{ width: 26px; height: 2px; background: var(--verde-vivo); border-radius: 1px; }
   .rp-sv-box{ display: inline-block; border: 1.5px solid var(--linha); border-radius: 8px; padding: 7px 24px; font-family: var(--font-dado); font-size: 14.5px; color: #31424f; background: #fff; }
@@ -331,11 +331,9 @@
   .rp-sign .rp-sign-note{ color: var(--azul); font-style: normal; }
   .rp-sign-line{ width: 320px; max-width: 70%; height: 1px; background: #c9d2d8; margin: 10px auto; }
   .rp-sign .rp-sign-name{ border-top: none; padding-top: 0; margin-top: 0; letter-spacing: .02em; }
-  .rp-foot{ display: flex; align-items: center; border-top: 1px solid #e8ecef; padding: 12px 0 10px; font-size: 11.5px; color: #44525c; line-height: 1.5; }
-  .rp-foot-seg{ display: flex; gap: 9px; align-items: center; padding: 0 14px; border-left: 1px solid #e6ebee; white-space: nowrap; }
-  .rp-foot-seg:first-child{ border-left: none; padding-left: 0; flex: 1; white-space: normal; }
-  .rp-foot-seg b{ color: var(--grafite); }
-  .rp-foot-ic{ width: 26px; height: 26px; border-radius: 50%; background: var(--azul-tint); color: var(--azul); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .rp-foot{ display: flex; align-items: baseline; justify-content: space-between; border-top: 1px solid #e8ecef; padding: 10px 0 8px; font-size: 10.5px; color: #566370; }
+  .rp-foot b{ color: var(--grafite); }
+  .rp-foot-pipe{ color: #b7c0c7; }
 
   /* ===== Páginas de anexo (renderizadas em HTML, mesmo estilo da página 1) ===== */
   .ax-page{ width: 794px; min-height: 1123px; background: #fff; padding: 30px 40px 0; display: flex; flex-direction: column; box-sizing: border-box; font-family: var(--font-corpo); color: var(--grafite); }
@@ -379,7 +377,7 @@
   .ax-footer-bar{ height: 7px; margin: 0 -40px; background: linear-gradient(90deg, #0b1e3a 0%, var(--navy) 10%, var(--navy) 80%, var(--verde-vivo) 90%, var(--verde-vivo) 100%); }
 
   /* ===== Ajustes finos aprovados (página 1) ===== */
-  .rp-a4{ padding: 60px 76px 0; }
+  .rp-a4{ padding: 40px 64px 0; }
   .report-preview .rp-title{ font-size: 21px; color: #02356e; margin-bottom: 8px; }
   .report-preview .rp-kicker{ font-size: 12.5px; color: #3aa335; }
   .report-preview .rp-kicker i{ background: #3aa335; }
@@ -392,7 +390,6 @@
   .rp-sec-title{ border-left: 1px solid #e3e8ec; padding-left: 14px; }
   .rp-foot-bar{ height: 3px; border-radius: 2px; margin-bottom: 2px; background: linear-gradient(90deg, #02356e 0%, #02356e 78%, #64b745 86%, #64b745 100%); }
   .rp-foot{ border-top: none; }
-  .rp-foot-seg:first-child{ line-height: 1.45; }
 
   /* ===== Tela "Minhas prestações" ===== */
   .mp-card{ background:#fff; border:1px solid var(--linha); border-radius:16px; padding:26px 28px; }
@@ -2639,13 +2636,13 @@ function ReportPreview({ form, modoPdf, paginaTexto }) {
       <div className="rp-footer">
         <div className="rp-foot-bar" />
         <div className="rp-foot">
-          <div className="rp-foot-seg">
-            <span className="rp-foot-ic"><Icon name="pin" size={14} /></span>
-            <span><b>DETRAN-PR</b><br/>Av. Victor Ferreira do Amaral, 2940 — Tarumã<br/>82800-900 — Curitiba — PR</span>
-          </div>
-          <div className="rp-foot-seg"><span className="rp-foot-ic"><SvgFone size={13} /></span><span>41 3361-1212</span></div>
-          <div className="rp-foot-seg"><span className="rp-foot-ic"><SvgGlobo size={14} /></span><span>www.detran.pr.gov.br</span></div>
-          <div className="rp-foot-seg">{paginaTexto || "Página 1 de 1"}</div>
+          <span><b>DETRAN/PR</b></span>
+          <span className="rp-foot-pipe">|</span>
+          <span>Sistema de Prestação de Contas de Viagem</span>
+          <span className="rp-foot-pipe">|</span>
+          <span>Solicitação: {form.numeroSolicitacao || "—"}</span>
+          <span className="rp-foot-pipe">|</span>
+          <span>{paginaTexto || "Página 1 de 1"}</span>
         </div>
       </div>
     </div>
@@ -2666,20 +2663,6 @@ const SvgEscudo = ({ size = 36 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 2.6l7.4 2.8v5.5c0 4.8-3.2 8.1-7.4 9.5-4.2-1.4-7.4-4.7-7.4-9.5V5.4z" />
     <polyline points="8.6 12 11 14.4 15.4 9.6" />
-  </svg>
-);
-
-const SvgFone = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2z" />
-  </svg>
-);
-
-const SvgGlobo = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <path d="M2 12h20" />
-    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
   </svg>
 );
 
@@ -4017,22 +4000,33 @@ function App() {
         doc.roundedRect(margin, linhaY - 17, contentW * 0.84, 2.2, 1.1, 1.1, "F");
         doc.setFillColor(...MX.verdeVivo);
         doc.roundedRect(margin + contentW * 0.88, linhaY - 17, contentW * 0.12, 2.2, 1.1, 1.1, "F");
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(...MX.texto);
-        doc.text("DETRAN/PR", margin, linhaY);
-        const wDet = doc.getTextWidth("DETRAN/PR");
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(...MX.cinzaTxt);
-        doc.text("  |  Sistema de Prestação de Contas de Viagem", margin + wDet, linhaY);
-        doc.text(`Solicitação: ${form.numeroSolicitacao || "—"}`, PAGE_W / 2 + 46, linhaY, { align: "center" });
-        doc.setTextColor(...MX.texto);
-        doc.text(`Página ${paginaPdfAtual} de ${totalPaginasPdf}`, PAGE_W - margin, linhaY, { align: "right" });
-        const bh = 12;
-        doc.setFillColor(...MX.navy);
-        doc.rect(0, PAGE_H - bh, PAGE_W, bh, "F");
-        doc.setFillColor(...MX.verdeVivo);
-        doc.rect(PAGE_W * 0.86, PAGE_H - bh, PAGE_W * 0.14, bh, "F");
+
+        const segmentos = [
+          "DETRAN/PR",
+          "Sistema de Prestação de Contas de Viagem",
+          `Solicitação: ${form.numeroSolicitacao || "—"}`,
+          `Página ${paginaPdfAtual} de ${totalPaginasPdf}`,
+        ];
+        doc.setFontSize(8.7);
+        const larguras = segmentos.map(s => doc.getTextWidth(s));
+        const larguraPipe = doc.getTextWidth("  |  ");
+        const larguraTexto = larguras.reduce((a, b) => a + b, 0) + larguraPipe * (segmentos.length - 1);
+        const espacoExtra = Math.max(0, contentW - larguraTexto);
+        const folga = espacoExtra / (segmentos.length - 1); // espaça os blocos até ocupar toda a faixa
+        let x = margin;
+        segmentos.forEach((texto, i) => {
+          doc.setFont("helvetica", i === 0 ? "bold" : "normal");
+          doc.setTextColor(...(i === 0 ? MX.texto : MX.cinzaTxt));
+          doc.text(texto, x, linhaY);
+          x += larguras[i];
+          if (i < segmentos.length - 1) {
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(...MX.cinzaTxt);
+            doc.text("|", x + larguraPipe / 2, linhaY, { align: "center" });
+            x += larguraPipe + folga;
+          }
+        });
+        // (a barra grossa de baixo foi removida — a faixa fina acima do texto já identifica a página)
       }
 
       function paginaAnexoDoc(numero, titulo, imagem, continuacao, redigido, tipoIcone) {
