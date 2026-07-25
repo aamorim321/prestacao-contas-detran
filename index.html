@@ -1563,9 +1563,6 @@
     border-radius:18px;
     background:linear-gradient(180deg,#fbfcfd 0%,#fff 100%);
   }
-  .start-choice-head{ text-align:center; margin-bottom:18px; }
-  .start-choice-head h3{ margin:0; font-size:22px; color:var(--grafite); }
-  .start-choice-head p{ margin:6px 0 0; color:var(--cinza); font-size:14px; }
   .start-choice-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
   .start-choice-card{
     min-height:178px;
@@ -2973,11 +2970,7 @@ function App() {
       try {
         await DraftDB.set(key, JSON.stringify({ form, createdAt, step, modoInicio }));
         setSaveState("saved");
-        const temConteudoReal = !!(
-          form.numeroSolicitacao || form.nomeViajante || form.destino || form.scvImportado ||
-          Object.values(form.anexos || {}).some(lista => (lista || []).length) ||
-          (form.translados || []).length
-        );
+        const temConteudoReal = !!(form.numeroSolicitacao || form.nomeViajante);
         if (temConteudoReal) {
           const arquivoIds = [];
           Object.values(form.anexos || {}).forEach(arr => (arr || []).forEach(f => arquivoIds.push(f.id)));
@@ -3339,6 +3332,23 @@ function App() {
     }));
     setScvModal(false);
     setStep(1);
+  }
+
+  function cancelarImportacaoScv() {
+    setScvModal(false);
+    setScvEtapaModal(1);
+    setScvNaoRealizada(false);
+    setScvErro("");
+    // Reabrindo dados já confirmados só para conferir de novo ("Revisar dados")?
+    // Então cancelar apenas fecha a janela — nada foi importado agora, nada se apaga.
+    if (form.dadosScvConfirmados) return;
+    const fileId = form.scvArquivo?.id;
+    setForm(f => ({ ...f, scvArquivo: null, scvImportado: false }));
+    setDadosScv(null);
+    if (fileId) {
+      setAnexosContent(prev => { const n = { ...prev }; delete n[fileId]; return n; });
+      deleteFileContent(fileId);
+    }
   }
 
   function addTransladoItem() {
@@ -4261,7 +4271,11 @@ function App() {
     reader.readAsText(arquivo);
   }
 
-  function iniciarNovaPrestacao() {
+  function iniciarNovaPrestacaoComArquivo(event) {
+    const input = event.target;
+    const file = input.files && input.files[0];
+    input.value = "";
+    if (!file) return;
     const possuiDados = !!(
       form.scvImportado || form.numeroSolicitacao || form.nomeViajante || form.transporte ||
       Object.values(form.anexos || {}).some(lista => (lista || []).length) ||
@@ -4282,6 +4296,7 @@ function App() {
     setDraftMessage("");
     setStep(1);
     setModoInicio("nova");
+    importarSolicitacaoSCV(file);
   }
 
   function escolherOutroInicio() {
@@ -4410,23 +4425,20 @@ function App() {
               {step === 1 && (
                 <div className="card">
                   <h2 className="section-title"><span className="section-number">1</span> Solicitação e dados da viagem</h2>
-                  <p className="section-hint">{modoInicio === null ? "Escolha como deseja iniciar." : modoInicio === "nova" ? "Importe a solicitação do SCV e confira os dados extraídos." : "Confira os dados da prestação aberta para edição."}</p>
+                  <p className="section-hint">{modoInicio === null ? "Escolha uma opção para continuar." : modoInicio === "nova" ? "Importe a solicitação do SCV e confira os dados extraídos." : "Confira os dados da prestação aberta para edição."}</p>
 
                   {modoInicio === null && (
                     <div className="start-choice-panel">
-                      <div className="start-choice-head">
-                        <h3>Como deseja iniciar?</h3>
-                        <p>Escolha uma opção para continuar.</p>
-                      </div>
                       <div className="start-choice-grid">
-                        <button type="button" className="start-choice-card new" onClick={iniciarNovaPrestacao}>
+                        <label className="start-choice-card new">
                           <span className="start-choice-icon"><Icon name="doc" size={25} /></span>
                           <span className="start-choice-copy">
                             <strong>Começar nova prestação</strong>
                             <small>Importe o PDF da solicitação de viagem do SCV.</small>
                           </span>
                           <span className="start-choice-action">Começar</span>
-                        </button>
+                          <input type="file" accept=".pdf,application/pdf" className="file-input-hidden" onChange={iniciarNovaPrestacaoComArquivo} />
+                        </label>
                         <label className="start-choice-card edit">
                           <span className="start-choice-icon"><Icon name="paperclip" size={24} /></span>
                           <span className="start-choice-copy">
@@ -5048,7 +5060,7 @@ function App() {
           <div className="preview-modal" style={{ width:"min(760px,100%)" }}>
             <div className="redact-head">
               <h3>{scvEtapaModal === 1 ? "Passo 1 de 2 — Confira os dados do PDF" : "Passo 2 de 2 — Tipo de prestação de contas"}</h3>
-              <button className="redact-close" onClick={() => setScvModal(false)}><Icon name="close" size={18} /></button>
+              <button className="redact-close" onClick={cancelarImportacaoScv}><Icon name="close" size={18} /></button>
             </div>
             <div className="preview-modal-body">
               {scvEtapaModal === 1 && dadosScv && (
@@ -5074,7 +5086,7 @@ function App() {
             <div className="redact-actions">
               <div className="left-group">
                 {scvEtapaModal === 1 ? (
-                  <button className="btn btn-ghost" onClick={() => setScvModal(false)}>Cancelar</button>
+                  <button className="btn btn-ghost" onClick={cancelarImportacaoScv}>Cancelar</button>
                 ) : (
                   <button className="btn btn-ghost" onClick={() => setScvEtapaModal(1)}>Voltar</button>
                 )}
