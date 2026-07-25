@@ -684,24 +684,25 @@
   .quick-nav.open{ opacity:1; visibility:visible; pointer-events:auto; transform:translateY(0) scale(1); }
   .menu-toggle.active{ background:#f0f5f8; color:#184f86; }
   .dashboard-main{ min-width:0; }
-  .hero-panel{ position:relative; overflow:hidden; border-radius:24px 24px 0 0; background:linear-gradient(103deg, #03295b 0%, #014b98 54%, #0c79d0 100%); box-shadow:0 28px 44px rgba(6,39,79,.16); padding:32px 34px 28px; }
-  .hero-panel::before{ content:""; position:absolute; width:210px; height:160px; left:22px; top:12px; background-image:radial-gradient(rgba(255,255,255,.18) 1px, transparent 1px); background-size:12px 12px; opacity:.45; }
-  .hero-grid{ display:grid; grid-template-columns:minmax(0,1fr) 38%; gap:20px; align-items:stretch; position:relative; z-index:1; }
-  .hero-title-row{ display:flex; gap:22px; align-items:flex-start; }
-  .hero-icon-wrap{ width:104px; flex:0 0 104px; display:flex; align-items:flex-start; justify-content:center; }
-  .hero-icon{ width:82px; height:82px; border-radius:50%; border:2px solid rgba(159,220,72,.8); background:rgba(4,28,59,.28); box-shadow:inset 0 0 0 10px rgba(255,255,255,.05); color:#fff; }
-  .hero-icon svg{ width:32px; height:32px; }
-  .hero-copy-block h1{ margin:0; color:#fff; font-size:clamp(32px, 3vw, 48px); line-height:1.08; letter-spacing:-.03em; }
-  .hero-accent{ width:54px; height:4px; border-radius:4px; background:#8fd348; margin:14px 0 16px; }
-  .hero-copy-block p{ margin:0; color:rgba(255,255,255,.94); font-size:16px; line-height:1.45; max-width:760px; }
+  .hero-panel{ position:relative; overflow:hidden; border-radius:12px 12px 0 0; background:linear-gradient(103deg, #03295b 0%, #014b98 54%, #0c79d0 100%); box-shadow:0 10px 20px rgba(6,39,79,.12); padding:18px 26px; }
+  .hero-panel::before{ content:""; position:absolute; width:210px; height:160px; left:22px; top:12px; background-image:radial-gradient(rgba(255,255,255,.18) 1px, transparent 1px); background-size:12px 12px; opacity:.35; }
+  .hero-grid{ display:grid; grid-template-columns:minmax(0,1fr) 22%; gap:14px; align-items:center; position:relative; z-index:1; }
+  .hero-title-row{ display:flex; gap:14px; align-items:center; }
+  .hero-icon-wrap{ width:44px; flex:0 0 44px; display:flex; align-items:center; justify-content:center; }
+  .hero-icon{ width:40px; height:40px; border-radius:50%; border:1.5px solid rgba(159,220,72,.8); background:rgba(4,28,59,.28); box-shadow:inset 0 0 0 5px rgba(255,255,255,.05); color:#fff; }
+  .hero-icon svg{ width:18px; height:18px; }
+  .hero-copy-block h1{ margin:0; color:#fff; font-size:19px; line-height:1.2; letter-spacing:-.01em; font-weight:700; }
+  .hero-accent{ width:34px; height:3px; border-radius:3px; background:#8fd348; margin:7px 0 8px; }
+  .hero-copy-block p{ margin:0; color:rgba(255,255,255,.9); font-size:12.5px; line-height:1.4; max-width:640px; }
   .hero-lead span{ display:block; white-space:nowrap; }
-  .hero-benefits{ margin-top:28px; display:flex; gap:0; border:1px solid rgba(255,255,255,.16); border-radius:16px; overflow:hidden; background:rgba(0,31,75,.16); max-width:760px; }
-  .hero-benefit{ flex:1; display:flex; align-items:center; gap:12px; padding:16px 18px; border-right:1px solid rgba(255,255,255,.12); color:#fff; }
+  .hero-benefits{ margin-top:12px; display:flex; gap:0; border:1px solid rgba(255,255,255,.16); border-radius:9px; overflow:hidden; background:rgba(0,31,75,.16); max-width:640px; }
+  .hero-benefit{ flex:1; display:flex; align-items:center; gap:8px; padding:9px 12px; border-right:1px solid rgba(255,255,255,.12); color:#fff; }
   .hero-benefit:last-child{ border-right:0; }
-  .hero-benefit-icon{ width:40px; height:40px; flex:0 0 40px; border-radius:50%; border:2px solid #94d743; color:#a7e15d; display:flex; align-items:center; justify-content:center; }
-  .hero-benefit strong{ display:block; font-size:14px; line-height:1.2; }
-  .hero-benefit small{ display:block; font-size:13px; color:rgba(255,255,255,.78); margin-top:3px; }
-  .hero-road-art{ position:relative; min-height:240px; }
+  .hero-benefit-icon{ width:26px; height:26px; flex:0 0 26px; border-radius:50%; border:1.5px solid #94d743; color:#a7e15d; display:flex; align-items:center; justify-content:center; }
+  .hero-benefit-icon svg{ width:14px; height:14px; }
+  .hero-benefit strong{ display:block; font-size:12px; line-height:1.2; }
+  .hero-benefit small{ display:block; font-size:10.5px; color:rgba(255,255,255,.75); margin-top:2px; }
+  .hero-road-art{ position:relative; min-height:90px; transform:scale(.42); transform-origin: top right; }
   .road-track{ position:absolute; inset:-16px -28px -14px 18px; border-radius:200px 0 0 200px; background:radial-gradient(circle at 60% 25%, rgba(255,255,255,.08), transparent 34%), linear-gradient(135deg, rgba(9,54,104,.2), rgba(13,112,199,.06)); }
   .road-track::before{ content:""; position:absolute; right:-66px; top:-10px; width:430px; height:330px; border-radius:50%; border:36px solid rgba(95,178,255,.16); border-left-color:transparent; border-bottom-color:rgba(95,178,255,.30); transform:rotate(-18deg); filter:drop-shadow(0 0 8px rgba(91,160,255,.24)); }
   .road-track::after{ content:""; position:absolute; right:18px; top:36px; width:330px; height:240px; border-radius:50%; border:4px dashed rgba(184,222,255,.55); border-left-color:transparent; border-bottom-color:transparent; transform:rotate(-18deg); }
@@ -713,7 +714,7 @@
   .path{ position:absolute; border-top:2px dashed rgba(206,222,255,.5); }
   .path-1{ top:36px; left:132px; width:132px; transform:rotate(12deg); }
   .path-2{ top:122px; left:78px; width:178px; transform:rotate(16deg); }
-  .workflow-shell{ background:#fff; border:1px solid #e3e8ec; border-top:0; border-radius:0 0 24px 24px; padding:18px 26px 20px; box-shadow:0 24px 40px rgba(17,38,59,.07); margin-bottom:18px; }
+  .workflow-shell{ background:#fff; border:1px solid #e3e8ec; border-top:0; border-radius:0 0 14px 14px; padding:18px 26px 20px; box-shadow:0 24px 40px rgba(17,38,59,.07); margin-bottom:18px; }
   .premium-stepper{ margin:0; align-items:center; }
   .premium-stepper .step-node{ width:auto; min-width:0; flex:1; align-items:flex-start; gap:14px; }
   .premium-stepper .step-circle{ width:36px; height:36px; font-size:15px; margin-bottom:8px; box-shadow:none; }
@@ -760,14 +761,15 @@
     .header-right{ gap:12px; }
     .profile-box{ padding-left:14px; }
     .system-badge{ display:flex; font-size:12px; padding:9px 14px; }
-    .hero-panel{ padding:24px 18px 20px; border-radius:20px 20px 0 0; }
-    .hero-title-row{ gap:14px; }
-    .hero-icon-wrap{ width:62px; flex-basis:62px; }
-    .hero-icon{ width:58px; height:58px; }
-    .hero-copy-block h1{ font-size:28px; }
-    .hero-copy-block p{ font-size:14px; }
+    .hero-panel{ padding:16px 18px; border-radius:10px 10px 0 0; }
+    .hero-title-row{ gap:10px; }
+    .hero-icon-wrap{ width:36px; flex-basis:36px; }
+    .hero-icon{ width:34px; height:34px; }
+    .hero-icon svg{ width:16px; height:16px; }
+    .hero-copy-block h1{ font-size:17px; }
+    .hero-copy-block p{ font-size:12px; }
     .hero-lead span{ white-space:normal; }
-    .hero-road-art{ min-height:150px; }
+    .hero-road-art{ display:none; }
     .road-track::before{ width:290px; height:220px; right:-54px; top:0; border-width:26px; }
     .road-track::after{ width:220px; height:170px; }
     .route-mark{ width:40px; height:40px; }
@@ -2031,13 +2033,10 @@ function useDraftToken() {
     const url = new URL(window.location.href);
     const t = url.searchParams.get("rascunho");
     if (t) { setToken(t); return; }
-    // Sem rascunho na URL: se já existem prestações guardadas, mostramos a lista;
-    // se não existe nenhuma, começamos uma nova direto no formulário.
-    if (lerListaRascunhos().length > 0) { setMostrarLista(true); return; }
-    const novo = uid();
-    url.searchParams.set("rascunho", novo);
-    window.history.replaceState({}, "", url.toString());
-    setToken(novo);
+    // Sem rascunho na URL: a tela "Minhas prestações" é sempre o ponto de
+    // partida — ela mesma mostra a lista (ou o aviso de lista vazia) e o
+    // botão "+ Iniciar nova prestação", que é quem de fato cria o rascunho.
+    setMostrarLista(true);
   }, []);
   return { token, mostrarLista };
 }
@@ -2155,7 +2154,6 @@ function RedactModal({ meta, dataUrl, onSave, onClose }) {
   const [girando, setGirando] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [modo, setModo] = useState("tarja"); // "tarja" = pintar de preto · "corte" = manter só a área selecionada
-  const [houveCorte, setHouveCorte] = useState(false);
   const canvasRef = useRef(null);
   const dragRef = useRef(null);
 
@@ -2170,7 +2168,6 @@ function RedactModal({ meta, dataUrl, onSave, onClose }) {
       const novaUrl = cnv.toDataURL("image/png");
       setPageUrls(prev => { const n = [...prev]; n[pageIndex] = novaUrl; return n; });
       setRectsByPage(prev => ({ ...prev, [pageIndex]: [] })); // tarjas antigas perdem a referência após o corte
-      setHouveCorte(true);
     } catch (e) { /* mantém como está se algo falhar */ }
   }
 
@@ -2332,7 +2329,7 @@ function RedactModal({ meta, dataUrl, onSave, onClose }) {
         achatadas.push(cnv.toDataURL("image/png"));
       }
       if (achatadas.length === 1 && !isPdf) {
-        onSave(achatadas[0], { tipo: "image/png", nome: meta.nome.replace(/\.(jpe?g)$/i, ".png"), redigido: houveCorte || Object.values(rectsByPage).some(arr => arr && arr.length) });
+        onSave(achatadas[0], { tipo: "image/png", nome: meta.nome.replace(/\.(jpe?g)$/i, ".png"), redigido: Object.values(rectsByPage).some(arr => arr && arr.length) });
       } else {
         const { PDFDocument } = window.PDFLib;
         const novoDoc = await PDFDocument.create();
@@ -2344,7 +2341,7 @@ function RedactModal({ meta, dataUrl, onSave, onClose }) {
         }
         const pdfBytes = await novoDoc.save();
         const newDataUrl = "data:application/pdf;base64," + bytesToBase64(pdfBytes);
-        onSave(newDataUrl, { tipo: "application/pdf", nome: meta.nome, redigido: houveCorte || Object.values(rectsByPage).some(arr => arr && arr.length) });
+        onSave(newDataUrl, { tipo: "application/pdf", nome: meta.nome, redigido: Object.values(rectsByPage).some(arr => arr && arr.length) });
       }
     } catch (e) {
       setLoadError("Não foi possível aplicar a ocultação (" + (e && e.message ? e.message : "erro") + ").");
@@ -2936,6 +2933,11 @@ function App() {
           loadedForm = { ...emptyForm, ...(parsed.form || {}) };
           setForm(loadedForm);
           setCreatedAt(parsed.createdAt || new Date().toISOString());
+          if (parsed.step) setStep(parsed.step);
+          if (parsed.modoInicio) {
+            setModoInicio(parsed.modoInicio);
+            if (parsed.modoInicio === "editar") setArquivoEdicaoCarregado(true);
+          }
           const registro = lerListaRascunhos().find(r => r.token === token);
           if (registro && registro.status === "concluida") setPdfGeradoUmaVez(true);
         } else {
@@ -2969,27 +2971,34 @@ function App() {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       try {
-        await DraftDB.set(key, JSON.stringify({ form, createdAt }));
+        await DraftDB.set(key, JSON.stringify({ form, createdAt, step, modoInicio }));
         setSaveState("saved");
-        const arquivoIds = [];
-        Object.values(form.anexos || {}).forEach(arr => (arr || []).forEach(f => arquivoIds.push(f.id)));
-        (form.translados || []).forEach(t => { if (t.arquivo) arquivoIds.push(t.arquivo.id); });
-        if (form.scvArquivo && form.scvArquivo.id) arquivoIds.push(form.scvArquivo.id);
-        atualizarRascunhoNaLista(token, {
-          numeroSolicitacao: form.numeroSolicitacao || "",
-          nomeViajante: form.nomeViajante || "",
-          destino: form.destino || "",
-          etapa: step,
-          status: pdfGeradoUmaVez ? "concluida" : "rascunho",
-          atualizadoEm: new Date().toISOString(),
-          arquivoIds,
-        });
+        const temConteudoReal = !!(
+          form.numeroSolicitacao || form.nomeViajante || form.destino || form.scvImportado ||
+          Object.values(form.anexos || {}).some(lista => (lista || []).length) ||
+          (form.translados || []).length
+        );
+        if (temConteudoReal) {
+          const arquivoIds = [];
+          Object.values(form.anexos || {}).forEach(arr => (arr || []).forEach(f => arquivoIds.push(f.id)));
+          (form.translados || []).forEach(t => { if (t.arquivo) arquivoIds.push(t.arquivo.id); });
+          if (form.scvArquivo && form.scvArquivo.id) arquivoIds.push(form.scvArquivo.id);
+          atualizarRascunhoNaLista(token, {
+            numeroSolicitacao: form.numeroSolicitacao || "",
+            nomeViajante: form.nomeViajante || "",
+            destino: form.destino || "",
+            etapa: step,
+            status: pdfGeradoUmaVez ? "concluida" : "rascunho",
+            atualizadoEm: new Date().toISOString(),
+            arquivoIds,
+          });
+        }
       } catch (e) {
         setSaveState("error");
       }
     }, 500);
     return () => clearTimeout(saveTimer.current);
-  }, [form, key, loadedOnce, createdAt, step, pdfGeradoUmaVez]);
+  }, [form, key, loadedOnce, createdAt, step, modoInicio, pdfGeradoUmaVez]);
 
   const update = useCallback((patch) => setForm((f) => ({ ...f, ...patch })), []);
 
@@ -3033,6 +3042,7 @@ function App() {
         setRedactTarget(null);
       },
       onClose: () => {
+        proximo.applyCancel && proximo.applyCancel();
         setEditQueue(q => q.slice(1));
         setRedactTarget(null);
       },
@@ -3076,7 +3086,6 @@ function App() {
   async function attachFiles(docId, fileList) {
     setFileWarnings(w => ({ ...w, [docId]: null }));
     const files = Array.from(fileList || []);
-    const novos = [];
     const paraFila = [];
     for (const file of files) {
       try {
@@ -3088,23 +3097,27 @@ function App() {
         const dataUrl = resultado.dataUrl;
         const fileId = uid();
         setAnexosContent(prev => ({ ...prev, [fileId]: dataUrl }));
-        const meta = { id: fileId, nome: file.name, tamanho: resultado.tamanho, tipo: resultado.comprimida ? "image/jpeg" : file.type };
-        novos.push(meta);
-        persistFile(fileId, dataUrl);
+        const metaBase = { id: fileId, nome: file.name, tamanho: resultado.tamanho, tipo: resultado.comprimida ? "image/jpeg" : file.type };
+        // O arquivo só é gravado no rascunho e entra em form.anexos quando a
+        // pessoa clicar em "Concluir e aplicar" no editor. Se cancelar, some
+        // sem deixar vestígio — nem no relatório, nem no armazenamento local.
         paraFila.push({
-          meta, dataUrl,
+          meta: metaBase, dataUrl,
           applySave: (newDataUrl, newMeta) => {
+            const metaFinal = { ...metaBase, ...newMeta };
             setAnexosContent(prev => ({ ...prev, [fileId]: newDataUrl }));
             persistFile(fileId, newDataUrl);
-            setForm(f => ({ ...f, anexos: { ...f.anexos, [docId]: (f.anexos[docId] || []).map(x => x.id === fileId ? { ...x, ...newMeta } : x) } }));
+            setForm(f => ({ ...f, anexos: { ...f.anexos, [docId]: [...(f.anexos[docId] || []), metaFinal] } }));
+          },
+          applyCancel: () => {
+            setAnexosContent(prev => { const n = { ...prev }; delete n[fileId]; return n; });
           },
         });
       } catch (e) {
         setFileWarnings(w => ({ ...w, [docId]: `Não foi possível ler "${file.name}".` }));
       }
     }
-    if (novos.length) {
-      setForm(f => ({ ...f, anexos: { ...f.anexos, [docId]: [...(f.anexos[docId] || []), ...novos] } }));
+    if (paraFila.length) {
       setEditQueue(q => [...q, ...paraFila]);
     }
   }
