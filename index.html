@@ -380,6 +380,22 @@
   .ax-footer-line b{ color: var(--grafite); }
   .ax-footer-bar{ height: 7px; margin: 0 -40px; background: linear-gradient(90deg, #0b1e3a 0%, var(--navy) 10%, var(--navy) 80%, var(--verde-vivo) 90%, var(--verde-vivo) 100%); }
 
+  /* ===== Ajustes finos aprovados (página 1) ===== */
+  .rp-a4{ padding: 60px 76px 0; }
+  .report-preview .rp-title{ font-size: 21px; color: #02356e; margin-bottom: 8px; }
+  .report-preview .rp-kicker{ font-size: 12.5px; color: #3aa335; }
+  .report-preview .rp-kicker i{ background: #3aa335; }
+  .report-preview .rp-sv-box{ font-size: 12.5px; padding: 6px 20px; color: #3d4a55; }
+  .rp-resumo-item{ flex-wrap: nowrap; }
+  .rp-resumo-item strong{ min-width: 0; }
+  .rp-resumo-situacao{ flex-direction: column; align-items: stretch; gap: 7px; }
+  .rp-situacao-head{ display: flex; gap: 10px; align-items: center; }
+  .rp-resumo-situacao .rp-selo{ align-self: center; }
+  .rp-sec-title{ border-left: 1px solid #e3e8ec; padding-left: 14px; }
+  .rp-foot-bar{ height: 3px; border-radius: 2px; margin-bottom: 2px; background: linear-gradient(90deg, #02356e 0%, #02356e 78%, #64b745 86%, #64b745 100%); }
+  .rp-foot{ border-top: none; }
+  .rp-foot-seg:first-child{ line-height: 1.45; }
+
   /* ================= FOOTER ================= */
   .footer-links-bar{ background: var(--azul); }
   .footer-links-bar .band-inner{ padding-top: 14px; padding-bottom: 14px; display:flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
@@ -1733,16 +1749,16 @@ const UNIDADES_LOTACAO = [
     ["DOPE/DEHA/DIAH/SABE", "Setor de Acompanhamento da Banca Examinadora"],
     ["DOPE/DEHA/DIMP", "Divisão Médica e Psicológica"], ["DOPE/DEHA/DIMP/SEPS", "Setor de Psicologia"],
     ["DOPE/DEHA/DISH", "Divisão de Sistemas e Renach"], ["DOPE/DEHA/HELP DESK", "Setor de Suporte Técnico — Help Desk"],
-    ["DOPE/DEIT", "Departamento Executivo de Infrações de Trânsito"], ["DOPE/DEIT/DCFI", "Divisão de Controle e Fiscalização"],
-    ["DOPE/DEIT/DAPI", "Divisão de Autos e Processos de Infração"], ["DOPE/DEIT/RENAINF", "Divisão de Sistemas e Renainf"],
-    ["DOPE/DEIT/DIPH", "Divisão de Penalidades da Habilitação"], ["DOPE/DEIT/DIJU", "Divisão de Julgamento"],
     ["DOPE/DCIP", "Departamento Executivo de Ciretran e Postos de Trânsito"],
     ["DOPE/DCIP/CIRETRAN", "Circunscrição Regional de Trânsito"], ["DOPE/DCIP/PATRAN", "Posto Avançado de Trânsito"],
     ["DOPE/DCIP/PSTRAN", "Posto de Serviços de Trânsito"],
   ]},
-  { grupo: "Diretoria de Fiscalização de Trânsito — DFIT", opcoes: [
-    ["DFIT", "Diretoria de Fiscalização de Trânsito"],
-    ["DFIT/DFIM", "Departamento Executivo de Fiscalização e Integração Municipal"],
+  { grupo: "Diretoria de Gestão de Trânsito e Fiscalização — DGTF", opcoes: [
+    ["DGTF", "Diretoria de Gestão de Trânsito e Fiscalização"],
+    ["DGTF/DFIM", "Departamento Executivo de Fiscalização e Integração Municipal"],
+    ["DGTF/DEIT", "Departamento Executivo de Infrações de Trânsito"], ["DGTF/DEIT/DCFI", "Divisão de Controle e Fiscalização"],
+    ["DGTF/DEIT/DAPI", "Divisão de Autos e Processos de Infração"], ["DGTF/DEIT/RENAINF", "Divisão de Sistemas e Renainf"],
+    ["DGTF/DEIT/DIPH", "Divisão de Penalidades da Habilitação"], ["DGTF/DEIT/DIJU", "Divisão de Julgamento"],
   ]},
 ].map(grupo => ({ ...grupo, opcoes: grupo.opcoes.map(([valor, nome]) => ({ valor, nome })) }));
 
@@ -1943,6 +1959,43 @@ function daysLeft(createdAt) {
   return Math.max(diff, 0);
 }
 
+// ---- Conversão de MAIÚSCULAS para escrita normal (regras do português) ----
+// Só converte quando o texto está TODO em maiúsculas (típico de dados importados do SCV);
+// texto digitado pela pessoa é preservado exatamente como ela escreveu.
+const CONECTIVOS_NOME = new Set(["da", "de", "do", "das", "dos", "e", "di", "du"]);
+function estaTodoMaiusculo(texto) {
+  const letras = String(texto || "").replace(/[^A-Za-zÀ-ÿ]/g, "");
+  return letras.length > 1 && letras === letras.toUpperCase();
+}
+function paraNomeProprio(texto) {
+  if (!texto || !estaTodoMaiusculo(texto)) return texto;
+  const partes = String(texto).toLowerCase().split(/\s+/);
+  return partes.map((p, i) => {
+    if (/^[a-z]{2}$/.test(p) && partes[i - 1] === "-") return p.toUpperCase(); // UF: "Curitiba - PR"
+    if (i > 0 && CONECTIVOS_NOME.has(p)) return p;
+    return p.charAt(0).toUpperCase() + p.slice(1);
+  }).join(" ");
+}
+function paraFrase(texto) {
+  if (!texto || !estaTodoMaiusculo(texto)) return texto;
+  const t = String(texto).toLowerCase();
+  return t.replace(/(^\s*[a-zà-ÿ])|([.!?]\s+[a-zà-ÿ])/g, m => m.toUpperCase());
+}
+
+// Cargos/funções — a própria pessoa escolhe a forma (masculina/feminina) como quer
+// aparecer no relatório, sem o sistema tentar adivinhar o gênero pelo nome.
+const CARGOS_FUNCOES = [
+  "Assessor", "Assessora",
+  "Assistente Administrativo",
+  "Chefe de Setor", "Chefe de Divisão", "Chefe de Departamento",
+  "Chefe de Gabinete", "Chefe de Ciretran",
+  "Diretor", "Diretora",
+  "Diretor-Presidente", "Diretora-Presidente",
+  "Estagiário", "Estagiária",
+  "Motorista",
+  "Supervisor", "Supervisora",
+];
+
 const emptyForm = {
   numeroSolicitacao: "", nomeViajante: "", cargoFuncao: "", siglaSetor: "", origem: "", destino: "",
   dataSaida: "", dataRetorno: "", nomeEvento: "", motivo: "", conclusao: "",
@@ -1954,17 +2007,23 @@ const emptyForm = {
 
 function useDraftToken() {
   const [token, setToken] = useState(null);
+  const [retomado, setRetomado] = useState(false);
   useEffect(() => {
     const url = new URL(window.location.href);
     let t = url.searchParams.get("rascunho");
     if (!t) {
-      t = uid();
-      url.searchParams.set("rascunho", t);
-      window.history.replaceState({}, "", url.toString());
+      // Sem link de rascunho na URL: retomamos o último rascunho deste navegador,
+      // para a pessoa não perder o preenchimento por ter fechado a aba.
+      try { t = localStorage.getItem("prestacao:ultimoRascunho"); } catch (e) {}
+      if (t) setRetomado(true);
     }
+    if (!t) t = uid();
+    url.searchParams.set("rascunho", t);
+    window.history.replaceState({}, "", url.toString());
+    try { localStorage.setItem("prestacao:ultimoRascunho", t); } catch (e) {}
     setToken(t);
   }, []);
-  return token;
+  return { token, retomado };
 }
 
 function bytesToBase64(bytes) {
@@ -2079,8 +2138,25 @@ function RedactModal({ meta, dataUrl, onSave, onClose }) {
   const [saving, setSaving] = useState(false);
   const [girando, setGirando] = useState(false);
   const [zoom, setZoom] = useState(100);
+  const [modo, setModo] = useState("tarja"); // "tarja" = pintar de preto · "corte" = manter só a área selecionada
+  const [houveCorte, setHouveCorte] = useState(false);
   const canvasRef = useRef(null);
   const dragRef = useRef(null);
+
+  async function aplicarCorte(rect) {
+    try {
+      const img = await loadImageEl(pageUrls[pageIndex]);
+      const cnv = document.createElement("canvas");
+      cnv.width = Math.max(1, Math.round(rect.w));
+      cnv.height = Math.max(1, Math.round(rect.h));
+      const ctx = cnv.getContext("2d");
+      ctx.drawImage(img, rect.x, rect.y, rect.w, rect.h, 0, 0, cnv.width, cnv.height);
+      const novaUrl = cnv.toDataURL("image/png");
+      setPageUrls(prev => { const n = [...prev]; n[pageIndex] = novaUrl; return n; });
+      setRectsByPage(prev => ({ ...prev, [pageIndex]: [] })); // tarjas antigas perdem a referência após o corte
+      setHouveCorte(true);
+    } catch (e) { /* mantém como está se algo falhar */ }
+  }
 
   async function girar90() {
     if (!pageUrls) return;
@@ -2144,12 +2220,26 @@ function RedactModal({ meta, dataUrl, onSave, onClose }) {
       ctx.fillStyle = "#000";
       (rectsByPage[pageIndex] || []).forEach(r => ctx.fillRect(r.x, r.y, r.w, r.h));
       if (previewRect) {
-        ctx.fillStyle = "rgba(0,0,0,.55)";
-        ctx.fillRect(previewRect.x, previewRect.y, previewRect.w, previewRect.h);
+        if (modo === "corte") {
+          // Escurece o que será descartado e contorna a área que vai FICAR
+          ctx.fillStyle = "rgba(0,0,0,.45)";
+          ctx.fillRect(0, 0, canvas.width, previewRect.y);
+          ctx.fillRect(0, previewRect.y + previewRect.h, canvas.width, canvas.height - previewRect.y - previewRect.h);
+          ctx.fillRect(0, previewRect.y, previewRect.x, previewRect.h);
+          ctx.fillRect(previewRect.x + previewRect.w, previewRect.y, canvas.width - previewRect.x - previewRect.w, previewRect.h);
+          ctx.strokeStyle = "#64b745";
+          ctx.lineWidth = Math.max(2, canvas.width / 300);
+          ctx.setLineDash([10, 7]);
+          ctx.strokeRect(previewRect.x, previewRect.y, previewRect.w, previewRect.h);
+          ctx.setLineDash([]);
+        } else {
+          ctx.fillStyle = "rgba(0,0,0,.55)";
+          ctx.fillRect(previewRect.x, previewRect.y, previewRect.w, previewRect.h);
+        }
       }
     }).catch(() => setLoadError("Não foi possível desenhar a página."));
     return () => { cancelado = true; };
-  }, [pageUrls, pageIndex, rectsByPage, previewRect]);
+  }, [pageUrls, pageIndex, rectsByPage, previewRect, modo]);
 
   function posFromEvent(e) {
     const canvas = canvasRef.current;
@@ -2164,11 +2254,13 @@ function RedactModal({ meta, dataUrl, onSave, onClose }) {
   function handleDown(e) {
     e.preventDefault();
     const p = posFromEvent(e);
-    const existentes = rectsByPage[pageIndex] || [];
-    const indiceClicado = existentes.findIndex(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
-    if (indiceClicado !== -1) {
-      setRectsByPage(prev => ({ ...prev, [pageIndex]: prev[pageIndex].filter((_, i) => i !== indiceClicado) }));
-      return;
+    if (modo === "tarja") {
+      const existentes = rectsByPage[pageIndex] || [];
+      const indiceClicado = existentes.findIndex(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+      if (indiceClicado !== -1) {
+        setRectsByPage(prev => ({ ...prev, [pageIndex]: prev[pageIndex].filter((_, i) => i !== indiceClicado) }));
+        return;
+      }
     }
     dragRef.current = p;
     setPreviewRect({ x: p.x, y: p.y, w: 0, h: 0 });
@@ -2183,6 +2275,16 @@ function RedactModal({ meta, dataUrl, onSave, onClose }) {
     if (!dragRef.current) return;
     dragRef.current = null;
     setPreviewRect(pr => {
+      if (pr && modo === "corte") {
+        if (pr.w > 24 && pr.h > 24) {
+          const temTarjas = (rectsByPage[pageIndex] || []).length > 0;
+          const aviso = temTarjas
+            ? "Cortar a imagem, mantendo somente a área destacada?\n\nAtenção: as tarjas já feitas nesta página serão removidas — refaça depois do corte, se precisar."
+            : "Cortar a imagem, mantendo somente a área destacada?";
+          if (window.confirm(aviso)) aplicarCorte(pr);
+        }
+        return null;
+      }
       if (pr && pr.w > 6 && pr.h > 6) {
         setRectsByPage(prev => ({ ...prev, [pageIndex]: [...(prev[pageIndex] || []), pr] }));
       }
@@ -2214,7 +2316,7 @@ function RedactModal({ meta, dataUrl, onSave, onClose }) {
         achatadas.push(cnv.toDataURL("image/png"));
       }
       if (achatadas.length === 1 && !isPdf) {
-        onSave(achatadas[0], { tipo: "image/png", nome: meta.nome.replace(/\.(jpe?g)$/i, ".png"), redigido: Object.values(rectsByPage).some(arr => arr && arr.length) });
+        onSave(achatadas[0], { tipo: "image/png", nome: meta.nome.replace(/\.(jpe?g)$/i, ".png"), redigido: houveCorte || Object.values(rectsByPage).some(arr => arr && arr.length) });
       } else {
         const { PDFDocument } = window.PDFLib;
         const novoDoc = await PDFDocument.create();
@@ -2226,7 +2328,7 @@ function RedactModal({ meta, dataUrl, onSave, onClose }) {
         }
         const pdfBytes = await novoDoc.save();
         const newDataUrl = "data:application/pdf;base64," + bytesToBase64(pdfBytes);
-        onSave(newDataUrl, { tipo: "application/pdf", nome: meta.nome, redigido: Object.values(rectsByPage).some(arr => arr && arr.length) });
+        onSave(newDataUrl, { tipo: "application/pdf", nome: meta.nome, redigido: houveCorte || Object.values(rectsByPage).some(arr => arr && arr.length) });
       }
     } catch (e) {
       setLoadError("Não foi possível aplicar a ocultação (" + (e && e.message ? e.message : "erro") + ").");
@@ -2259,6 +2361,7 @@ function RedactModal({ meta, dataUrl, onSave, onClose }) {
                 <li>Se o documento estiver de lado, clique em <b>“Girar 90°”</b>.</li>
                 <li>Clique e arraste sobre o dado até cobri-lo com uma <b>tarja preta</b>.</li>
                 <li>Para apagar uma tarja, clique sobre ela ou use <b>“Desfazer última marcação”</b>.</li>
+                <li>Para <b>cortar a imagem</b> (ex.: remover um rodapé com dados desnecessários), clique em <b>“✂ Cortar”</b> e desenhe a área que deve <b>ficar</b> — o resto é descartado.</li>
                 <li>Confira o documento e clique em <b>“Concluir e aplicar”</b>.</li>
               </ol>
               <div className="redact-demo" aria-hidden="true">
@@ -2289,6 +2392,8 @@ function RedactModal({ meta, dataUrl, onSave, onClose }) {
                   <button className="btn btn-ghost" onClick={() => setZoom(z => Math.min(200, z + 15))}>+ Ampliar</button>
                   <span>{zoom}%</span>
                   <button className="btn btn-ghost" style={{ marginLeft: 10, paddingLeft: 14, borderLeft: "1px solid var(--linha)" }} onClick={girar90} disabled={!pageUrls || girando}>{girando ? "Girando..." : "↻ Girar 90°"}</button>
+                  <button className={"btn " + (modo === "tarja" ? "btn-primary" : "btn-ghost")} style={{ marginLeft: 10, paddingLeft: 14, borderLeft: "1px solid var(--linha)" }} onClick={() => setModo("tarja")} disabled={!pageUrls} aria-pressed={modo === "tarja"}>Tarja preta</button>
+                  <button className={"btn " + (modo === "corte" ? "btn-primary" : "btn-ghost")} onClick={() => setModo("corte")} disabled={!pageUrls} aria-pressed={modo === "corte"}>✂ Cortar</button>
                 </div>
                 {pageUrls.length > 1 && (
                   <div className="redact-pager">
@@ -2438,7 +2543,7 @@ function ReportPreview({ form, modoPdf, paginaTexto }) {
   if (form.anexos?.bilhete?.length) docsPreview.push({ nome: "Bilhete, BPE ou declaração de embarque" });
   if (form.anexos?.termo_ciencia?.length) docsPreview.push({ nome: "Termo de Ciência e Responsabilidade" });
   if (form.anexos?.saque?.length) docsPreview.push({ nome: "Comprovante de saque ou transferência" });
-  else if (form.saqueComprovante === "nao" && form.justificativas?.saque) docsPreview.push({ nome: "Justificativa registrada", detalhe: form.justificativas.saque });
+  else if (form.saqueComprovante === "nao" && form.justificativas?.saque) docsPreview.push({ nome: "Justificativa registrada por não ter inserido o comprovante de saque/transferência", detalhe: form.justificativas.saque });
   if (transladosComArquivo.length) docsPreview.push({ nome: "Comprovantes de translado", detalhe: `${transladosComArquivo.length} comprovante(s) — Total: ${moedaBR(totalTranslados)}` });
   if (form.anexos?.devolucao_roteiro?.length) docsPreview.push({ nome: "Devolução de diária — roteiro reduzido" });
   if (form.anexos?.devolucao_translado?.length) docsPreview.push({ nome: "Devolução do saldo de translado" });
@@ -2463,9 +2568,11 @@ function ReportPreview({ form, modoPdf, paginaTexto }) {
           <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="pessoa" size={15} /></span><span>Viajante:</span><strong>{form.nomeViajante || "—"}</strong></div>
           <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="maleta" size={15} /></span><span>Tipo de viagem:</span><strong>{tipoViagem}</strong></div>
           <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="pin" size={15} /></span><span>Destino:</span><strong>{form.destino || "—"}</strong></div>
-          <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="alvo" size={15} /></span><span>Situação do roteiro:</span><span className={"rp-selo " + (form.tipoPrestacao === "roteiro_sem_alteracao" ? "ok" : "warn")}><Icon name="check" size={12} /> {tipoPrestacao}</span></div>
+          <div className="rp-resumo-item rp-resumo-situacao">
+            <div className="rp-situacao-head"><span className="rp-ri-icon"><Icon name="alvo" size={15} /></span><span>Situação do roteiro:</span></div>
+            <span className={"rp-selo " + (form.tipoPrestacao === "roteiro_sem_alteracao" ? "ok" : "warn")}><Icon name="check" size={12} /> {tipoPrestacao}</span>
+          </div>
           <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="calendario" size={15} /></span><span>Período:</span><strong>{periodo}</strong></div>
-          <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="doc" size={15} /></span><span>Solicitação:</span><strong>{form.numeroSolicitacao || "—"}</strong></div>
         </div>
       </div>
 
@@ -2513,7 +2620,6 @@ function ReportPreview({ form, modoPdf, paginaTexto }) {
       </div>
 
       <div className="rp-sign">
-        <span className="rp-sign-clip"><Icon name="paperclip" size={16} /></span>
         <div className="rp-sign-note">Assinado eletronicamente por</div>
         <div className="rp-sign-line" />
         <div className="rp-sign-name">{(form.nomeViajante || "Nome do viajante").toUpperCase()}</div>
@@ -2521,14 +2627,15 @@ function ReportPreview({ form, modoPdf, paginaTexto }) {
       </div>
 
       <div className="rp-footer">
+        <div className="rp-foot-bar" />
         <div className="rp-foot">
           <div className="rp-foot-seg">
             <span className="rp-foot-ic"><Icon name="pin" size={14} /></span>
-            <span><b>DETRAN-PR</b> — Av. Victor Ferreira do Amaral, 2940 — Tarumã<br/>82800-900 — Curitiba — PR</span>
+            <span><b>DETRAN-PR</b><br/>Av. Victor Ferreira do Amaral, 2940 — Tarumã<br/>82800-900 — Curitiba — PR</span>
           </div>
           <div className="rp-foot-seg"><span className="rp-foot-ic"><SvgFone size={13} /></span><span>41 3361-1212</span></div>
           <div className="rp-foot-seg"><span className="rp-foot-ic"><SvgGlobo size={14} /></span><span>www.detran.pr.gov.br</span></div>
-          <div className="rp-foot-seg">{paginaTexto || "Página 1"}</div>
+          <div className="rp-foot-seg">{paginaTexto || "Página 1 de 1"}</div>
         </div>
         <div className="rp-footer-bar"><span className="faixa-verde" /></div>
       </div>
@@ -2568,7 +2675,8 @@ const SvgGlobo = ({ size = 14 }) => (
 );
 
 function App() {
-  const token = useDraftToken();
+  const { token, retomado: rascunhoRetomado } = useDraftToken();
+  const [avisoRetomada, setAvisoRetomada] = useState(false);
   const [step, setStep] = useState(1);
   const [tentouAvancarEtapa1, setTentouAvancarEtapa1] = useState(false);
   const [tentouAvancarEtapa2, setTentouAvancarEtapa2] = useState(false);
@@ -2658,6 +2766,7 @@ function App() {
           loadedForm = { ...emptyForm, ...(parsed.form || {}) };
           setForm(loadedForm);
           setCreatedAt(parsed.createdAt || new Date().toISOString());
+          if (rascunhoRetomado) setAvisoRetomada(true);
         } else {
           setCreatedAt(new Date().toISOString());
         }
@@ -2942,11 +3051,11 @@ function App() {
 
     // No roteiro do SCV, o primeiro município é a saída inicial. Os demais (podem ser várias paradas)
     // formam o destino — juntamos todos, já que escolher "a mais longe" seria ambíguo e pouco confiável.
-    const origem = cidades[0] ? cidades[0].replace("/", " - ").toUpperCase() : "";
+    const origem = cidades[0] ? paraNomeProprio(cidades[0].replace("/", " - ").toUpperCase()) : "";
     const destinoRoteiro = cidades.length > 1
-      ? cidades.slice(1).map(c => c.replace("/", " - ").toUpperCase()).join(", ")
+      ? cidades.slice(1).map(c => paraNomeProprio(c.replace("/", " - ").toUpperCase())).join(", ")
       : "";
-    const destinoLocal = localEvento ? limparTextoExtraido(localEvento).toUpperCase() : "";
+    const destinoLocal = localEvento ? paraNomeProprio(limparTextoExtraido(localEvento).toUpperCase()) : "";
 
     // A primeira data do roteiro é a saída; a última é o retorno ao município de origem.
     const datasRoteiro = [...roteiro.matchAll(/\b(\d{2}\/\d{2}\/\d{4})\b/g)].map(m => m[1]);
@@ -2955,17 +3064,17 @@ function App() {
 
     return {
       numeroSolicitacao: numero,
-      nomeViajante: limparTextoExtraido(nome).toUpperCase(),
-      cargoFuncao: limparTextoExtraido(cargo).toUpperCase(),
-      chefiaImediataScv: limparTextoExtraido(chefia).toUpperCase(),
+      nomeViajante: paraNomeProprio(limparTextoExtraido(nome).toUpperCase()),
+      cargoFuncao: "",
+      chefiaImediataScv: paraNomeProprio(limparTextoExtraido(chefia).toUpperCase()),
       origem,
       destino: destinoRoteiro || destinoLocal,
       dataSaida: dataBRparaISO(dataSaidaRoteiro || periodoEvento[1]),
       dataRetorno: dataBRparaISO(dataRetornoRoteiro || periodoEvento[3]),
-      nomeEvento: limparTextoExtraido(descricao || nomeAtividade).toUpperCase(),
-      nomeAtividadeScv: limparTextoExtraido(nomeAtividade).toUpperCase(),
-      tipoViagemScv: limparTextoExtraido(tipoViagemScv).toUpperCase(),
-      localEventoScv: limparTextoExtraido(localEvento).toUpperCase(),
+      nomeEvento: paraFrase(limparTextoExtraido(descricao || nomeAtividade).toUpperCase()),
+      nomeAtividadeScv: paraFrase(limparTextoExtraido(nomeAtividade).toUpperCase()),
+      tipoViagemScv: paraFrase(limparTextoExtraido(tipoViagemScv).toUpperCase()),
+      localEventoScv: paraNomeProprio(limparTextoExtraido(localEvento).toUpperCase()),
       periodoEventoScv: periodoEvento.length ? `${periodoEvento[1]} ${periodoEvento[2]} a ${periodoEvento[3]} ${periodoEvento[4]}` : "",
       transporte: mapearTransporteSCV(roteiro || texto),
     };
@@ -3504,7 +3613,7 @@ function App() {
         const canvas = await window.html2canvas(container, { scale: 2, backgroundColor: "#ffffff", useCORS: true, logging: false, windowWidth: 794 });
         raiz.unmount();
         container.remove();
-        return canvas.toDataURL("image/png");
+        return canvas.toDataURL("image/jpeg", 0.92);
       }
 
       function adicionarPaginaImagem(imgData, primeira) {
@@ -3513,26 +3622,48 @@ function App() {
         const prop = props.width / props.height;
         let w = PAGE_W, h = w / prop;
         if (h > PAGE_H) { h = PAGE_H; w = h * prop; }
-        doc.addImage(imgData, "PNG", (PAGE_W - w) / 2, (PAGE_H - h) / 2, w, h);
+        const fmt = imgData.startsWith("data:image/png") ? "PNG" : "JPEG";
+        doc.addImage(imgData, fmt, (PAGE_W - w) / 2, (PAGE_H - h) / 2, w, h);
       }
 
       // ---- Páginas de comprovante (uma para cada arquivo anexado) ----
       async function obterPaginasComoImagens(meta, contentDataUrl) {
         const nomeArquivo = (meta.nome || "").toLowerCase();
         const isPdf = meta.tipo === "application/pdf" || nomeArquivo.endsWith(".pdf");
-        if (!isPdf) return [contentDataUrl];
+        if (!isPdf) {
+          // Fotos de celular podem ter 10+ MB; reduzimos para no máx. 1600px e JPEG
+          // comprimido — qualidade mais que suficiente para leitura, arquivo muito menor.
+          try {
+            const img = await loadImageEl(contentDataUrl);
+            const maxDim = 1600;
+            const escala = Math.min(1, maxDim / Math.max(img.width, img.height));
+            const cnv = document.createElement("canvas");
+            cnv.width = Math.round(img.width * escala);
+            cnv.height = Math.round(img.height * escala);
+            const ctx = cnv.getContext("2d");
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, cnv.width, cnv.height);
+            ctx.drawImage(img, 0, 0, cnv.width, cnv.height);
+            return [cnv.toDataURL("image/jpeg", 0.85)];
+          } catch (e) {
+            return [contentDataUrl];
+          }
+        }
         if (!window.pdfjsLib) throw new Error("Leitor de PDF indisponível");
         const bytes = dataUrlToBytes(contentDataUrl);
         const pdfDoc = await window.pdfjsLib.getDocument({ data: bytes }).promise;
         const paginas = [];
         for (let i = 1; i <= pdfDoc.numPages; i++) {
           const pagina = await pdfDoc.getPage(i);
-          const viewport = pagina.getViewport({ scale: 1.8 });
+          const viewport = pagina.getViewport({ scale: 1.5 });
           const cnv = document.createElement("canvas");
           cnv.width = viewport.width;
           cnv.height = viewport.height;
-          await pagina.render({ canvasContext: cnv.getContext("2d"), viewport }).promise;
-          paginas.push(cnv.toDataURL("image/png"));
+          const ctx = cnv.getContext("2d");
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, cnv.width, cnv.height);
+          await pagina.render({ canvasContext: ctx, viewport }).promise;
+          paginas.push(cnv.toDataURL("image/jpeg", 0.85));
         }
         return paginas;
       }
@@ -3562,7 +3693,7 @@ function App() {
           if (anexosContent[t.arquivo.id]) {
             try { imgs = await obterPaginasComoImagens(t.arquivo, anexosContent[t.arquivo.id]); } catch (e) { imgs = []; }
           }
-          itens.push({ de: t.de, para: t.para, data: t.data, valor: t.valor, imagem: imgs[0] || null, extras: imgs.slice(1), redigido: !!t.arquivo.redigido });
+          itens.push({ de: t.de, para: t.para, data: t.data, valor: t.valor, imagens: imgs, redigido: !!t.arquivo.redigido });
         }
         anexosPreparados.push({ tipo: "translados", itens });
       }
@@ -3572,7 +3703,7 @@ function App() {
       let totalPaginasPdf = 1;
       anexosPreparados.forEach(a => {
         if (a.tipo === "doc") totalPaginasPdf += Math.max(1, a.imagens.length);
-        else totalPaginasPdf += Math.max(1, Math.ceil(a.itens.length / 2)) + a.itens.reduce((acc, t) => acc + t.extras.length, 0);
+        else totalPaginasPdf += a.itens.reduce((acc, t) => acc + Math.max(1, Math.ceil((t.imagens.length || 1) / 2)), 0) + 1;
       });
 
       // ---- Página 1 ----
@@ -3580,10 +3711,7 @@ function App() {
       adicionarPaginaImagem(imgPagina1, true);
 
       // ---- Páginas de anexo (desenhadas diretamente no PDF — rápido) ----
-      const periodoAnexos = form.dataSaida && form.dataRetorno
-        ? `${formatDateBR(form.dataSaida)} a ${formatDateBR(form.dataRetorno)}`
-        : (formatDateBR(form.dataSaida) || formatDateBR(form.dataRetorno) || "—");
-      const tipoViagemRotulo = TRANSPORTES.find(x => x.id === form.transporte)?.label || "—";
+      let paginaPdfAtual = 1; // a página 1 é o relatório técnico
 
       // Paleta aproximada do layout aprovado
       const MX = {
@@ -3605,6 +3733,7 @@ function App() {
 
       function cabecalhoAnexo() {
         doc.addPage();
+        paginaPdfAtual += 1;
         const logoY = 30;
         const detranH = 30, detranW = detranH / (575 / 2123);
         const paranaH = 33, paranaW = paranaH / (129 / 297);
@@ -3635,45 +3764,21 @@ function App() {
       }
 
       function tituloAnexo(numero, titulo, tipoIcone) {
-        const boxS = 44;
+        const boxS = 38;
         doc.setFillColor(...MX.verdeIcone);
-        doc.roundedRect(margin, y, boxS, boxS, 11, 11, "F");
-        if (tipoIcone === "carro") desenharIconeCarroBranco(margin + boxS / 2, y + boxS / 2, 26);
-        else desenharIconeDocBranco(margin + boxS / 2, y + boxS / 2, 25);
-        const tx = margin + boxS + 14;
+        doc.roundedRect(margin, y, boxS, boxS, 10, 10, "F");
+        if (tipoIcone === "carro") desenharIconeCarroBranco(margin + boxS / 2, y + boxS / 2, 22);
+        else desenharIconeDocBranco(margin + boxS / 2, y + boxS / 2, 21);
+        const tx = margin + boxS + 13;
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(13);
+        doc.setFontSize(11);
         doc.setTextColor(...MX.verdeIcone);
-        doc.text(`ANEXO ${String(numero).padStart(2, "0")}`, tx, y + 16);
-        doc.setFontSize(18.5);
+        doc.text(`ANEXO ${String(numero).padStart(2, "0")}`, tx, y + 14);
+        doc.setFontSize(15.5);
         doc.setTextColor(...MX.navy);
-        const linhasTitulo = doc.splitTextToSize(String(titulo || "").toUpperCase(), contentW - boxS - 14);
-        doc.text(linhasTitulo[0], tx, y + 37);
-        y += boxS + 18;
-      }
-
-      function faixaContexto(campos) {
-        const h = 46;
-        doc.setFillColor(...MX.cinzaFundo);
-        doc.setDrawColor(...MX.cinzaBorda);
-        doc.setLineWidth(1);
-        doc.roundedRect(margin, y, contentW, h, 10, 10, "FD");
-        const colW = contentW / campos.length;
-        campos.forEach(([rotulo, valor], i) => {
-          const x0 = margin + colW * i;
-          if (i > 0) { doc.setDrawColor(...MX.cinzaBorda); doc.line(x0, y + 9, x0, y + h - 9); }
-          const tx = x0 + 14;
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(9);
-          doc.setTextColor(...MX.texto);
-          doc.text(rotulo, tx, y + 19);
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(9.5);
-          doc.setTextColor(...MX.cinzaTxt);
-          const vv = doc.splitTextToSize(String(valor || "—"), colW - 24)[0] || "—";
-          doc.text(vv, tx, y + 33);
-        });
-        y += h + 16;
+        const linhasTitulo = doc.splitTextToSize(String(titulo || "").toUpperCase(), contentW - boxS - 13);
+        doc.text(linhasTitulo[0], tx, y + 32);
+        y += boxS + 16;
       }
 
       function pilulaDadosOcultados(baseY) {
@@ -3699,11 +3804,12 @@ function App() {
         doc.text(txt, px + 30, baseY + ph / 2 + 3.2);
       }
 
-      function rodapePaginaAnexo(numero) {
+      function rodapePaginaAnexo() {
         const linhaY = PAGE_H - 40;
-        doc.setDrawColor(...MX.cinzaBorda);
-        doc.setLineWidth(0.8);
-        doc.line(margin, linhaY - 13, PAGE_W - margin, linhaY - 13);
+        doc.setFillColor(...MX.navy);
+        doc.roundedRect(margin, linhaY - 17, contentW * 0.84, 2.2, 1.1, 1.1, "F");
+        doc.setFillColor(...MX.verdeVivo);
+        doc.roundedRect(margin + contentW * 0.88, linhaY - 17, contentW * 0.12, 2.2, 1.1, 1.1, "F");
         doc.setFontSize(9);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(...MX.texto);
@@ -3714,7 +3820,7 @@ function App() {
         doc.text("  |  Sistema de Prestação de Contas de Viagem", margin + wDet, linhaY);
         doc.text(`Solicitação: ${form.numeroSolicitacao || "—"}`, PAGE_W / 2 + 46, linhaY, { align: "center" });
         doc.setTextColor(...MX.texto);
-        doc.text(`Anexo ${numero} de ${totalAnexosPdf}`, PAGE_W - margin, linhaY, { align: "right" });
+        doc.text(`Página ${paginaPdfAtual} de ${totalPaginasPdf}`, PAGE_W - margin, linhaY, { align: "right" });
         const bh = 12;
         doc.setFillColor(...MX.navy);
         doc.rect(0, PAGE_H - bh, PAGE_W, bh, "F");
@@ -3725,11 +3831,6 @@ function App() {
       function paginaAnexoDoc(numero, titulo, imagem, continuacao, redigido, tipoIcone) {
         cabecalhoAnexo();
         tituloAnexo(numero, titulo + (continuacao ? " (CONTINUAÇÃO)" : ""), tipoIcone);
-        if (!continuacao) faixaContexto([
-          ["Período da viagem", periodoAnexos],
-          ["Destino", form.destino],
-          ["Solicitação", form.numeroSolicitacao],
-        ]);
         const pilulaH = redigido ? 34 : 0;
         const frameTop = y;
         const frameBottom = PAGE_H - 72 - pilulaH;
@@ -3752,106 +3853,114 @@ function App() {
           } catch (e) {}
         }
         if (redigido) pilulaDadosOcultados(frameBottom + 6);
-        rodapePaginaAnexo(numero);
+        rodapePaginaAnexo();
       }
 
-      function cardTranslado(seq, t, cardY, cardH) {
+      function camposDoTranslado(t, topoY) {
+        const camposT = [["Origem", t.de], ["Destino", t.para], ["Data do translado", formatDateBR(t.data)], ["Valor do comprovante", t.valor]];
+        const colW = (contentW - 28) / 4;
+        camposT.forEach(([rotulo, valor], i) => {
+          const x0 = margin + 14 + colW * i;
+          if (i > 0) { doc.setDrawColor(...MX.cinzaBorda); doc.line(x0, topoY, x0, topoY + 25); }
+          const tx = i > 0 ? x0 + 10 : x0;
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(8.5);
+          doc.setTextColor(...MX.texto);
+          doc.text(rotulo, tx, topoY + 8);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(9);
+          doc.setTextColor(...MX.cinzaTxt);
+          const vv = doc.splitTextToSize(String(valor || "—"), colW - 14)[0] || "—";
+          doc.text(vv, tx, topoY + 20);
+        });
+        doc.setDrawColor(...MX.cinzaBorda);
+        doc.line(margin + 14, topoY + 31, PAGE_W - margin - 14, topoY + 31);
+        return topoY + 39;
+      }
+
+      function desenharPaginaTranslado(numeroAnexo, seqTranslado, t, imagensPar, indicePrimeira, totalPaginasArquivo) {
+        cabecalhoAnexo();
+        tituloAnexo(numeroAnexo, "COMPROVANTE DE TRANSLADO", "carro");
+        const pilulaH = t.redigido ? 34 : 0;
+        const areaBottom = PAGE_H - 72 - pilulaH;
+        // Card único do translado ocupando a área útil da página
         doc.setDrawColor(...MX.cinzaBorda);
         doc.setLineWidth(1);
-        doc.roundedRect(margin, cardY, contentW, cardH, 10, 10, "S");
-        const hx = margin + 14, hy = cardY + 13;
+        doc.roundedRect(margin, y, contentW, areaBottom - y, 10, 10, "S");
+        const seq = String(seqTranslado + 1).padStart(2, "0");
+        const hx = margin + 14, hy = y + 13;
         doc.setFillColor(...MX.verdeIcone);
         doc.roundedRect(hx, hy, 20, 20, 5, 5, "F");
         doc.setFont("helvetica", "bold");
         doc.setFontSize(9.5);
         doc.setTextColor(255, 255, 255);
         doc.text(seq, hx + 10, hy + 13.5, { align: "center" });
-        doc.setFontSize(12.5);
+        doc.setFontSize(11.5);
         doc.setTextColor(...MX.navy);
-        doc.text(`TRANSLADO ${seq}`, hx + 28, hy + 14.5);
-        const fy = cardY + 44;
-        const camposT = [["Origem", t.de], ["Destino", t.para], ["Data do translado", formatDateBR(t.data)], ["Valor do comprovante", t.valor]];
-        const colW = (contentW - 28) / 4;
-        camposT.forEach(([rotulo, valor], i) => {
-          const x0 = margin + 14 + colW * i;
-          if (i > 0) { doc.setDrawColor(...MX.cinzaBorda); doc.line(x0, fy, x0, fy + 25); }
-          const tx = i > 0 ? x0 + 10 : x0;
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(8.5);
-          doc.setTextColor(...MX.texto);
-          doc.text(rotulo, tx, fy + 8);
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(9);
-          doc.setTextColor(...MX.cinzaTxt);
-          const vv = doc.splitTextToSize(String(valor || "—"), colW - 14)[0] || "—";
-          doc.text(vv, tx, fy + 20);
-        });
-        doc.setDrawColor(...MX.cinzaBorda);
-        doc.line(margin + 14, fy + 31, PAGE_W - margin - 14, fy + 31);
-        const imgTop = fy + 39, imgBottom = cardY + cardH - 12;
-        if (t.imagem) {
-          try {
-            const props = doc.getImageProperties(t.imagem);
-            const maxW = contentW * 0.62, maxH = imgBottom - imgTop;
-            const esc = Math.min(maxW / props.width, maxH / props.height);
-            const w = props.width * esc, h = props.height * esc;
-            doc.addImage(t.imagem, margin + (contentW - w) / 2, imgTop + (maxH - h) / 2, w, h);
-          } catch (e) {}
-        } else {
+        doc.text(`TRANSLADO ${seq}`, hx + 28, hy + 14);
+        const imgTop = camposDoTranslado(t, y + 44);
+        const imgBottom = areaBottom - 26; // reserva espaço para a legenda "Página X de Y"
+        const areaH = imgBottom - imgTop;
+        const validas = imagensPar.filter(Boolean);
+        if (!validas.length) {
           doc.setFont("helvetica", "italic");
           doc.setFontSize(9.5);
           doc.setTextColor(...MX.cinzaTxt);
           doc.text("Comprovante não disponível nesta sessão — reanexe o documento.", PAGE_W / 2, (imgTop + imgBottom) / 2, { align: "center" });
+        } else {
+          const lado = validas.length; // 1 ou 2 imagens lado a lado
+          const gapImg = 16;
+          const larguraCol = lado === 1 ? contentW * 0.62 : (contentW - 28 - gapImg) / 2;
+          validas.forEach((img, i) => {
+            try {
+              const props = doc.getImageProperties(img);
+              const esc = Math.min(larguraCol / props.width, areaH / props.height);
+              const w = props.width * esc, h = props.height * esc;
+              const cx = lado === 1
+                ? margin + contentW / 2
+                : margin + 14 + larguraCol * i + gapImg * i + larguraCol / 2;
+              const ix = cx - w / 2;
+              const iy = imgTop + (areaH - h) / 2;
+              doc.addImage(img, ix, iy, w, h);
+              if (totalPaginasArquivo > 1) {
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(8.5);
+                doc.setTextColor(...MX.cinzaTxt);
+                doc.text(`Página ${indicePrimeira + i + 1} de ${totalPaginasArquivo}`, cx, areaBottom - 10, { align: "center" });
+              }
+            } catch (e) {}
+          });
         }
+        if (t.redigido) pilulaDadosOcultados(areaBottom + 6);
+        rodapePaginaAnexo();
       }
 
-      function resumoTranslados(baseY, qtd, valorTotal) {
+      function desenharPaginaResumoTranslados(numeroAnexo, qtd, valorTotal) {
+        cabecalhoAnexo();
+        tituloAnexo(numeroAnexo, "COMPROVANTE DE TRANSLADO — RESUMO", "carro");
         const h = 56;
         doc.setFillColor(...MX.verdeClaro);
         doc.setDrawColor(...MX.verdeBorda);
         doc.setLineWidth(1.2);
-        doc.roundedRect(margin, baseY, contentW, h, 10, 10, "FD");
+        doc.roundedRect(margin, y, contentW, h, 10, 10, "FD");
         doc.setFillColor(...MX.verdeIcone);
-        doc.roundedRect(margin + 14, baseY + h / 2 - 16, 32, 32, 8, 8, "F");
-        desenharIconeDocBranco(margin + 30, baseY + h / 2, 18);
+        doc.roundedRect(margin + 14, y + h / 2 - 16, 32, 32, 8, 8, "F");
+        desenharIconeDocBranco(margin + 30, y + h / 2, 18);
         const tx = margin + 58;
         doc.setFont("helvetica", "bold");
         doc.setFontSize(11);
         doc.setTextColor(...MX.verdeTexto);
-        doc.text("Resumo dos translados", tx, baseY + 18);
+        doc.text("Resumo dos translados", tx, y + 18);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9.5);
         doc.setTextColor(...MX.texto);
-        doc.text(`${qtd} comprovante${qtd > 1 ? "s" : ""} apresentado${qtd > 1 ? "s" : ""}`, tx, baseY + 32);
+        doc.text(`${qtd} comprovante${qtd > 1 ? "s" : ""} apresentado${qtd > 1 ? "s" : ""}`, tx, y + 32);
         doc.setFont("helvetica", "bold");
-        doc.text("Valor total: ", tx, baseY + 45);
+        doc.text("Valor total: ", tx, y + 45);
         const wl = doc.getTextWidth("Valor total: ");
         doc.setTextColor(...MX.verdeValor);
-        doc.text(moedaBR(valorTotal), tx + wl, baseY + 45);
-      }
-
-      function paginaTranslados(numero, grupo, indiceInicial, mostrarResumo, totalItens, valorTotal, mostrarPilula) {
-        cabecalhoAnexo();
-        tituloAnexo(numero, "COMPROVANTE DE TRANSLADO", "carro");
-        faixaContexto([
-          ["Tipo de viagem", tipoViagemRotulo],
-          ["Período da viagem", periodoAnexos],
-          ["Destino", form.destino],
-          ["Solicitação", form.numeroSolicitacao],
-        ]);
-        const resumoH = mostrarResumo ? 56 + 12 : 0;
-        const pilulaH = mostrarPilula ? 34 : 0;
-        const areaBottom = PAGE_H - 72 - pilulaH;
-        const gap = 14;
-        const areaH = areaBottom - y - resumoH;
-        const cardH = (areaH - gap * (grupo.length - 1)) / grupo.length;
-        grupo.forEach((t, i) => {
-          cardTranslado(String(indiceInicial + i + 1).padStart(2, "0"), t, y, cardH);
-          y += cardH + gap;
-        });
-        if (mostrarResumo) resumoTranslados(areaBottom - 56, totalItens, valorTotal);
-        if (mostrarPilula) pilulaDadosOcultados(areaBottom + 6);
-        rodapePaginaAnexo(numero);
+        doc.text(moedaBR(valorTotal), tx + wl, y + 45);
+        rodapePaginaAnexo();
       }
 
       for (let n = 0; n < anexosPreparados.length; n++) {
@@ -3864,19 +3973,15 @@ function App() {
             paginaAnexoDoc(numero, a.titulo, paginas[pi], pi > 0, a.redigido, tipoIcone);
           }
         } else {
-          const grupos = [];
-          for (let i = 0; i < a.itens.length; i += 2) grupos.push(a.itens.slice(i, i + 2));
-          const algumRedigido = a.itens.some(t => t.redigido);
           const valorTotal = a.itens.reduce((acc, t) => acc + parseMoeda(t.valor), 0);
-          for (let g = 0; g < grupos.length; g++) {
-            const ultimo = g === grupos.length - 1;
-            paginaTranslados(numero, grupos[g], g * 2, ultimo, a.itens.length, valorTotal, ultimo && algumRedigido);
-          }
-          for (const t of a.itens) {
-            for (const extra of t.extras) {
-              paginaAnexoDoc(numero, "Comprovante de translado", extra, true, t.redigido, "carro");
+          for (let i = 0; i < a.itens.length; i++) {
+            const t = a.itens[i];
+            const imgs = t.imagens.length ? t.imagens : [null];
+            for (let p = 0; p < imgs.length; p += 2) {
+              desenharPaginaTranslado(numero, i, t, imgs.slice(p, p + 2), p, t.imagens.length);
             }
           }
+          desenharPaginaResumoTranslados(numero, a.itens.length, valorTotal);
         }
       }
 
@@ -3908,6 +4013,25 @@ function App() {
     if (mostraTranslado && t.arquivo) arquivosRevisao.push({ categoria: `Comprovante de translado ${i + 1}: ${t.de || "origem"} → ${t.para || "destino"}`, nome: t.arquivo.nome });
   });
   docs.filter(d => d.id === "comprobatorio").forEach(d => (form.anexos[d.id] || []).forEach(f => arquivosRevisao.push({ categoria: d.nome, nome: f.nome })));
+
+  async function iniciarNovaPrestacao() {
+    const temAlgo = form.numeroSolicitacao || form.nomeViajante || Object.keys(form.anexos || {}).some(k => (form.anexos[k] || []).length);
+    if (temAlgo && !window.confirm("Deseja iniciar uma NOVA prestação de contas?\n\nO preenchimento atual será apagado deste navegador. Se quiser guardá-lo, cancele e use antes o botão \"Baixar rascunho (.json)\" na etapa de revisão.")) return;
+    try {
+      if (key) {
+        const ids = [];
+        Object.values(form.anexos || {}).forEach(arr => (arr || []).forEach(f => ids.push(f.id)));
+        (form.translados || []).forEach(t => { if (t.arquivo) ids.push(t.arquivo.id); });
+        if (form.scvArquivo && form.scvArquivo.id) ids.push(form.scvArquivo.id);
+        await Promise.all([DraftDB.delete(key), ...ids.map(id => DraftDB.delete(`${key}:arquivo:${id}`))]);
+      }
+    } catch (e) { /* mesmo se a limpeza falhar, seguimos para o novo rascunho */ }
+    const novoToken = uid();
+    try { localStorage.setItem("prestacao:ultimoRascunho", novoToken); } catch (e) {}
+    const url = new URL(window.location.href);
+    url.searchParams.set("rascunho", novoToken);
+    window.location.href = url.toString();
+  }
 
   function salvarRascunhoLocal({ silencioso = false } = {}) {
     try {
@@ -4017,7 +4141,7 @@ function App() {
       <div className="band topbar">
         <div className="band-inner">
           <div className="header-left">
-            <div className="brand-group">
+            <div className="brand-group" onClick={iniciarNovaPrestacao} role="button" tabIndex={0} title="Iniciar uma nova prestação de contas" style={{ cursor: "pointer" }} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") iniciarNovaPrestacao(); }}>
               <img className="detran-logo" src={DETRAN_LOGO} alt="DETRAN/PR — Departamento de Trânsito do Paraná" />
               <div className="lockup">
                 <div className="lockup-title">Sistema de Prestação de Contas</div>
@@ -4035,6 +4159,15 @@ function App() {
         <div className="band-inner">
           <div className="dashboard-shell">
             <div className="dashboard-main">
+              {avisoRetomada && (
+                <div className="banner info" style={{ marginBottom: 16 }}>
+                  <Icon name="info" size={17} />
+                  <span>
+                    <b>Retomamos automaticamente o seu rascunho salvo.</b> Continue de onde parou — ou, se preferir,{" "}
+                    <button type="button" className="erro-resumo-link" onClick={iniciarNovaPrestacao}>comece uma nova prestação de contas</button>.
+                  </span>
+                </div>
+              )}
               <section className="hero-panel">
                 <div className="hero-grid">
                   <div className="hero-copy-block">
@@ -4209,7 +4342,14 @@ function App() {
                   <div className="field-row" style={{ marginTop: 16 }}>
                     <div className={"field" + (invalidos1.has("campo-cargoFuncao") ? " field-invalido" : "")} id="campo-cargoFuncao">
                       <label>Cargo/Função <span className="req">*</span></label>
-                      <CampoTexto type="text" value={form.cargoFuncao} onChange={v => update({ cargoFuncao: v })} placeholder="Ex: Assessor/a" />
+                      <select value={form.cargoFuncao} onChange={e => update({ cargoFuncao: e.target.value })}>
+                        <option value="">Selecione o cargo/função</option>
+                        {form.cargoFuncao && !CARGOS_FUNCOES.includes(form.cargoFuncao) && (
+                          <option value={form.cargoFuncao}>{form.cargoFuncao} — informado anteriormente</option>
+                        )}
+                        {CARGOS_FUNCOES.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                      <div className="char-hint">Escolha a forma como deve aparecer no relatório (ex.: Assessora — DAFI).</div>
                       {invalidos1.has("campo-cargoFuncao") && <div className="campo-erro-msg">Preencha o cargo/função.</div>}
                     </div>
                     <div className={"field lotacao-field" + (invalidos1.has("campo-siglaSetor") ? " field-invalido" : "")} id="campo-siglaSetor">
@@ -4736,7 +4876,7 @@ function App() {
               {scvEtapaModal === 1 && dadosScv && (
                 <>
                   <div className="scv-review-grid">
-                    {[['Solicitação',dadosScv.numeroSolicitacao],['Viajante',dadosScv.nomeViajante],['Cargo/Função',dadosScv.cargoFuncao],['Tipo da viagem',dadosScv.tipoViagemScv],['Descrição do evento',dadosScv.nomeEvento],['Origem',dadosScv.origem],['Destino',dadosScv.destino],['Saída',formatDateBR(dadosScv.dataSaida)],['Retorno',formatDateBR(dadosScv.dataRetorno)],['Transporte',TRANSPORTES.find(t=>t.id===dadosScv.transporte)?.label]].map(([l,v]) => <div className="scv-review-item" key={l}><span>{l}</span><strong>{v || 'Não identificado'}</strong></div>)}
+                    {[['Solicitação',dadosScv.numeroSolicitacao],['Viajante',dadosScv.nomeViajante],['Tipo da viagem',dadosScv.tipoViagemScv],['Descrição do evento',dadosScv.nomeEvento],['Origem',dadosScv.origem],['Destino',dadosScv.destino],['Saída',formatDateBR(dadosScv.dataSaida)],['Retorno',formatDateBR(dadosScv.dataRetorno)],['Transporte',TRANSPORTES.find(t=>t.id===dadosScv.transporte)?.label]].map(([l,v]) => <div className="scv-review-item" key={l}><span>{l}</span><strong>{v || 'Não identificado'}</strong></div>)}
                   </div>
                   <div className="banner info" style={{ marginTop:14, marginBottom:0 }}><Icon name="info" size={17}/><span>Confira os dados acima. O leitor automático pode não reconhecer algum campo quando o PDF tiver formato diferente. Você poderá editar qualquer informação no formulário.</span></div>
                 </>
