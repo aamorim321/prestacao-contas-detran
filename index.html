@@ -289,8 +289,6 @@
   .rp-footer{ margin-top: 28px; }
   .rp-footer-text{ display:flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 9px; color: var(--cinza); flex-wrap: wrap; margin-bottom: 10px; }
   .rp-footer-text .rp-footer-right{ color: var(--azul); font-family: var(--font-dado); white-space: nowrap; }
-  .rp-footer-bar{ position: relative; height: 5px; border-radius: 2px; overflow: hidden; background: var(--azul); }
-  .rp-footer-bar .faixa-verde{ position: absolute; top: 0; right: 0; height: 100%; width: 20%; background: var(--verde-vivo); clip-path: polygon(28% 0, 100% 0, 100% 100%, 0% 100%); }
 
   /* ===== Relatório — layout "institucional contemporâneo" ===== */
   .rp-card{ border: 1px solid var(--linha); border-radius: 12px; margin-bottom: 18px; overflow: hidden; background: #fff; }
@@ -395,6 +393,27 @@
   .rp-foot-bar{ height: 3px; border-radius: 2px; margin-bottom: 2px; background: linear-gradient(90deg, #02356e 0%, #02356e 78%, #64b745 86%, #64b745 100%); }
   .rp-foot{ border-top: none; }
   .rp-foot-seg:first-child{ line-height: 1.45; }
+
+  /* ===== Tela "Minhas prestações" ===== */
+  .mp-card{ background:#fff; border:1px solid var(--linha); border-radius:16px; padding:26px 28px; }
+  .mp-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
+  .mp-head-title{ display:flex; gap:14px; align-items:center; }
+  .mp-head-icon{ width:44px; height:44px; border-radius:12px; background:var(--navy); color:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .mp-head h2{ margin:0 0 4px; font-size:19px; color:var(--grafite); }
+  .mp-head p{ margin:0; font-size:13px; color:var(--cinza); }
+  .mp-item{ position:relative; border:1px solid var(--linha); border-radius:14px; padding:18px 20px 18px 26px; margin-bottom:14px; overflow:hidden; }
+  .mp-item::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:6px; background:var(--faixa, #e2a93b); }
+  .mp-item.concluida{ --faixa: var(--verde-vivo); }
+  .mp-item-top{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:8px; }
+  .mp-item-top strong{ font-size:15.5px; color:var(--grafite); }
+  .mp-badge{ display:inline-flex; align-items:center; gap:7px; font-size:11.5px; font-weight:800; letter-spacing:.03em; padding:4px 12px; border-radius:var(--r-pill); }
+  .mp-badge.rascunho{ background:#fbf3dd; color:#8a6d1a; border:1px solid #f0dfae; }
+  .mp-badge.concluida{ background:var(--verde-tint); color:var(--verde-escuro); border:1px solid #cde8bd; }
+  .mp-item-info{ font-size:13px; color:#5b6a74; margin-bottom:4px; }
+  .mp-item-meta{ font-size:12px; color:#8a97a0; margin-bottom:12px; }
+  .mp-item-acoes{ display:flex; gap:9px; flex-wrap:wrap; }
+  .mp-vazio{ text-align:center; color:var(--cinza); font-size:14px; padding:22px 0; }
+  @media (max-width: 560px){ .mp-item-acoes .btn{ flex:1 1 auto; width:auto; } }
 
   /* ================= FOOTER ================= */
   .footer-links-bar{ background: var(--azul); }
@@ -2007,23 +2026,20 @@ const emptyForm = {
 
 function useDraftToken() {
   const [token, setToken] = useState(null);
-  const [retomado, setRetomado] = useState(false);
+  const [mostrarLista, setMostrarLista] = useState(false);
   useEffect(() => {
     const url = new URL(window.location.href);
-    let t = url.searchParams.get("rascunho");
-    if (!t) {
-      // Sem link de rascunho na URL: retomamos o último rascunho deste navegador,
-      // para a pessoa não perder o preenchimento por ter fechado a aba.
-      try { t = localStorage.getItem("prestacao:ultimoRascunho"); } catch (e) {}
-      if (t) setRetomado(true);
-    }
-    if (!t) t = uid();
-    url.searchParams.set("rascunho", t);
+    const t = url.searchParams.get("rascunho");
+    if (t) { setToken(t); return; }
+    // Sem rascunho na URL: se já existem prestações guardadas, mostramos a lista;
+    // se não existe nenhuma, começamos uma nova direto no formulário.
+    if (lerListaRascunhos().length > 0) { setMostrarLista(true); return; }
+    const novo = uid();
+    url.searchParams.set("rascunho", novo);
     window.history.replaceState({}, "", url.toString());
-    try { localStorage.setItem("prestacao:ultimoRascunho", t); } catch (e) {}
-    setToken(t);
+    setToken(novo);
   }, []);
-  return { token, retomado };
+  return { token, mostrarLista };
 }
 
 function bytesToBase64(bytes) {
@@ -2494,11 +2510,11 @@ function LocalidadeSelect({ value, onChange, estados, estadosErro, municipiosCac
 
   function selecionarMunicipio(nomeMunicipio) {
     if (!nomeMunicipio) { onChange(""); return; }
-    onChange(`${nomeMunicipio.toUpperCase()} - ${uf}`);
+    onChange(`${nomeMunicipio} - ${uf}`);
   }
 
   const municipios = municipiosCache[uf] || [];
-  const municipioSelecionado = municipioDoValor ? (municipios.find(m => m.toUpperCase() === municipioDoValor) || "") : "";
+  const municipioSelecionado = municipioDoValor ? (municipios.find(m => m.toUpperCase() === municipioDoValor.toUpperCase()) || "") : "";
 
   if (estadosErro) {
     return <CampoTexto type="text" value={value} onChange={onChange} placeholder="Ex: Curitiba - PR" />;
@@ -2551,7 +2567,7 @@ function ReportPreview({ form, modoPdf, paginaTexto }) {
   const atestoPreview = "Atesto e certifico que as informações constantes no presente documento demonstram efetivamente a realização e a efetividade da viagem, e que os comprovantes de despesa anexos a esta prestação de contas foram efetivamente realizados no estrito interesse da administração pública, conforme o Decreto Estadual n.º 6.358/2024.";
   return (
     <div className={"report-preview" + (modoPdf ? " rp-a4" : "")}>
-      {modoPdf && <div className="rp-topbar" />}
+      <div className="rp-topbar" />
       <div className="rp-logos">
         <img src={DETRAN_LOGO} alt="DetranPR" />
         <div className="rp-logo-col">
@@ -2637,7 +2653,6 @@ function ReportPreview({ form, modoPdf, paginaTexto }) {
           <div className="rp-foot-seg"><span className="rp-foot-ic"><SvgGlobo size={14} /></span><span>www.detran.pr.gov.br</span></div>
           <div className="rp-foot-seg">{paginaTexto || "Página 1 de 1"}</div>
         </div>
-        <div className="rp-footer-bar"><span className="faixa-verde" /></div>
       </div>
     </div>
   );
@@ -2674,9 +2689,163 @@ const SvgGlobo = ({ size = 14 }) => (
   </svg>
 );
 
+// ---- Lista de rascunhos deste navegador (tela "Minhas prestações") ----
+const CHAVE_LISTA_RASCUNHOS = "prestacao:listaRascunhos";
+function lerListaRascunhos() {
+  try { return JSON.parse(localStorage.getItem(CHAVE_LISTA_RASCUNHOS)) || []; } catch (e) { return []; }
+}
+function gravarListaRascunhos(lista) {
+  try { localStorage.setItem(CHAVE_LISTA_RASCUNHOS, JSON.stringify(lista)); } catch (e) {}
+}
+function atualizarRascunhoNaLista(tokenRascunho, dados) {
+  if (!tokenRascunho) return;
+  const lista = lerListaRascunhos();
+  const i = lista.findIndex(r => r.token === tokenRascunho);
+  const item = { ...(i >= 0 ? lista[i] : { token: tokenRascunho }), ...dados };
+  if (i >= 0) lista[i] = item; else lista.unshift(item);
+  lista.sort((a, b) => String(b.atualizadoEm || "").localeCompare(String(a.atualizadoEm || "")));
+  gravarListaRascunhos(lista);
+}
+function removerRascunhoDaLista(tokenRascunho) {
+  gravarListaRascunhos(lerListaRascunhos().filter(r => r.token !== tokenRascunho));
+}
+function abrirRascunho(tokenRascunho) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("rascunho", tokenRascunho);
+  window.location.href = url.toString();
+}
+const NOMES_ETAPAS = { 1: "Dados da viagem", 2: "Transporte e comprovantes", 3: "Revisão e PDF" };
+function dataHoraBR(iso) {
+  if (!iso) return "";
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString("pt-BR") + " às " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  } catch (e) { return ""; }
+}
+
+function TelaMinhasPrestacoes() {
+  const [lista, setLista] = useState(lerListaRascunhos());
+
+  function novaPrestacao() {
+    abrirRascunho(uid());
+  }
+  async function excluir(item) {
+    const rotulo = item.numeroSolicitacao ? `S.V. ${item.numeroSolicitacao}` : "sem número de solicitação";
+    if (!window.confirm(`Excluir a prestação ${rotulo}?\n\nEla será apagada deste navegador e não poderá ser recuperada.`)) return;
+    try {
+      const chave = `prestacao:${item.token}`;
+      const ids = item.arquivoIds || [];
+      await Promise.all([DraftDB.delete(chave), ...ids.map(id => DraftDB.delete(`${chave}:arquivo:${id}`))]);
+    } catch (e) { /* remove da lista mesmo se a limpeza falhar */ }
+    removerRascunhoDaLista(item.token);
+    setLista(lerListaRascunhos());
+  }
+
+  return (
+    <div className="page-wrap">
+      <div className="proto-flag">
+        <div className="band-inner proto-flag-inner">
+          <div className="proto-left"><span className="proto-dot"></span><strong>VERSÃO PILOTO</strong><span className="proto-sep">•</span><span>Sistema de Prestação de Contas integrado à Central de Viagens em desenvolvimento</span></div>
+          <div className="proto-right"><Icon name="shield" size={15} /> Ambiente seguro</div>
+        </div>
+      </div>
+      <div className="band institucional-bar" aria-hidden="true"></div>
+      <div className="band topbar">
+        <div className="band-inner">
+          <div className="header-left">
+            <div className="brand-group">
+              <img className="detran-logo" src={DETRAN_LOGO} alt="DETRAN/PR — Departamento de Trânsito do Paraná" />
+              <div className="lockup">
+                <div className="lockup-title">Sistema de Prestação de Contas</div>
+                <div className="lockup-sub">Central de Viagens · DETRAN/PR</div>
+              </div>
+            </div>
+          </div>
+          <div className="header-right">
+            <div className="system-badge"><Icon name="check" size={15} /> Preenchimento orientado</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="band main-wrap">
+        <div className="band-inner">
+          <div className="mp-card">
+            <div className="mp-head">
+              <div className="mp-head-title">
+                <div className="mp-head-icon"><Icon name="list" size={20} /></div>
+                <div>
+                  <h2>Minhas prestações de contas</h2>
+                  <p>Os rascunhos ficam salvos somente neste dispositivo e navegador.</p>
+                </div>
+              </div>
+              <button className="btn btn-primary" onClick={novaPrestacao}>+ Iniciar nova prestação</button>
+            </div>
+
+            {lista.length === 0 && (
+              <div className="mp-vazio">Nenhuma prestação guardada neste navegador. Clique em <b>“Iniciar nova prestação”</b> para começar.</div>
+            )}
+
+            {lista.map(item => {
+              const concluida = item.status === "concluida";
+              return (
+                <div className={"mp-item" + (concluida ? " concluida" : "")} key={item.token}>
+                  <div className="mp-item-top">
+                    <strong>{item.numeroSolicitacao ? `S.V. Nº ${item.numeroSolicitacao}` : "Sem número de solicitação"}</strong>
+                    <span className={"mp-badge " + (concluida ? "concluida" : "rascunho")}>
+                      {concluida ? <Icon name="check" size={12} /> : <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#c8932c", display: "inline-block" }} />}
+                      {concluida ? "PDF GERADO" : "EM RASCUNHO"}
+                    </span>
+                  </div>
+                  {(item.nomeViajante || item.destino) && (
+                    <div className="mp-item-info">
+                      {item.nomeViajante ? `Viajante: ${item.nomeViajante}` : ""}{item.nomeViajante && item.destino ? "  ·  " : ""}{item.destino ? `Destino: ${item.destino}` : ""}
+                    </div>
+                  )}
+                  <div className="mp-item-meta">
+                    {concluida ? "Concluída" : "Alterada"} em {dataHoraBR(item.atualizadoEm)}
+                    {!concluida && item.etapa ? `  ·  Etapa ${item.etapa} de 3 — ${NOMES_ETAPAS[item.etapa] || ""}` : ""}
+                    {concluida ? "  ·  Pronta para assinatura no e-Protocolo" : ""}
+                  </div>
+                  <div className="mp-item-acoes">
+                    <button className={"btn " + (concluida ? "btn-ghost" : "btn-primary")} style={concluida ? { borderColor: "var(--verde-vivo)", color: "#3f9b2f", fontWeight: 700 } : undefined} onClick={() => abrirRascunho(item.token)}>
+                      {concluida ? "Reabrir e editar" : "Continuar"}
+                    </button>
+                    <button className="btn btn-ghost" onClick={() => excluir(item)}>Excluir</button>
+                  </div>
+                </div>
+              );
+            })}
+
+            <div className="banner info" style={{ marginTop: 6 }}>
+              <Icon name="info" size={17} />
+              <span>Precisa continuar em outro computador? Use o botão <b>“Baixar rascunho (.json)”</b> na etapa de revisão e importe o arquivo na outra máquina. As prestações desta lista não saem deste navegador.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="band footer-links-bar">
+        <div className="band-inner">
+          <span className="footer-pill"><Icon name="doc" size={14} /> Manual de Procedimentos</span>
+        </div>
+      </div>
+      <div className="band site-footer">
+        <div className="band-inner">
+          <img className="gov-logo-footer" src={PARANA_LOGO} alt="Governo do Estado do Paraná" />
+          <div className="footer-divider" />
+          <div className="endereco">
+            <b>Departamento de Trânsito do Paraná — DETRAN/PR</b>
+            Av. Victor Ferreira do Amaral, 2940 — Tarumã — 82800-900 — Curitiba/PR
+            <div className="endereco-contato">Central de Viagens — Ramal 1124 · Passagens Aéreas — Ramal 1312</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function App() {
-  const { token, retomado: rascunhoRetomado } = useDraftToken();
-  const [avisoRetomada, setAvisoRetomada] = useState(false);
+  const { token, mostrarLista } = useDraftToken();
   const [step, setStep] = useState(1);
   const [tentouAvancarEtapa1, setTentouAvancarEtapa1] = useState(false);
   const [tentouAvancarEtapa2, setTentouAvancarEtapa2] = useState(false);
@@ -2701,6 +2870,7 @@ function App() {
   const [scvErro, setScvErro] = useState("");
   const [dadosScv, setDadosScv] = useState(null);
   const [scvNaoRealizada, setScvNaoRealizada] = useState(false);
+  const [pdfGeradoUmaVez, setPdfGeradoUmaVez] = useState(false);
   const pdfPreviewRef = useRef(null);
 
   const saqueFileInputRef = useRef(null);
@@ -2766,7 +2936,8 @@ function App() {
           loadedForm = { ...emptyForm, ...(parsed.form || {}) };
           setForm(loadedForm);
           setCreatedAt(parsed.createdAt || new Date().toISOString());
-          if (rascunhoRetomado) setAvisoRetomada(true);
+          const registro = lerListaRascunhos().find(r => r.token === token);
+          if (registro && registro.status === "concluida") setPdfGeradoUmaVez(true);
         } else {
           setCreatedAt(new Date().toISOString());
         }
@@ -2800,12 +2971,25 @@ function App() {
       try {
         await DraftDB.set(key, JSON.stringify({ form, createdAt }));
         setSaveState("saved");
+        const arquivoIds = [];
+        Object.values(form.anexos || {}).forEach(arr => (arr || []).forEach(f => arquivoIds.push(f.id)));
+        (form.translados || []).forEach(t => { if (t.arquivo) arquivoIds.push(t.arquivo.id); });
+        if (form.scvArquivo && form.scvArquivo.id) arquivoIds.push(form.scvArquivo.id);
+        atualizarRascunhoNaLista(token, {
+          numeroSolicitacao: form.numeroSolicitacao || "",
+          nomeViajante: form.nomeViajante || "",
+          destino: form.destino || "",
+          etapa: step,
+          status: pdfGeradoUmaVez ? "concluida" : "rascunho",
+          atualizadoEm: new Date().toISOString(),
+          arquivoIds,
+        });
       } catch (e) {
         setSaveState("error");
       }
     }, 500);
     return () => clearTimeout(saveTimer.current);
-  }, [form, key, loadedOnce, createdAt]);
+  }, [form, key, loadedOnce, createdAt, step, pdfGeradoUmaVez]);
 
   const update = useCallback((patch) => setForm((f) => ({ ...f, ...patch })), []);
 
@@ -3987,6 +4171,7 @@ function App() {
 
       const finalBytes = doc.output("arraybuffer");
       downloadBytes(new Uint8Array(finalBytes), `prestacao_contas_${form.numeroSolicitacao || "sem_numero"}.pdf`);
+      setPdfGeradoUmaVez(true);
       setPdfConcluido(true);
     } catch (e) {
       setPdfErro("Não foi possível gerar o PDF (" + (e && e.message ? e.message : "erro desconhecido") + "). Tente novamente ou reduza o tamanho dos anexos.");
@@ -4014,22 +4199,9 @@ function App() {
   });
   docs.filter(d => d.id === "comprobatorio").forEach(d => (form.anexos[d.id] || []).forEach(f => arquivosRevisao.push({ categoria: d.nome, nome: f.nome })));
 
-  async function iniciarNovaPrestacao() {
-    const temAlgo = form.numeroSolicitacao || form.nomeViajante || Object.keys(form.anexos || {}).some(k => (form.anexos[k] || []).length);
-    if (temAlgo && !window.confirm("Deseja iniciar uma NOVA prestação de contas?\n\nO preenchimento atual será apagado deste navegador. Se quiser guardá-lo, cancele e use antes o botão \"Baixar rascunho (.json)\" na etapa de revisão.")) return;
-    try {
-      if (key) {
-        const ids = [];
-        Object.values(form.anexos || {}).forEach(arr => (arr || []).forEach(f => ids.push(f.id)));
-        (form.translados || []).forEach(t => { if (t.arquivo) ids.push(t.arquivo.id); });
-        if (form.scvArquivo && form.scvArquivo.id) ids.push(form.scvArquivo.id);
-        await Promise.all([DraftDB.delete(key), ...ids.map(id => DraftDB.delete(`${key}:arquivo:${id}`))]);
-      }
-    } catch (e) { /* mesmo se a limpeza falhar, seguimos para o novo rascunho */ }
-    const novoToken = uid();
-    try { localStorage.setItem("prestacao:ultimoRascunho", novoToken); } catch (e) {}
+  function irParaMinhasPrestacoes() {
     const url = new URL(window.location.href);
-    url.searchParams.set("rascunho", novoToken);
+    url.searchParams.delete("rascunho");
     window.location.href = url.toString();
   }
 
@@ -4127,6 +4299,8 @@ function App() {
     setMostrarConferencia(false);
   }
 
+  if (mostrarLista) return <TelaMinhasPrestacoes />;
+
   return (
     <div className="page-wrap">
       <div className="proto-flag">
@@ -4141,7 +4315,7 @@ function App() {
       <div className="band topbar">
         <div className="band-inner">
           <div className="header-left">
-            <div className="brand-group" onClick={iniciarNovaPrestacao} role="button" tabIndex={0} title="Iniciar uma nova prestação de contas" style={{ cursor: "pointer" }} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") iniciarNovaPrestacao(); }}>
+            <div className="brand-group" onClick={irParaMinhasPrestacoes} role="button" tabIndex={0} title="Ver minhas prestações de contas" style={{ cursor: "pointer" }} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") irParaMinhasPrestacoes(); }}>
               <img className="detran-logo" src={DETRAN_LOGO} alt="DETRAN/PR — Departamento de Trânsito do Paraná" />
               <div className="lockup">
                 <div className="lockup-title">Sistema de Prestação de Contas</div>
@@ -4159,15 +4333,6 @@ function App() {
         <div className="band-inner">
           <div className="dashboard-shell">
             <div className="dashboard-main">
-              {avisoRetomada && (
-                <div className="banner info" style={{ marginBottom: 16 }}>
-                  <Icon name="info" size={17} />
-                  <span>
-                    <b>Retomamos automaticamente o seu rascunho salvo.</b> Continue de onde parou — ou, se preferir,{" "}
-                    <button type="button" className="erro-resumo-link" onClick={iniciarNovaPrestacao}>comece uma nova prestação de contas</button>.
-                  </span>
-                </div>
-              )}
               <section className="hero-panel">
                 <div className="hero-grid">
                   <div className="hero-copy-block">
