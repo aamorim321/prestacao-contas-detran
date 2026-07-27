@@ -312,8 +312,9 @@
   .rp-sec-icon{ width: 36px; height: 36px; border-radius: 10px; background: var(--verde); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .rp-sec-title{ flex: 0 0 190px; font-size: 13px; font-weight: 800; color: var(--azul-escuro); letter-spacing: .02em; line-height: 1.45; padding-top: 2px; }
   .rp-sec-body{ flex: 1; font-size: 14.5px; color: #31424f; white-space: pre-wrap; word-break: break-word; padding-top: 2px; }
-  .rp-doclist{ display: grid; grid-template-columns: 1fr 1fr; gap: 0 26px; padding: 10px 18px 14px; }
+  .rp-doclist{ display: flex; flex-direction: column; padding: 10px 18px 14px; }
   .rp-doc-check{ display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid #eef1f3; font-size: 14px; color: #31424f; }
+  .rp-doc-num{ font-weight: 700; color: var(--azul); flex-shrink: 0; min-width: 18px; }
   .rp-doc-check .rp-check-dot{ width: 20px; height: 20px; border-radius: 50%; background: var(--verde-tint); color: var(--verde); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
   .rp-doc-detalhe{ font-style: italic; opacity: .8; font-size: .92em; margin-top: 2px; }
   .rp-declaracao{ border: 1.5px solid var(--verde); border-radius: 12px; background: #f6fbf3; padding: 16px 18px; display: flex; gap: 14px; margin: 20px 0 18px; align-items: flex-start; }
@@ -2546,7 +2547,7 @@ function LocalidadeSelect({ value, onChange, estados, estadosErro, municipiosCac
   );
 }
 
-function dadosRelatorioPreview(form) {
+function dadosRelatorioPreview(form, numeracaoAnexos) {
   const periodo = form.dataSaida && form.dataRetorno
     ? `${formatDateBR(form.dataSaida)} a ${formatDateBR(form.dataRetorno)}`
     : (formatDateBR(form.dataSaida) || formatDateBR(form.dataRetorno) || "—");
@@ -2555,18 +2556,25 @@ function dadosRelatorioPreview(form) {
   const tipoPrestacao = form.tipoPrestacao === "roteiro_reduzido" ? "ROTEIRO REDUZIDO" : form.tipoPrestacao === "roteiro_sem_alteracao" ? "ROTEIRO SEM ALTERAÇÃO" : "—";
   const transladosComArquivo = (form.translados || []).filter(t => t.arquivo);
   const totalTranslados = transladosComArquivo.reduce((a, t) => a + parseMoeda(t.valor), 0);
+  const comPag = (nome, docId, idx = 0) => {
+    const p = numeracaoAnexos?.paginaPorDocId?.[docId]?.[idx];
+    return p ? `${nome} — pág. ${p}` : nome;
+  };
   const docsPreview = [];
-  if (form.anexos?.solicitacao_veiculo?.length) docsPreview.push({ nome: "Solicitação de veículo" });
-  if (form.anexos?.diario_bordo?.length) docsPreview.push({ nome: "Diário de bordo" });
-  if (form.anexos?.embarque?.length) docsPreview.push({ nome: "Cartão de embarque ou declaração de embarque" });
-  if (form.anexos?.bilhete?.length) docsPreview.push({ nome: "Bilhete, BPE ou declaração de embarque" });
-  if (form.anexos?.termo_ciencia?.length) docsPreview.push({ nome: "Termo de Ciência e Responsabilidade" });
-  if (form.anexos?.saque?.length) docsPreview.push({ nome: "Comprovante de saque ou transferência" });
+  if (form.anexos?.solicitacao_veiculo?.length) docsPreview.push({ nome: comPag("Solicitação de veículo", "solicitacao_veiculo") });
+  if (form.anexos?.diario_bordo?.length) docsPreview.push({ nome: comPag("Diário de bordo", "diario_bordo") });
+  if (form.anexos?.embarque?.length) docsPreview.push({ nome: comPag("Cartão de embarque ou declaração de embarque", "embarque") });
+  if (form.anexos?.bilhete?.length) docsPreview.push({ nome: comPag("Bilhete, BPE ou declaração de embarque", "bilhete") });
+  if (form.anexos?.termo_ciencia?.length) docsPreview.push({ nome: comPag("Termo de Ciência e Responsabilidade", "termo_ciencia") });
+  if (form.anexos?.saque?.length) docsPreview.push({ nome: comPag("Comprovante de saque ou transferência", "saque") });
   else if (form.saqueComprovante === "nao" && form.justificativas?.saque) docsPreview.push({ nome: "Justificativa registrada por não ter inserido o comprovante de saque/transferência", detalhe: form.justificativas.saque });
-  if (transladosComArquivo.length) docsPreview.push({ nome: "Comprovantes de translado", detalhe: `${transladosComArquivo.length} comprovante(s) — Total: ${moedaBR(totalTranslados)}` });
-  if (form.anexos?.devolucao_roteiro?.length) docsPreview.push({ nome: "Devolução de diária — roteiro reduzido" });
-  if (form.anexos?.devolucao_translado?.length) docsPreview.push({ nome: "Devolução do saldo de translado" });
-  if (form.anexos?.comprobatorio?.length) docsPreview.push({ nome: "Outros documentos comprobatórios" });
+  if (transladosComArquivo.length) {
+    const pSintese = numeracaoAnexos?.paginaSinteseTranslado;
+    docsPreview.push({ nome: pSintese ? `Comprovantes de translado — pág. ${pSintese}` : "Comprovantes de translado", detalhe: `${transladosComArquivo.length} comprovante(s) — Total: ${moedaBR(totalTranslados)}` });
+  }
+  if (form.anexos?.devolucao_roteiro?.length) docsPreview.push({ nome: comPag("Devolução de diária — roteiro reduzido", "devolucao_roteiro") });
+  if (form.anexos?.devolucao_translado?.length) docsPreview.push({ nome: comPag("Devolução do saldo de translado", "devolucao_translado") });
+  if (form.anexos?.comprobatorio?.length) docsPreview.push({ nome: comPag("Outros documentos comprobatórios", "comprobatorio") });
   const totalTransladoGasto = (form.translados || []).reduce((a, t) => a + parseMoeda(t.valor), 0);
   const liberadoTranslado = parseMoeda(form.valorTransladoLiberado);
   const saldoTransladoDevolver = form.usouTranslado === "sim" && form.valorTransladoLiberado ? Math.max(0, liberadoTranslado - totalTransladoGasto) : 0;
@@ -2578,8 +2586,8 @@ function dadosRelatorioPreview(form) {
 
 // Blocos do relatório, um por bloco visual (cada um é uma unidade que NUNCA é
 // cortada ao meio quando o PDF precisa quebrar em mais de uma página).
-function RelatorioBlocos({ form }) {
-  const d = dadosRelatorioPreview(form);
+function RelatorioBlocos({ form, numeracaoAnexos }) {
+  const d = dadosRelatorioPreview(form, numeracaoAnexos);
   return (
     <>
       <div className="rp-card">
@@ -2627,6 +2635,7 @@ function RelatorioBlocos({ form }) {
         <div className="rp-doclist">
           {d.docsPreview.length ? d.docsPreview.map((item, i) => (
             <div className="rp-doc-check" key={i}>
+              <span className="rp-doc-num">{i + 1}.</span>
               <span className="rp-check-dot"><Icon name="check" size={12} /></span>
               <span>{item.nome}{item.detalhe && <div className="rp-doc-detalhe">{item.detalhe}</div>}</span>
             </div>
@@ -2655,7 +2664,7 @@ function RelatorioBlocos({ form }) {
 
 // Corpo completo do relatório (sem cabeçalho/rodapé próprios) — usado só na
 // geração do PDF, para medir e fatiar em quantas páginas A4 forem necessárias.
-function RelatorioCorpo({ form }) {
+function RelatorioCorpo({ form, numeracaoAnexos }) {
   return (
     <div className="rp-corpo">
       <div className="rp-titleblock">
@@ -2663,7 +2672,7 @@ function RelatorioCorpo({ form }) {
         <div className="rp-kicker"><i />PRESTAÇÃO DE CONTAS<i /></div>
         <div className="rp-subtitle"><span className="rp-sv-box">S.V. &nbsp;Nº&nbsp; {form.numeroSolicitacao || "________"}</span></div>
       </div>
-      <RelatorioBlocos form={form} />
+      <RelatorioBlocos form={form} numeracaoAnexos={numeracaoAnexos} />
     </div>
   );
 }
@@ -3648,7 +3657,7 @@ function App() {
             if (anexosContent[meta.id]) {
               try { imagens = await obterPaginasComoImagens(meta, anexosContent[meta.id]); } catch (e) { imagens = []; }
             }
-            anexosPreparados.push({ tipo: "doc", titulo, imagens, redigido: !!meta.redigido });
+            anexosPreparados.push({ tipo: "doc", docId: d.id, titulo, imagens, redigido: !!meta.redigido });
           }
         }
       }
@@ -3663,6 +3672,8 @@ function App() {
           }
           itens.push({ de: t.de, para: t.para, data: t.data, valor: t.valor, imagens: imgs, redigido: !!t.arquivo.redigido });
         }
+        // Mais antigo primeiro — mesma ordem no relatório sintético e nas páginas físicas
+        itens.sort((a, b) => (a.data || "9999") < (b.data || "9999") ? -1 : (a.data || "9999") > (b.data || "9999") ? 1 : 0);
         anexosPreparados.push({ tipo: "translados", itens });
       }
       await prepararDocs(docs.filter(d => d.id === "comprobatorio"));
@@ -3673,6 +3684,50 @@ function App() {
         if (a.tipo === "doc") totalPaginasAnexos += Math.max(1, a.imagens.length);
         else totalPaginasAnexos += a.itens.reduce((acc, t) => acc + Math.max(1, Math.ceil((t.imagens.length || 1) / 2)), 0) + 1;
       });
+
+      // Em que página cada anexo começa, para a página 1 poder mostrar "pág. X"
+      // no checklist e no relatório sintético do translado. Como só sabemos
+      // quantas páginas o relatório técnico vai ocupar DEPOIS de montá-lo, essa
+      // função é chamada de novo (rápido — é só contagem) se a suposição inicial
+      // de 1 página não se confirmar.
+      // Quantas linhas de tabela cabem numa página do relatório sintético —
+      // usada tanto para desenhar quanto para numerar (mesma conta nos dois
+      // lugares, pra nunca desalinhar o número de página mostrado na página 1).
+      const ALTURA_LINHA_SINTESE = 22;
+      const OFFSET_TABELA_SINTESE = 101.5 + 56 + 20 + 24 + 6; // cabeçalho + card de totais + espaço + cabeçalho da tabela
+      function linhasPorPaginaSintese(primeira) {
+        const disponivel = (primeira ? PAGE_H - OFFSET_TABELA_SINTESE : PAGE_H - 101.5 - 24 - 6) - 76;
+        return Math.max(1, Math.floor(disponivel / ALTURA_LINHA_SINTESE));
+      }
+      function paginasNecessariasSintese(qtdItens) {
+        const primeira = linhasPorPaginaSintese(true);
+        if (qtdItens <= primeira) return 1;
+        const seguintes = linhasPorPaginaSintese(false);
+        return 1 + Math.ceil((qtdItens - primeira) / seguintes);
+      }
+
+      function calcularNumeracaoAnexos(paginaInicialAnexos) {
+        let pagina = paginaInicialAnexos;
+        const paginaPorDocId = {};
+        let paginaSinteseTranslado = null;
+        let paginasTranslado = [];
+        anexosPreparados.forEach(a => {
+          if (a.tipo === "doc") {
+            if (!paginaPorDocId[a.docId]) paginaPorDocId[a.docId] = [];
+            paginaPorDocId[a.docId].push(pagina);
+            pagina += Math.max(1, a.imagens.length);
+          } else {
+            paginaSinteseTranslado = pagina;
+            pagina += paginasNecessariasSintese(a.itens.length);
+            paginasTranslado = a.itens.map(() => 0);
+            a.itens.forEach((t, i) => {
+              paginasTranslado[i] = pagina;
+              pagina += Math.max(1, Math.ceil((t.imagens.length || 1) / 2));
+            });
+          }
+        });
+        return { paginaPorDocId, paginaSinteseTranslado, paginasTranslado };
+      }
 
       // ---- Moldura única (cabeçalho/rodapé) usada em toda página do PDF ----
       let paginaPdfAtual = 0; // incrementado a cada cabecalhoAnexo()
@@ -3808,14 +3863,14 @@ function App() {
 
       // ---- Corpo do relatório técnico: mede os cards de verdade e quebra em
       // quantas páginas A4 forem necessárias, sem cortar nenhum card ao meio ----
-      async function gerarPaginasRelatorio() {
+      async function gerarPaginasRelatorio(numeracaoAnexos) {
         const PX_POR_PT = 794 / PAGE_W;
         const larguraCorpo = Math.round(contentW * PX_POR_PT);
         const container = document.createElement("div");
         container.style.cssText = `position:fixed;left:-12000px;top:0;width:${larguraCorpo}px;background:#ffffff;z-index:-1;`;
         document.body.appendChild(container);
         const raiz = ReactDOM.createRoot(container);
-        raiz.render(<div className="rp-captura"><RelatorioCorpo form={form} /></div>);
+        raiz.render(<div className="rp-captura"><RelatorioCorpo form={form} numeracaoAnexos={numeracaoAnexos} /></div>);
         await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 70)));
         const imagensImg = Array.from(container.querySelectorAll("img"));
         await Promise.all(imagensImg.map(im => im.complete ? Promise.resolve() : new Promise(res => { im.onload = im.onerror = res; })));
@@ -3863,7 +3918,14 @@ function App() {
         });
       }
 
-      const paginasRelatorio = await gerarPaginasRelatorio();
+      // Supõe relatório = 1 página; se der errado (textos longos empurrando
+      // para uma 2ª+ página), corrige a numeração e refaz só essa parte.
+      let numeracaoAnexos = calcularNumeracaoAnexos(2);
+      let paginasRelatorio = await gerarPaginasRelatorio(numeracaoAnexos);
+      if (paginasRelatorio.length !== 1) {
+        numeracaoAnexos = calcularNumeracaoAnexos(paginasRelatorio.length + 1);
+        paginasRelatorio = await gerarPaginasRelatorio(numeracaoAnexos);
+      }
       totalPaginasPdf = paginasRelatorio.length + totalPaginasAnexos;
       paginasRelatorio.forEach((pagina, i) => {
         cabecalhoAnexo(i > 0); // a primeira página do PDF já existe por padrão — não criar outra
@@ -3978,31 +4040,80 @@ function App() {
         rodapePaginaAnexo();
       }
 
-      function desenharPaginaResumoTranslados(numeroAnexo, qtd, valorTotal) {
+      function desenharRelatorioSinteticoTranslado(numeroAnexo, itens, valorLiberado) {
+        const valorComprovado = itens.reduce((acc, t) => acc + parseMoeda(t.valor), 0);
+        const valorRecolher = Math.max(0, valorLiberado - valorComprovado);
+
         cabecalhoAnexo();
-        tituloAnexo(numeroAnexo, "COMPROVANTE DE TRANSLADO — RESUMO", "carro");
-        const h = 56;
+        tituloAnexo(numeroAnexo, "RELATÓRIO SINTÉTICO — TRANSLADO", "carro");
+
+        const hResumo = 56;
         doc.setFillColor(...MX.verdeClaro);
         doc.setDrawColor(...MX.verdeBorda);
         doc.setLineWidth(1.2);
-        doc.roundedRect(margin, y, contentW, h, 10, 10, "FD");
-        doc.setFillColor(...MX.verdeIcone);
-        doc.roundedRect(margin + 14, y + h / 2 - 16, 32, 32, 8, 8, "F");
-        desenharIconeDocBranco(margin + 30, y + h / 2, 18);
-        const tx = margin + 58;
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(11);
-        doc.setTextColor(...MX.verdeTexto);
-        doc.text("Resumo dos translados", tx, y + 18);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9.5);
-        doc.setTextColor(...MX.texto);
-        doc.text(`${qtd} comprovante${qtd > 1 ? "s" : ""} apresentado${qtd > 1 ? "s" : ""}`, tx, y + 32);
-        doc.setFont("helvetica", "bold");
-        doc.text("Valor total: ", tx, y + 45);
-        const wl = doc.getTextWidth("Valor total: ");
-        doc.setTextColor(...MX.verdeValor);
-        doc.text(moedaBR(valorTotal), tx + wl, y + 45);
+        doc.roundedRect(margin, y, contentW, hResumo, 10, 10, "FD");
+        const colunasResumo = [
+          ["Valor total recebido", valorLiberado, MX.texto],
+          ["Despesas comprovadas", valorComprovado, MX.texto],
+          ["Valor a ser recolhido", valorRecolher, valorRecolher > 0.009 ? MX.verdeValor : MX.texto],
+        ];
+        const colW3 = contentW / 3;
+        colunasResumo.forEach(([label, valor, cor], i) => {
+          const cx = margin + colW3 * i + colW3 / 2;
+          if (i > 0) { doc.setDrawColor(...MX.verdeBorda); doc.line(margin + colW3 * i, y + 12, margin + colW3 * i, y + hResumo - 12); }
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(8.5);
+          doc.setTextColor(...MX.texto);
+          doc.text(label, cx, y + 20, { align: "center" });
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(13);
+          doc.setTextColor(...cor);
+          doc.text(moedaBR(valor), cx, y + 40, { align: "center" });
+        });
+        y += hResumo + 20;
+
+        const colunasTabela = [
+          { label: "Data", w: 0.15 },
+          { label: "Origem", w: 0.27 },
+          { label: "Destino", w: 0.27 },
+          { label: "Valor", w: 0.16 },
+          { label: "Pág.", w: 0.15 },
+        ];
+        function cabecalhoTabela() {
+          doc.setFillColor(...MX.cinzaFundo);
+          doc.roundedRect(margin, y, contentW, 24, 6, 6, "F");
+          let cx = margin + 10;
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(8.5);
+          doc.setTextColor(...MX.texto);
+          colunasTabela.forEach(c => { doc.text(c.label.toUpperCase(), cx, y + 16); cx += contentW * c.w; });
+          y += 24 + 6;
+        }
+        cabecalhoTabela();
+        const alturaLinha = ALTURA_LINHA_SINTESE;
+        itens.forEach((t, i) => {
+          if (y + alturaLinha > PAGE_H - 76) {
+            rodapePaginaAnexo();
+            cabecalhoAnexo();
+            tituloAnexo(numeroAnexo, "RELATÓRIO SINTÉTICO — TRANSLADO (CONTINUAÇÃO)", "carro");
+            cabecalhoTabela();
+          }
+          if (i % 2 === 1) { doc.setFillColor(250, 251, 251); doc.rect(margin, y - 4, contentW, alturaLinha, "F"); }
+          let cx = margin + 10;
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(9);
+          doc.setTextColor(...MX.texto);
+          const valoresLinha = [formatDateBR(t.data) || "—", t.de || "—", t.para || "—", t.valor || "—", t.pagina ? String(t.pagina) : "—"];
+          valoresLinha.forEach((v, ci) => {
+            const c = colunasTabela[ci];
+            const vv = doc.splitTextToSize(String(v), contentW * c.w - 14)[0] || "—";
+            doc.text(vv, cx, y + 12);
+            cx += contentW * c.w;
+          });
+          doc.setDrawColor(...MX.cinzaBorda);
+          doc.line(margin, y + alturaLinha - 4, PAGE_W - margin, y + alturaLinha - 4);
+          y += alturaLinha;
+        });
         rodapePaginaAnexo();
       }
 
@@ -4016,7 +4127,9 @@ function App() {
             paginaAnexoDoc(numero, a.titulo, paginas[pi], pi > 0, a.redigido, tipoIcone);
           }
         } else {
-          const valorTotal = a.itens.reduce((acc, t) => acc + parseMoeda(t.valor), 0);
+          const paginasItens = numeracaoAnexos.paginasTranslado;
+          const itensComPagina = a.itens.map((t, i) => ({ ...t, pagina: paginasItens[i] }));
+          desenharRelatorioSinteticoTranslado(numero, itensComPagina, parseMoeda(form.valorTransladoLiberado));
           for (let i = 0; i < a.itens.length; i++) {
             const t = a.itens[i];
             const imgs = t.imagens.length ? t.imagens : [null];
@@ -4024,7 +4137,6 @@ function App() {
               desenharPaginaTranslado(numero, i, t, imgs.slice(p, p + 2), p, t.imagens.length);
             }
           }
-          desenharPaginaResumoTranslados(numero, a.itens.length, valorTotal);
         }
       }
 
