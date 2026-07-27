@@ -322,8 +322,8 @@
   .rp-declaracao-text{ font-size: 13.5px; color: #31424f; text-align: justify; line-height: 1.6; }
 
   /* ===== Página 1 — refinamentos para o layout aprovado ===== */
-  .report-preview .rp-logos img:first-child{ height: 42px; }
-  .report-preview .rp-logo-col img{ height: 46px; }
+  .rp-logos img:first-child{ height: 42px; }
+  .rp-logo-col img{ height: 46px; }
   .rp-topbar{ height: 6px; border-radius: 3px; margin: -6px 0 20px; background: linear-gradient(90deg, var(--navy) 0%, var(--navy) 74%, var(--verde-vivo) 84%, var(--verde-vivo) 100%); }
   .rp-kicker{ display: flex; align-items: center; justify-content: center; gap: 12px; }
   .rp-kicker i{ width: 26px; height: 2px; background: var(--verde-vivo); border-radius: 1px; }
@@ -388,10 +388,10 @@
   .ax-footer-bar{ height: 7px; margin: 0 -40px; background: linear-gradient(90deg, #0b1e3a 0%, var(--navy) 10%, var(--navy) 80%, var(--verde-vivo) 90%, var(--verde-vivo) 100%); }
 
   /* ===== Ajustes finos aprovados (página 1) ===== */
-  .report-preview .rp-title{ font-size: 21px; color: #02356e; margin-bottom: 8px; }
-  .report-preview .rp-kicker{ font-size: 12.5px; color: #3aa335; }
-  .report-preview .rp-kicker i{ background: #3aa335; }
-  .report-preview .rp-sv-box{ font-size: 12.5px; padding: 6px 20px; color: #3d4a55; }
+  .rp-title{ font-size: 21px; color: #02356e; margin-bottom: 8px; }
+  .rp-kicker{ font-size: 12.5px; color: #3aa335; }
+  .rp-kicker i{ background: #3aa335; }
+  .rp-sv-box{ font-size: 12.5px; padding: 6px 20px; color: #3d4a55; }
   .rp-resumo-item{ flex-wrap: nowrap; }
   .rp-resumo-item strong{ min-width: 0; }
   .rp-resumo-situacao{ flex-direction: column; align-items: stretch; gap: 7px; }
@@ -541,6 +541,8 @@
     .btn{ width: 100%; }
     .nav-row{ flex-wrap: wrap; gap: 10px; }
     .nav-row .btn{ flex: 1; }
+    .nav-row-right{ flex: 1 1 100%; flex-wrap: wrap; }
+    .nav-row-right .btn{ flex: 1; }
     .redact-actions .left-group .btn,
     .redact-actions .right-group .btn,
     .redact-zoom .btn,
@@ -2548,7 +2550,7 @@ function dadosRelatorioPreview(form) {
   const periodo = form.dataSaida && form.dataRetorno
     ? `${formatDateBR(form.dataSaida)} a ${formatDateBR(form.dataRetorno)}`
     : (formatDateBR(form.dataSaida) || formatDateBR(form.dataRetorno) || "—");
-  const tipoViagem = (TRANSPORTES.find(t => t.id === form.transporte)?.label || "—").toUpperCase();
+  const tipoViagem = TRANSPORTES.find(t => t.id === form.transporte)?.label || "—";
   const cargoLinha = [form.cargoFuncao, form.siglaSetor].filter(Boolean).join(" — ");
   const tipoPrestacao = form.tipoPrestacao === "roteiro_reduzido" ? "ROTEIRO REDUZIDO" : form.tipoPrestacao === "roteiro_sem_alteracao" ? "ROTEIRO SEM ALTERAÇÃO" : "—";
   const transladosComArquivo = (form.translados || []).filter(t => t.arquivo);
@@ -2565,8 +2567,13 @@ function dadosRelatorioPreview(form) {
   if (form.anexos?.devolucao_roteiro?.length) docsPreview.push({ nome: "Devolução de diária — roteiro reduzido" });
   if (form.anexos?.devolucao_translado?.length) docsPreview.push({ nome: "Devolução do saldo de translado" });
   if (form.anexos?.comprobatorio?.length) docsPreview.push({ nome: "Outros documentos comprobatórios" });
+  const totalTransladoGasto = (form.translados || []).reduce((a, t) => a + parseMoeda(t.valor), 0);
+  const liberadoTranslado = parseMoeda(form.valorTransladoLiberado);
+  const saldoTransladoDevolver = form.usouTranslado === "sim" && form.valorTransladoLiberado ? Math.max(0, liberadoTranslado - totalTransladoGasto) : 0;
+  const saldoRoteiroDevolver = form.tipoPrestacao === "roteiro_reduzido" ? parseMoeda(form.valorDevolucao) : 0;
+  const saldoADevolver = saldoRoteiroDevolver + saldoTransladoDevolver;
   const atestoPreview = "Atesto e certifico que as informações constantes no presente documento demonstram efetivamente a realização e a efetividade da viagem, e que os comprovantes de despesa anexos a esta prestação de contas foram efetivamente realizados no estrito interesse da administração pública, conforme o Decreto Estadual n.º 6.358/2024.";
-  return { periodo, tipoViagem, cargoLinha, tipoPrestacao, docsPreview, atestoPreview };
+  return { periodo, tipoViagem, cargoLinha, tipoPrestacao, docsPreview, atestoPreview, saldoADevolver };
 }
 
 // Blocos do relatório, um por bloco visual (cada um é uma unidade que NUNCA é
@@ -2586,12 +2593,15 @@ function RelatorioBlocos({ form }) {
             <span className={"rp-selo " + (form.tipoPrestacao === "roteiro_sem_alteracao" ? "ok" : "warn")}><Icon name="check" size={12} /> {d.tipoPrestacao}</span>
           </div>
           <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="calendario" size={15} /></span><span>Período:</span><strong>{d.periodo}</strong></div>
+          {d.saldoADevolver > 0.009 && (
+            <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="doc" size={15} /></span><span>Saldo a devolver:</span><strong>{moedaBR(d.saldoADevolver)}</strong></div>
+          )}
         </div>
       </div>
 
       <div className="rp-sec">
         <div className="rp-sec-icon"><Icon name="doc" size={17} /></div>
-        <div className="rp-sec-title">1. DESCRIÇÃO DA ATIVIDADE REALIZADA</div>
+        <div className="rp-sec-title">1. DESCRIÇÃO DO EVENTO</div>
         <div className="rp-sec-body">{form.nomeEvento || "—"}</div>
       </div>
       <div className="rp-sec">
@@ -2601,7 +2611,7 @@ function RelatorioBlocos({ form }) {
       </div>
       <div className="rp-sec">
         <div className="rp-sec-icon"><Icon name="check" size={17} /></div>
-        <div className="rp-sec-title">3. CONCLUSÃO E RESULTADOS</div>
+        <div className="rp-sec-title">3. CONCLUSÃO</div>
         <div className="rp-sec-body">{form.conclusao || "—"}</div>
       </div>
       {String(form.infoComplementares || "").trim() && (
@@ -3439,8 +3449,8 @@ function App() {
     { id: "campo-dataSaida", label: "Data de saída", ok: !!form.dataSaida },
     { id: "campo-dataRetorno", label: "Data de retorno", ok: !!form.dataRetorno && datasValidas },
     { id: "campo-nomeEvento", label: "Descrição do evento", ok: !!form.nomeEvento },
-    { id: "campo-motivo", label: "Objetivo da participação", ok: !!String(form.motivo || "").trim() },
-    { id: "campo-conclusao", label: "Conclusão", ok: !!String(form.conclusao || "").trim() },
+    { id: "campo-motivo", label: "Objetivo da participação (mínimo de 150 caracteres)", ok: String(form.motivo || "").trim().length >= 150 },
+    { id: "campo-conclusao", label: "Conclusão (mínimo de 150 caracteres)", ok: String(form.conclusao || "").trim().length >= 150 },
   ];
   const camposFaltandoEtapa1 = camposObrigatoriosEtapa1.filter(c => !c.ok);
   const invalidos1 = tentouAvancarEtapa1 ? new Set(camposFaltandoEtapa1.map(c => c.id)) : new Set();
@@ -3729,10 +3739,16 @@ function App() {
         doc.setFontSize(11);
         doc.setTextColor(...MX.verdeIcone);
         doc.text(`ANEXO ${String(numero).padStart(2, "0")}`, tx, y + 14);
-        doc.setFontSize(15.5);
         doc.setTextColor(...MX.navy);
-        const linhasTitulo = doc.splitTextToSize(String(titulo || "").toUpperCase(), contentW - boxS - 13);
-        doc.text(linhasTitulo[0], tx, y + 32);
+        const larguraDisponivel = contentW - boxS - 13;
+        const textoTitulo = String(titulo || "").toUpperCase();
+        let tamanhoFonte = 14;
+        doc.setFontSize(tamanhoFonte);
+        while (tamanhoFonte > 9.5 && doc.getTextWidth(textoTitulo) > larguraDisponivel) {
+          tamanhoFonte -= 0.5;
+          doc.setFontSize(tamanhoFonte);
+        }
+        doc.text(textoTitulo, tx, y + 32);
         y += boxS + 16;
       }
 
@@ -3764,7 +3780,7 @@ function App() {
         doc.setFillColor(...MX.navy);
         doc.roundedRect(margin, linhaY - 17, contentW * 0.84, 2.2, 1.1, 1.1, "F");
         doc.setFillColor(...MX.verdeVivo);
-        doc.roundedRect(margin + contentW * 0.88, linhaY - 17, contentW * 0.12, 2.2, 1.1, 1.1, "F");
+        doc.roundedRect(margin + contentW * 0.84, linhaY - 17, contentW * 0.16, 2.2, 1.1, 1.1, "F");
 
         const segmentos = [
           "DETRAN/PR",
@@ -4119,19 +4135,6 @@ function App() {
     importarSolicitacaoSCV(file);
   }
 
-  function escolherOutroInicio() {
-    const possuiDados = !!(
-      form.scvImportado || arquivoEdicaoCarregado || form.numeroSolicitacao || form.nomeViajante
-    );
-    if (possuiDados) {
-      const continuar = window.confirm("Deseja voltar e escolher outra opção? Os dados atuais poderão ser substituídos.");
-      if (!continuar) return;
-    }
-    setModoInicio(null);
-    setArquivoEdicaoCarregado(false);
-    setDraftMessage("");
-  }
-
   const podeExibirFormularioInicial =
     (modoInicio === "nova" && !!form.dadosScvConfirmados) ||
     (modoInicio === "editar" && arquivoEdicaoCarregado);
@@ -4277,7 +4280,6 @@ function App() {
                     <>
                       <div className="selected-start-mode">
                         <span><Icon name="doc" size={17} /><b>Nova prestação</b></span>
-                        <button type="button" className="btn-link" onClick={escolherOutroInicio}>Escolher outra opção</button>
                       </div>
                       <div className="scv-import-card">
                         <div className="scv-import-head">
@@ -4288,6 +4290,7 @@ function App() {
                           </div>
                         </div>
                         <div className="scv-import-actions scv-import-actions-stack">
+                          {!form.scvImportado && (
                           <label
                             className={"scv-dropzone " + (scvDragAtivo ? "drag-active" : "")}
                             aria-label="Selecionar PDF do SCV"
@@ -4302,6 +4305,7 @@ function App() {
                             <div className="scv-dropzone-hint">Somente arquivo PDF</div>
                             <input type="file" accept=".pdf,application/pdf" className="file-input-hidden" disabled={scvExtraindo} onChange={importarSolicitacaoSCV} />
                           </label>
+                          )}
                           {form.scvImportado && <div className="scv-inline-actions"><button type="button" className="btn btn-ghost" onClick={() => { setDadosScv({ numeroSolicitacao:form.numeroSolicitacao, nomeViajante:form.nomeViajante, cargoFuncao:form.cargoFuncao, origem:form.origem, destino:form.destino, dataSaida:form.dataSaida, dataRetorno:form.dataRetorno, nomeEvento:form.nomeEvento, transporte:form.transporte }); setScvEtapaModal(1); setScvModal(true); }}>Revisar dados</button><label className="btn btn-primary" style={{ margin:0 }}>Substituir PDF<input type="file" accept=".pdf,application/pdf" className="file-input-hidden" disabled={scvExtraindo} onChange={importarSolicitacaoSCV} /></label></div>}
                         </div>
                         {form.scvImportado && <div className="scv-status"><Icon name="check" size={18} /><span><b>{form.scvArquivo?.nome}</b><br />{form.dadosScvConfirmados ? "Dados confirmados. Complete as informações abaixo." : "PDF importado. Revise e confirme os dados."}</span></div>}
@@ -4315,7 +4319,6 @@ function App() {
                       <span><Icon name="paperclip" size={17} /><b>Prestação aberta para edição</b></span>
                       <div className="selected-start-actions">
                         <label className="btn-link">Abrir outro arquivo<input type="file" accept=".json,application/json" className="file-input-hidden" onChange={carregarRascunhoLocal} /></label>
-                        <button type="button" className="btn-link" onClick={escolherOutroInicio}>Escolher outra opção</button>
                       </div>
                     </div>
                   )}
@@ -4433,13 +4436,15 @@ function App() {
                   <div className={"field" + (invalidos1.has("campo-motivo") ? " field-invalido" : "")} id="campo-motivo" style={{ marginTop: 16 }}>
                     <label>Objetivo da participação <span className="req">*</span></label>
                     <CampoTexto as="textarea" value={form.motivo} onChange={v => update({ motivo: v })} placeholder="Descreva a finalidade institucional e o objetivo da participação." />
-                    {invalidos1.has("campo-motivo") && <div className="campo-erro-msg">Descreva o objetivo da participação.</div>}
+                    <div className="char-hint">{Math.min(String(form.motivo || "").trim().length, 150)}/150 caracteres mínimos{String(form.motivo || "").trim().length >= 150 ? " ✓" : ""}</div>
+                    {invalidos1.has("campo-motivo") && <div className="campo-erro-msg">Descreva o objetivo da participação com pelo menos 150 caracteres (evite respostas genéricas como "viagem realizada com sucesso").</div>}
                   </div>
 
                   <div className={"field" + (invalidos1.has("campo-conclusao") ? " field-invalido" : "")} id="campo-conclusao" style={{ marginTop: 16 }}>
                     <label>Conclusão <span className="req">*</span></label>
                     <CampoTexto as="textarea" value={form.conclusao} onChange={v => update({ conclusao: v })} placeholder="Descreva o resultado da viagem e o aproveitamento institucional." style={{ minHeight: 90 }} />
-                    {invalidos1.has("campo-conclusao") && <div className="campo-erro-msg">Descreva a conclusão.</div>}
+                    <div className="char-hint">{Math.min(String(form.conclusao || "").trim().length, 150)}/150 caracteres mínimos{String(form.conclusao || "").trim().length >= 150 ? " ✓" : ""}</div>
+                    {invalidos1.has("campo-conclusao") && <div className="campo-erro-msg">Descreva a conclusão com pelo menos 150 caracteres.</div>}
                   </div>
 
                   <div className="field" style={{ marginTop: 16 }}>
@@ -4524,6 +4529,7 @@ function App() {
                                       <>
                                         <label className="file-btn" style={{ marginTop: 0 }}>Anexar comprovante <span className="req">*</span><input type="file" accept=".pdf,.jpg,.jpeg,.png" className="file-input-hidden" onChange={e => { if (e.target.files[0]) attachTransladoFile(t.id, e.target.files[0]); e.target.value = ""; }} /></label>
                                         <div className="translado-order-hint">Boa prática: anexe primeiro o comprovante, confira a imagem e depois preencha os dados correspondentes.</div>
+                                        {translados.length > 1 && <button className="btn-link-danger" style={{ marginTop: 8 }} onClick={() => removeTransladoItem(t.id)}>Excluir este registro</button>}
                                       </>
                                     ) : (
                                       <>
@@ -4803,16 +4809,23 @@ function App() {
                 <button className="btn btn-ghost" onClick={() => setStep(s => Math.max(1, s - 1))} style={{ visibility: step === 1 ? "hidden" : "visible" }}>
                   Voltar
                 </button>
-                {step < 3 ? (
-                  <button className="btn btn-primary" onClick={() => {
-                    const faltando = step === 1 ? camposFaltandoEtapa1 : itensFaltandoEtapa2;
-                    const setTentou = step === 1 ? setTentouAvancarEtapa1 : setTentouAvancarEtapa2;
-                    if (faltando.length > 0) { setTentou(true); focarPrimeiroCampo(faltando[0].id); return; }
-                    setStep(s => s + 1);
-                  }}>
-                    Continuar
-                  </button>
-                ) : <span />}
+                <div className="nav-row-right" style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                  {podeExibirFormularioInicial && (
+                    <button type="button" className="btn btn-ghost" onClick={irParaMinhasPrestacoes} title="O preenchimento já fica salvo automaticamente — este botão só leva você para a lista de prestações.">
+                      Salvar e voltar ao início
+                    </button>
+                  )}
+                  {step < 3 ? (
+                    <button className="btn btn-primary" onClick={() => {
+                      const faltando = step === 1 ? camposFaltandoEtapa1 : itensFaltandoEtapa2;
+                      const setTentou = step === 1 ? setTentouAvancarEtapa1 : setTentouAvancarEtapa2;
+                      if (faltando.length > 0) { setTentou(true); focarPrimeiroCampo(faltando[0].id); return; }
+                      setStep(s => s + 1);
+                    }}>
+                      Continuar
+                    </button>
+                  ) : <span />}
+                </div>
               </div>
               </>
               )}
