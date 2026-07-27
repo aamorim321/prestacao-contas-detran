@@ -1855,15 +1855,7 @@ function moedaBR(valor) {
 }
 
 function docsFor(transporte, incluirDevolucaoTranslado, incluirDevolucaoRoteiro) {
-  const docs = [
-    { id: "saque", nome: "Comprovante de saque ou transferência da diária", obrig: true },
-  ];
-  if (incluirDevolucaoRoteiro) {
-    docs.push({ id: "devolucao_roteiro", nome: "Comprovante de devolução de diária — roteiro reduzido", obrig: true });
-  }
-  if (incluirDevolucaoTranslado) {
-    docs.push({ id: "devolucao_translado", nome: "Comprovante de devolução do saldo de translado", obrig: true });
-  }
+  const docs = [];
   if (transporte === "aereo") docs.push({ id: "embarque", nome: "Cartão de embarque ou declaração de embarque", obrig: true });
   if (transporte === "onibus") docs.push({ id: "bilhete", nome: "Bilhete, BPE ou declaração/certificado de embarque", obrig: true });
   if (transporte === "veiculo_oficial") {
@@ -1871,6 +1863,13 @@ function docsFor(transporte, incluirDevolucaoTranslado, incluirDevolucaoRoteiro)
     docs.push({ id: "diario_bordo", nome: "Diário de bordo", obrig: true });
   }
   if (transporte === "meios_proprios") docs.push({ id: "termo_ciencia", nome: "Termo de Ciência e Responsabilidade", obrig: true });
+  docs.push({ id: "saque", nome: "Comprovante de saque ou transferência da diária", obrig: true });
+  if (incluirDevolucaoRoteiro) {
+    docs.push({ id: "devolucao_roteiro", nome: "Comprovante de devolução de diária — roteiro reduzido", obrig: true });
+  }
+  if (incluirDevolucaoTranslado) {
+    docs.push({ id: "devolucao_translado", nome: "Comprovante de devolução do saldo de translado", obrig: true });
+  }
   docs.push({ id: "comprobatorio", nome: "Outros documentos comprobatórios (certificado, declaração, lista de presença ou ata)", obrig: false });
   return docs;
 }
@@ -2568,11 +2567,11 @@ function dadosRelatorioPreview(form, numeracaoAnexos) {
   if (form.anexos?.termo_ciencia?.length) docsPreview.push({ nome: comPag("Termo de Ciência e Responsabilidade", "termo_ciencia") });
   if (form.anexos?.saque?.length) docsPreview.push({ nome: comPag("Comprovante de saque ou transferência", "saque") });
   else if (form.saqueComprovante === "nao" && form.justificativas?.saque) docsPreview.push({ nome: "Justificativa registrada por não ter inserido o comprovante de saque/transferência", detalhe: form.justificativas.saque });
+  if (form.anexos?.devolucao_roteiro?.length) docsPreview.push({ nome: comPag("Devolução de diária — roteiro reduzido", "devolucao_roteiro") });
   if (transladosComArquivo.length) {
     const pSintese = numeracaoAnexos?.paginaSinteseTranslado;
     docsPreview.push({ nome: pSintese ? `Comprovantes de translado — pág. ${pSintese}` : "Comprovantes de translado", detalhe: `${transladosComArquivo.length} comprovante(s) — Total: ${moedaBR(totalTranslados)}` });
   }
-  if (form.anexos?.devolucao_roteiro?.length) docsPreview.push({ nome: comPag("Devolução de diária — roteiro reduzido", "devolucao_roteiro") });
   if (form.anexos?.devolucao_translado?.length) docsPreview.push({ nome: comPag("Devolução do saldo de translado", "devolucao_translado") });
   if (form.anexos?.comprobatorio?.length) docsPreview.push({ nome: comPag("Outros documentos comprobatórios", "comprobatorio") });
   const totalTransladoGasto = (form.translados || []).reduce((a, t) => a + parseMoeda(t.valor), 0);
@@ -2586,8 +2585,28 @@ function dadosRelatorioPreview(form, numeracaoAnexos) {
 
 // Blocos do relatório, um por bloco visual (cada um é uma unidade que NUNCA é
 // cortada ao meio quando o PDF precisa quebrar em mais de uma página).
-function RelatorioBlocos({ form, numeracaoAnexos }) {
+function RelatorioBlocos({ form, numeracaoAnexos, quebras }) {
   const d = dadosRelatorioPreview(form, numeracaoAnexos);
+  const q = quebras || {};
+  function secaoTexto(numero, titulo, icone, textoOriginal, chave) {
+    const chunks = q[chave];
+    if (!chunks || chunks.length <= 1) {
+      return (
+        <div className="rp-sec" data-campo={chave}>
+          <div className="rp-sec-icon"><Icon name={icone} size={17} /></div>
+          <div className="rp-sec-title">{numero}. {titulo}</div>
+          <div className="rp-sec-body">{textoOriginal || "—"}</div>
+        </div>
+      );
+    }
+    return chunks.map((texto, i) => (
+      <div className="rp-sec" data-campo={chave} key={i}>
+        <div className="rp-sec-icon"><Icon name={icone} size={17} /></div>
+        <div className="rp-sec-title">{numero}. {titulo}{i > 0 ? " (CONTINUAÇÃO)" : ""}</div>
+        <div className="rp-sec-body">{texto}</div>
+      </div>
+    ));
+  }
   return (
     <>
       <div className="rp-card">
@@ -2607,28 +2626,10 @@ function RelatorioBlocos({ form, numeracaoAnexos }) {
         </div>
       </div>
 
-      <div className="rp-sec">
-        <div className="rp-sec-icon"><Icon name="doc" size={17} /></div>
-        <div className="rp-sec-title">1. DESCRIÇÃO DO EVENTO</div>
-        <div className="rp-sec-body">{form.nomeEvento || "—"}</div>
-      </div>
-      <div className="rp-sec">
-        <div className="rp-sec-icon"><Icon name="alvo" size={17} /></div>
-        <div className="rp-sec-title">2. OBJETIVO DA PARTICIPAÇÃO</div>
-        <div className="rp-sec-body">{form.motivo || "—"}</div>
-      </div>
-      <div className="rp-sec">
-        <div className="rp-sec-icon"><Icon name="check" size={17} /></div>
-        <div className="rp-sec-title">3. CONCLUSÃO</div>
-        <div className="rp-sec-body">{form.conclusao || "—"}</div>
-      </div>
-      {String(form.infoComplementares || "").trim() && (
-        <div className="rp-sec">
-          <div className="rp-sec-icon"><Icon name="info" size={17} /></div>
-          <div className="rp-sec-title">4. INFORMAÇÕES COMPLEMENTARES</div>
-          <div className="rp-sec-body">{form.infoComplementares}</div>
-        </div>
-      )}
+      {secaoTexto("1", "DESCRIÇÃO DO EVENTO", "doc", form.nomeEvento, "nomeEvento")}
+      {secaoTexto("2", "OBJETIVO DA PARTICIPAÇÃO", "alvo", form.motivo, "motivo")}
+      {secaoTexto("3", "CONCLUSÃO", "check", form.conclusao, "conclusao")}
+      {String(form.infoComplementares || "").trim() && secaoTexto("4", "INFORMAÇÕES COMPLEMENTARES", "info", form.infoComplementares, "infoComplementares")}
 
       <div className="rp-card">
         <div className="rp-card-tab"><Icon name="paperclip" size={14} /> DOCUMENTOS ANEXADOS</div>
@@ -2664,7 +2665,7 @@ function RelatorioBlocos({ form, numeracaoAnexos }) {
 
 // Corpo completo do relatório (sem cabeçalho/rodapé próprios) — usado só na
 // geração do PDF, para medir e fatiar em quantas páginas A4 forem necessárias.
-function RelatorioCorpo({ form, numeracaoAnexos }) {
+function RelatorioCorpo({ form, numeracaoAnexos, quebras }) {
   return (
     <div className="rp-corpo">
       <div className="rp-titleblock">
@@ -2672,7 +2673,7 @@ function RelatorioCorpo({ form, numeracaoAnexos }) {
         <div className="rp-kicker"><i />PRESTAÇÃO DE CONTAS<i /></div>
         <div className="rp-subtitle"><span className="rp-sv-box">S.V. &nbsp;Nº&nbsp; {form.numeroSolicitacao || "________"}</span></div>
       </div>
-      <RelatorioBlocos form={form} numeracaoAnexos={numeracaoAnexos} />
+      <RelatorioBlocos form={form} numeracaoAnexos={numeracaoAnexos} quebras={quebras} />
     </div>
   );
 }
@@ -3661,7 +3662,7 @@ function App() {
           }
         }
       }
-      await prepararDocs(docs.filter(d => d.id !== "comprobatorio"));
+      await prepararDocs(docs.filter(d => d.id !== "comprobatorio" && d.id !== "devolucao_translado"));
       const transladosParaAnexar = (mostraTranslado && form.usouTranslado === "sim") ? translados.filter(t => t.arquivo) : [];
       if (transladosParaAnexar.length) {
         const itens = [];
@@ -3676,6 +3677,7 @@ function App() {
         itens.sort((a, b) => (a.data || "9999") < (b.data || "9999") ? -1 : (a.data || "9999") > (b.data || "9999") ? 1 : 0);
         anexosPreparados.push({ tipo: "translados", itens });
       }
+      await prepararDocs(docs.filter(d => d.id === "devolucao_translado"));
       await prepararDocs(docs.filter(d => d.id === "comprobatorio"));
 
       const totalAnexosPdf = anexosPreparados.length;
@@ -3803,8 +3805,17 @@ function App() {
           tamanhoFonte -= 0.5;
           doc.setFontSize(tamanhoFonte);
         }
-        doc.text(textoTitulo, tx, y + 32);
-        y += boxS + 16;
+        // Salvaguarda final: se mesmo na fonte mínima não couber numa linha só,
+        // quebra em até 2 — nunca ultrapassa a margem — e o cabeçalho cresce em
+        // altura para caber a 2ª linha.
+        let linhasTitulo = [textoTitulo];
+        if (doc.getTextWidth(textoTitulo) > larguraDisponivel) {
+          linhasTitulo = doc.splitTextToSize(textoTitulo, larguraDisponivel).slice(0, 2);
+        }
+        const linhaAltura = tamanhoFonte + 3;
+        linhasTitulo.forEach((linha, i) => doc.text(linha, tx, y + 32 + i * linhaAltura));
+        const alturaConteudo = linhasTitulo.length > 1 ? (32 + (linhasTitulo.length - 1) * linhaAltura + 10) : boxS;
+        y += Math.max(boxS, alturaConteudo) + 16;
       }
 
       function pilulaDadosOcultados(baseY) {
@@ -3863,18 +3874,99 @@ function App() {
 
       // ---- Corpo do relatório técnico: mede os cards de verdade e quebra em
       // quantas páginas A4 forem necessárias, sem cortar nenhum card ao meio ----
+      // ---- Corte de texto dentro de um card (para textos maiores que uma página) ----
+      // Usa o layout real do navegador (via Range) para achar até onde o texto cabe
+      // numa determinada altura, sempre cortando num espaço (nunca no meio de uma palavra).
+      function alturaTextoAte(textNode, topoOriginal, offset) {
+        if (offset <= 0) return 0;
+        const range = document.createRange();
+        range.setStart(textNode, 0);
+        range.setEnd(textNode, Math.min(offset, textNode.textContent.length));
+        return range.getBoundingClientRect().bottom - topoOriginal;
+      }
+      function encontrarOffsetParaAltura(textNode, topoOriginal, alturaAlvo) {
+        const texto = textNode.textContent;
+        let lo = 0, hi = texto.length;
+        while (lo < hi) {
+          const mid = Math.floor((lo + hi + 1) / 2);
+          if (alturaTextoAte(textNode, topoOriginal, mid) <= alturaAlvo) lo = mid; else hi = mid - 1;
+        }
+        return lo;
+      }
+      function cortarNoEspaco(texto, offset) {
+        if (offset >= texto.length) return texto.length;
+        const j = texto.lastIndexOf(" ", offset);
+        return j > 0 ? j : offset;
+      }
+      function calcularQuebrasDeCampo(elementoBody, alturaDisponivelPorPagina) {
+        if (!elementoBody) return null;
+        const textNode = Array.from(elementoBody.childNodes).find(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim());
+        if (!textNode) return null;
+        const texto = textNode.textContent;
+        const topoOriginal = elementoBody.getBoundingClientRect().top;
+        const alturaTotal = alturaTextoAte(textNode, topoOriginal, texto.length);
+        if (alturaTotal <= alturaDisponivelPorPagina) return null; // cabe inteiro, não precisa quebrar
+
+        const chunks = [];
+        let offsetAtual = 0;
+        let tentativas = 0;
+        while (offsetAtual < texto.length && tentativas < 40) {
+          tentativas += 1;
+          const alturaBase = alturaTextoAte(textNode, topoOriginal, offsetAtual);
+          let proximoOffset = encontrarOffsetParaAltura(textNode, topoOriginal, alturaBase + alturaDisponivelPorPagina);
+          if (proximoOffset <= offsetAtual) proximoOffset = texto.length;
+          else proximoOffset = cortarNoEspaco(texto, proximoOffset);
+          if (proximoOffset <= offsetAtual) proximoOffset = texto.length;
+          chunks.push(texto.slice(offsetAtual, proximoOffset).trim());
+          offsetAtual = proximoOffset;
+          while (texto[offsetAtual] === " ") offsetAtual++;
+        }
+        return chunks.length > 1 ? chunks : null;
+      }
+
       async function gerarPaginasRelatorio(numeracaoAnexos) {
         const PX_POR_PT = 794 / PAGE_W;
         const larguraCorpo = Math.round(contentW * PX_POR_PT);
-        const container = document.createElement("div");
-        container.style.cssText = `position:fixed;left:-12000px;top:0;width:${larguraCorpo}px;background:#ffffff;z-index:-1;`;
-        document.body.appendChild(container);
-        const raiz = ReactDOM.createRoot(container);
-        raiz.render(<div className="rp-captura"><RelatorioCorpo form={form} numeracaoAnexos={numeracaoAnexos} /></div>);
-        await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 70)));
-        const imagensImg = Array.from(container.querySelectorAll("img"));
-        await Promise.all(imagensImg.map(im => im.complete ? Promise.resolve() : new Promise(res => { im.onload = im.onerror = res; })));
+        const alturaHeaderPt = 101.5;
+        const alturaFooterReservaPt = 72;
+        const alturaUtilPaginaPx = (PAGE_H - alturaHeaderPt - alturaFooterReservaPt) * PX_POR_PT;
+        const PADDING_VERTICAL_SEC = 28; // padding: 14px 16px do .rp-sec
 
+        async function renderizarCorpo(quebras) {
+          const container = document.createElement("div");
+          container.style.cssText = `position:fixed;left:-12000px;top:0;width:${larguraCorpo}px;background:#ffffff;z-index:-1;`;
+          document.body.appendChild(container);
+          const raiz = ReactDOM.createRoot(container);
+          raiz.render(<div className="rp-captura"><RelatorioCorpo form={form} numeracaoAnexos={numeracaoAnexos} quebras={quebras} /></div>);
+          await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 70)));
+          const imagensImg = Array.from(container.querySelectorAll("img"));
+          await Promise.all(imagensImg.map(im => im.complete ? Promise.resolve() : new Promise(res => { im.onload = im.onerror = res; })));
+          return { container, raiz };
+        }
+
+        // ---- 1ª passagem: mede os blocos no tamanho natural e detecta os que
+        // são maiores que uma página inteira, sozinhos (só isso precisa quebrar) ----
+        const { container: container1, raiz: raiz1 } = await renderizarCorpo(null);
+        const corpoEl1 = container1.querySelector(".rp-corpo");
+        const blocos1 = Array.from(corpoEl1.children);
+        const quebras = {};
+        blocos1.forEach(el => {
+          const altura = el.getBoundingClientRect().height;
+          if (altura > alturaUtilPaginaPx) {
+            const campo = el.getAttribute("data-campo");
+            const corpoTexto = el.querySelector(".rp-sec-body");
+            if (campo && corpoTexto) {
+              const chunks = calcularQuebrasDeCampo(corpoTexto, alturaUtilPaginaPx - PADDING_VERTICAL_SEC);
+              if (chunks) quebras[campo] = chunks;
+            }
+          }
+        });
+        raiz1.unmount();
+        container1.remove();
+
+        // ---- 2ª passagem: com os textos já divididos (quando necessário), cada
+        // bloco individual cabe numa página — agora sim fatiamos em páginas ----
+        const { container, raiz } = await renderizarCorpo(Object.keys(quebras).length ? quebras : null);
         const corpoEl = container.querySelector(".rp-corpo");
         const containerTop = corpoEl.getBoundingClientRect().top;
         const blocos = Array.from(corpoEl.children).map(el => {
@@ -3886,12 +3978,6 @@ function App() {
         raiz.unmount();
         container.remove();
         const escala = canvasCompleto.width / larguraCorpo;
-
-        // Mesma geometria usada em cabecalhoAnexo()/rodapePaginaAnexo(): cabeçalho
-        // termina perto de y=101.5pt; o rodapé reserva os últimos ~72pt da página.
-        const alturaHeaderPt = 101.5;
-        const alturaFooterReservaPt = 72;
-        const alturaUtilPaginaPx = (PAGE_H - alturaHeaderPt - alturaFooterReservaPt) * PX_POR_PT;
 
         const cortes = [];
         let inicioAtual = 0;
@@ -3984,8 +4070,9 @@ function App() {
       }
 
       function desenharPaginaTranslado(numeroAnexo, seqTranslado, t, imagensPar, indicePrimeira, totalPaginasArquivo) {
+        const continuacao = indicePrimeira > 0;
         cabecalhoAnexo();
-        tituloAnexo(numeroAnexo, "COMPROVANTE DE TRANSLADO", "carro");
+        tituloAnexo(numeroAnexo, "COMPROVANTE DE TRANSLADO" + (continuacao ? " (CONTINUAÇÃO)" : ""), "carro");
         const pilulaH = t.redigido ? 34 : 0;
         const areaBottom = PAGE_H - 72 - pilulaH;
         // Card único do translado ocupando a área útil da página
@@ -4003,7 +4090,7 @@ function App() {
         doc.setFontSize(11.5);
         doc.setTextColor(...MX.navy);
         doc.text(`TRANSLADO ${seq}`, hx + 28, hy + 14);
-        const imgTop = camposDoTranslado(t, y + 44);
+        const imgTop = continuacao ? y + 44 : camposDoTranslado(t, y + 44);
         const imgBottom = areaBottom - 26; // reserva espaço para a legenda "Página X de Y"
         const areaH = imgBottom - imgTop;
         const validas = imagensPar.filter(Boolean);
