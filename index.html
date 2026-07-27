@@ -311,7 +311,7 @@
   .rp-sec{ display: flex; gap: 16px; border: 1px solid var(--linha); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; align-items: flex-start; background: #fff; }
   .rp-sec-icon{ width: 36px; height: 36px; border-radius: 10px; background: var(--verde); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .rp-sec-title{ flex: 0 0 190px; font-size: 13px; font-weight: 800; color: var(--azul-escuro); letter-spacing: .02em; line-height: 1.45; padding-top: 2px; }
-  .rp-sec-body{ flex: 1; font-size: 14.5px; color: #31424f; white-space: pre-wrap; word-break: break-word; padding-top: 2px; }
+  .rp-sec-body{ flex: 1; font-size: 14.5px; line-height: 1.5; text-align: justify; color: #31424f; white-space: pre-wrap; word-break: break-word; padding-top: 2px; }
   .rp-doclist{ display: flex; flex-direction: column; padding: 10px 18px 14px; }
   .rp-doc-check{ display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid #eef1f3; font-size: 14px; color: #31424f; }
   .rp-doc-num{ font-weight: 700; color: var(--azul); flex-shrink: 0; min-width: 18px; }
@@ -2585,27 +2585,16 @@ function dadosRelatorioPreview(form, numeracaoAnexos) {
 
 // Blocos do relatório, um por bloco visual (cada um é uma unidade que NUNCA é
 // cortada ao meio quando o PDF precisa quebrar em mais de uma página).
-function RelatorioBlocos({ form, numeracaoAnexos, quebras }) {
+function RelatorioBlocos({ form, numeracaoAnexos }) {
   const d = dadosRelatorioPreview(form, numeracaoAnexos);
-  const q = quebras || {};
   function secaoTexto(numero, titulo, icone, textoOriginal, chave) {
-    const chunks = q[chave];
-    if (!chunks || chunks.length <= 1) {
-      return (
-        <div className="rp-sec" data-campo={chave}>
-          <div className="rp-sec-icon"><Icon name={icone} size={17} /></div>
-          <div className="rp-sec-title">{numero}. {titulo}</div>
-          <div className="rp-sec-body">{textoOriginal || "—"}</div>
-        </div>
-      );
-    }
-    return chunks.map((texto, i) => (
-      <div className="rp-sec" data-campo={chave} key={i}>
+    return (
+      <div className="rp-sec" data-campo={chave}>
         <div className="rp-sec-icon"><Icon name={icone} size={17} /></div>
-        <div className="rp-sec-title">{numero}. {titulo}{i > 0 ? " (CONTINUAÇÃO)" : ""}</div>
-        <div className="rp-sec-body">{texto}</div>
+        <div className="rp-sec-title">{numero}. {titulo}</div>
+        <div className="rp-sec-body">{textoOriginal || "—"}</div>
       </div>
-    ));
+    );
   }
   return (
     <>
@@ -2665,7 +2654,7 @@ function RelatorioBlocos({ form, numeracaoAnexos, quebras }) {
 
 // Corpo completo do relatório (sem cabeçalho/rodapé próprios) — usado só na
 // geração do PDF, para medir e fatiar em quantas páginas A4 forem necessárias.
-function RelatorioCorpo({ form, numeracaoAnexos, quebras }) {
+function RelatorioCorpo({ form, numeracaoAnexos }) {
   return (
     <div className="rp-corpo">
       <div className="rp-titleblock">
@@ -2673,7 +2662,7 @@ function RelatorioCorpo({ form, numeracaoAnexos, quebras }) {
         <div className="rp-kicker"><i />PRESTAÇÃO DE CONTAS<i /></div>
         <div className="rp-subtitle"><span className="rp-sv-box">S.V. &nbsp;Nº&nbsp; {form.numeroSolicitacao || "________"}</span></div>
       </div>
-      <RelatorioBlocos form={form} numeracaoAnexos={numeracaoAnexos} quebras={quebras} />
+      <RelatorioBlocos form={form} numeracaoAnexos={numeracaoAnexos} />
     </div>
   );
 }
@@ -3872,106 +3861,40 @@ function App() {
         // (a barra grossa de baixo foi removida — a faixa fina acima do texto já identifica a página)
       }
 
-      // ---- Corpo do relatório técnico: mede os cards de verdade e quebra em
-      // quantas páginas A4 forem necessárias, sem cortar nenhum card ao meio ----
-      // ---- Corte de texto dentro de um card (para textos maiores que uma página) ----
-      // Usa o layout real do navegador (via Range) para achar até onde o texto cabe
-      // numa determinada altura, sempre cortando num espaço (nunca no meio de uma palavra).
-      function alturaTextoAte(textNode, topoOriginal, offset) {
-        if (offset <= 0) return 0;
-        const range = document.createRange();
-        range.setStart(textNode, 0);
-        range.setEnd(textNode, Math.min(offset, textNode.textContent.length));
-        return range.getBoundingClientRect().bottom - topoOriginal;
-      }
-      function encontrarOffsetParaAltura(textNode, topoOriginal, alturaAlvo) {
-        const texto = textNode.textContent;
-        let lo = 0, hi = texto.length;
-        while (lo < hi) {
-          const mid = Math.floor((lo + hi + 1) / 2);
-          if (alturaTextoAte(textNode, topoOriginal, mid) <= alturaAlvo) lo = mid; else hi = mid - 1;
-        }
-        return lo;
-      }
-      function cortarNoEspaco(texto, offset) {
-        if (offset >= texto.length) return texto.length;
-        const j = texto.lastIndexOf(" ", offset);
-        return j > 0 ? j : offset;
-      }
-      function calcularQuebrasDeCampo(elementoBody, alturaDisponivelPorPagina) {
-        if (!elementoBody) return null;
-        const textNode = Array.from(elementoBody.childNodes).find(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim());
-        if (!textNode) return null;
-        const texto = textNode.textContent;
-        const topoOriginal = elementoBody.getBoundingClientRect().top;
-        const alturaTotal = alturaTextoAte(textNode, topoOriginal, texto.length);
-        if (alturaTotal <= alturaDisponivelPorPagina) return null; // cabe inteiro, não precisa quebrar
-
-        const chunks = [];
-        let offsetAtual = 0;
-        let tentativas = 0;
-        while (offsetAtual < texto.length && tentativas < 40) {
-          tentativas += 1;
-          const alturaBase = alturaTextoAte(textNode, topoOriginal, offsetAtual);
-          let proximoOffset = encontrarOffsetParaAltura(textNode, topoOriginal, alturaBase + alturaDisponivelPorPagina);
-          if (proximoOffset <= offsetAtual) proximoOffset = texto.length;
-          else proximoOffset = cortarNoEspaco(texto, proximoOffset);
-          if (proximoOffset <= offsetAtual) proximoOffset = texto.length;
-          chunks.push(texto.slice(offsetAtual, proximoOffset).trim());
-          offsetAtual = proximoOffset;
-          while (texto[offsetAtual] === " ") offsetAtual++;
-        }
-        return chunks.length > 1 ? chunks : null;
-      }
-
+      // ---- Corpo do relatório técnico: renderiza tudo de uma vez e depois
+      // fatia a IMAGEM já pronta em quantas páginas A4 forem necessárias.
+      // Diferente de tentar prever onde o texto vai quebrar, aqui o corte usa
+      // os pixels reais renderizados — nunca desalinha, mesmo que caia no
+      // meio de um parágrafo. Quando isso acontece, desenha um pequeno
+      // cabeçalho "(CONTINUAÇÃO)" no topo da página seguinte.
       async function gerarPaginasRelatorio(numeracaoAnexos) {
         const PX_POR_PT = 794 / PAGE_W;
         const larguraCorpo = Math.round(contentW * PX_POR_PT);
         const alturaHeaderPt = 101.5;
         const alturaFooterReservaPt = 72;
         const alturaUtilPaginaPx = (PAGE_H - alturaHeaderPt - alturaFooterReservaPt) * PX_POR_PT;
-        const PADDING_VERTICAL_SEC = 28; // padding: 14px 16px do .rp-sec
+        const ALTURA_CABECALHO_CONTINUACAO = 46; // px CSS reservados para o cabeçalho sintético
 
-        async function renderizarCorpo(quebras) {
-          const container = document.createElement("div");
-          container.style.cssText = `position:fixed;left:-12000px;top:0;width:${larguraCorpo}px;background:#ffffff;z-index:-1;`;
-          document.body.appendChild(container);
-          const raiz = ReactDOM.createRoot(container);
-          raiz.render(<div className="rp-captura"><RelatorioCorpo form={form} numeracaoAnexos={numeracaoAnexos} quebras={quebras} /></div>);
-          await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 70)));
-          const imagensImg = Array.from(container.querySelectorAll("img"));
-          await Promise.all(imagensImg.map(im => im.complete ? Promise.resolve() : new Promise(res => { im.onload = im.onerror = res; })));
-          return { container, raiz };
-        }
+        const container = document.createElement("div");
+        container.style.cssText = `position:fixed;left:-12000px;top:0;width:${larguraCorpo}px;background:#ffffff;z-index:-1;`;
+        document.body.appendChild(container);
+        const raiz = ReactDOM.createRoot(container);
+        raiz.render(<div className="rp-captura"><RelatorioCorpo form={form} numeracaoAnexos={numeracaoAnexos} /></div>);
+        await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 70)));
+        const imagensImg = Array.from(container.querySelectorAll("img"));
+        await Promise.all(imagensImg.map(im => im.complete ? Promise.resolve() : new Promise(res => { im.onload = im.onerror = res; })));
 
-        // ---- 1ª passagem: mede os blocos no tamanho natural e detecta os que
-        // são maiores que uma página inteira, sozinhos (só isso precisa quebrar) ----
-        const { container: container1, raiz: raiz1 } = await renderizarCorpo(null);
-        const corpoEl1 = container1.querySelector(".rp-corpo");
-        const blocos1 = Array.from(corpoEl1.children);
-        const quebras = {};
-        blocos1.forEach(el => {
-          const altura = el.getBoundingClientRect().height;
-          if (altura > alturaUtilPaginaPx) {
-            const campo = el.getAttribute("data-campo");
-            const corpoTexto = el.querySelector(".rp-sec-body");
-            if (campo && corpoTexto) {
-              const chunks = calcularQuebrasDeCampo(corpoTexto, alturaUtilPaginaPx - PADDING_VERTICAL_SEC);
-              if (chunks) quebras[campo] = chunks;
-            }
-          }
-        });
-        raiz1.unmount();
-        container1.remove();
-
-        // ---- 2ª passagem: com os textos já divididos (quando necessário), cada
-        // bloco individual cabe numa página — agora sim fatiamos em páginas ----
-        const { container, raiz } = await renderizarCorpo(Object.keys(quebras).length ? quebras : null);
         const corpoEl = container.querySelector(".rp-corpo");
         const containerTop = corpoEl.getBoundingClientRect().top;
         const blocos = Array.from(corpoEl.children).map(el => {
           const r = el.getBoundingClientRect();
-          return { topo: r.top - containerTop, fundo: r.bottom - containerTop };
+          const tituloEl = el.querySelector(".rp-sec-title");
+          return {
+            topo: r.top - containerTop,
+            fundo: r.bottom - containerTop,
+            splitavel: !!el.getAttribute("data-campo"),
+            titulo: tituloEl ? tituloEl.textContent.trim() : null,
+          };
         });
 
         const canvasCompleto = await window.html2canvas(container, { scale: 2, backgroundColor: "#ffffff", useCORS: true, logging: false, windowWidth: larguraCorpo });
@@ -3979,30 +3902,66 @@ function App() {
         container.remove();
         const escala = canvasCompleto.width / larguraCorpo;
 
-        const cortes = [];
-        let inicioAtual = 0;
-        let fimUltimoQueCoube = 0;
-        blocos.forEach(bloco => {
-          if (bloco.fundo - inicioAtual > alturaUtilPaginaPx && fimUltimoQueCoube > inicioAtual) {
-            cortes.push({ inicio: inicioAtual, fim: fimUltimoQueCoube });
-            inicioAtual = fimUltimoQueCoube;
+        // ---- Anda pela altura acumulada e corta a cada página cheia. Se o
+        // bloco atual não coube por inteiro, mas já cabia em parte, corta NO
+        // MEIO dele (em vez de empurrar o bloco inteiro e deixar buraco) ----
+        const paginas = []; // { inicio, fim, cabecalhoContinuacao }
+        let inicioPagina = 0;
+        let cabecalhoContinuacaoPendente = null;
+        let i = 0;
+        let protecao = 0;
+        while (i < blocos.length && protecao < 500) {
+          protecao += 1;
+          const bloco = blocos[i];
+          const orcamento = alturaUtilPaginaPx - (cabecalhoContinuacaoPendente ? ALTURA_CABECALHO_CONTINUACAO : 0);
+          if (bloco.fundo - inicioPagina <= orcamento) {
+            i += 1;
+            continue; // este bloco cabe inteiro na página atual
           }
-          fimUltimoQueCoube = bloco.fundo;
-        });
-        cortes.push({ inicio: inicioAtual, fim: fimUltimoQueCoube });
+          const alturaUsada = bloco.topo - inicioPagina;
+          const espacoRestante = orcamento - alturaUsada;
+          if (espacoRestante < 60 || !bloco.splitavel) {
+            // não vale a pena (ou não é possível) cortar no meio deste bloco —
+            // fecha a página aqui; ele recomeça inteiro na página seguinte
+            paginas.push({ inicio: inicioPagina, fim: bloco.topo, cabecalhoContinuacao: cabecalhoContinuacaoPendente });
+            cabecalhoContinuacaoPendente = null;
+            inicioPagina = bloco.topo;
+            continue;
+          }
+          // corta no meio deste card de texto
+          const fimDaPagina = inicioPagina + orcamento;
+          paginas.push({ inicio: inicioPagina, fim: fimDaPagina, cabecalhoContinuacao: cabecalhoContinuacaoPendente });
+          cabecalhoContinuacaoPendente = (bloco.titulo || "").replace(/\s*\(CONTINUA[ÇC][ÃA]O\)\s*$/i, "") + " (CONTINUAÇÃO)";
+          inicioPagina = fimDaPagina;
+          blocos[i] = { ...bloco, topo: fimDaPagina };
+        }
+        paginas.push({ inicio: inicioPagina, fim: blocos.length ? blocos[blocos.length - 1].fundo : inicioPagina, cabecalhoContinuacao: cabecalhoContinuacaoPendente });
 
-        return cortes.map(({ inicio, fim }) => {
-          const alturaCss = Math.max(1, fim - inicio);
+        return paginas.map(({ inicio, fim, cabecalhoContinuacao }) => {
+          const alturaConteudo = Math.max(1, fim - inicio);
+          const alturaCabecalho = cabecalhoContinuacao ? ALTURA_CABECALHO_CONTINUACAO : 0;
           const cnv = document.createElement("canvas");
           cnv.width = canvasCompleto.width;
-          cnv.height = Math.round(alturaCss * escala);
+          cnv.height = Math.round((alturaConteudo + alturaCabecalho) * escala);
           const ctx = cnv.getContext("2d");
           ctx.fillStyle = "#ffffff";
           ctx.fillRect(0, 0, cnv.width, cnv.height);
-          ctx.drawImage(canvasCompleto, 0, inicio * escala, canvasCompleto.width, alturaCss * escala, 0, 0, cnv.width, cnv.height);
-          return { dataUrl: cnv.toDataURL("image/jpeg", 0.92), alturaPt: alturaCss / PX_POR_PT };
+          ctx.drawImage(
+            canvasCompleto,
+            0, inicio * escala, canvasCompleto.width, alturaConteudo * escala,
+            0, alturaCabecalho * escala, cnv.width, alturaConteudo * escala
+          );
+          if (cabecalhoContinuacao) {
+            const s = escala;
+            ctx.fillStyle = "#02356e";
+            ctx.font = `bold ${12.5 * s}px "IBM Plex Sans", Arial, sans-serif`;
+            ctx.textBaseline = "middle";
+            ctx.fillText(cabecalhoContinuacao.toUpperCase(), 0, 21 * s);
+          }
+          return { dataUrl: cnv.toDataURL("image/jpeg", 0.92), alturaPt: (alturaConteudo + alturaCabecalho) / PX_POR_PT };
         });
       }
+
 
       // Supõe relatório = 1 página; se der errado (textos longos empurrando
       // para uma 2ª+ página), corrige a numeração e refaz só essa parte.
