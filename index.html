@@ -248,7 +248,7 @@
 
   /* ================= REPORT PREVIEW ================= */
   .report-preview{ background: #fff; border: 1px solid var(--linha); border-radius: var(--r-lg); padding: 32px 32px 30px; font-family: var(--font-corpo); box-shadow: var(--shadow-card); }
-  .rp-logos{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom: 19px; }
+  .rp-logos{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom: 22px; }
   .rp-logos img:first-child{ height: 46px; }
   .rp-logo-col{ display:flex; flex-direction:column; align-items:flex-end; gap: 6px; }
   .rp-logo-col img{ height: 50px; }
@@ -287,6 +287,14 @@
   .rp-sign-role{ font-size: 14px; color: var(--cinza); margin-top: 2px; }
 
   .rp-footer{ margin-top: 28px; }
+
+  /* Wrapper enxuto usado só na geração do PDF: mesma tipografia do relatório,
+     mas sem borda/padding própria — o único espaçamento da página passa a
+     vir da moldura vetorial (cabeçalho/rodapé/margem), sem duplicar. */
+  .rp-captura{ font-family: var(--font-corpo); background: #fff; color: var(--grafite); }
+  .rp-corpo{ display: flex; flex-direction: column; }
+  .rp-titleblock{ }
+  .rp-decl-assin{ }
   .rp-footer-text{ display:flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 9px; color: var(--cinza); flex-wrap: wrap; margin-bottom: 10px; }
   .rp-footer-text .rp-footer-right{ color: var(--azul); font-family: var(--font-dado); white-space: nowrap; }
 
@@ -314,11 +322,9 @@
   .rp-declaracao-text{ font-size: 13.5px; color: #31424f; text-align: justify; line-height: 1.6; }
 
   /* ===== Página 1 — refinamentos para o layout aprovado ===== */
-  .rp-a4{ width: 794px; min-height: 1123px; display: flex; flex-direction: column; box-sizing: border-box; }
-  .rp-a4 .rp-footer{ margin-top: auto; }
-  .report-preview .rp-logos img:first-child{ height: 40px; }
-  .report-preview .rp-logo-col img{ height: 44px; }
-  .rp-topbar{ height: 5px; border-radius: 2.5px; margin: 0 0 32px; background: linear-gradient(90deg, var(--navy) 0%, var(--navy) 74%, var(--verde-vivo) 84%, var(--verde-vivo) 100%); }
+  .report-preview .rp-logos img:first-child{ height: 42px; }
+  .report-preview .rp-logo-col img{ height: 46px; }
+  .rp-topbar{ height: 6px; border-radius: 3px; margin: -6px 0 20px; background: linear-gradient(90deg, var(--navy) 0%, var(--navy) 74%, var(--verde-vivo) 84%, var(--verde-vivo) 100%); }
   .rp-kicker{ display: flex; align-items: center; justify-content: center; gap: 12px; }
   .rp-kicker i{ width: 26px; height: 2px; background: var(--verde-vivo); border-radius: 1px; }
   .rp-sv-box{ display: inline-block; border: 1.5px solid var(--linha); border-radius: 8px; padding: 7px 24px; font-family: var(--font-dado); font-size: 14.5px; color: #31424f; background: #fff; }
@@ -331,9 +337,14 @@
   .rp-sign .rp-sign-note{ color: var(--azul); font-style: normal; }
   .rp-sign-line{ width: 320px; max-width: 70%; height: 1px; background: #c9d2d8; margin: 10px auto; }
   .rp-sign .rp-sign-name{ border-top: none; padding-top: 0; margin-top: 0; letter-spacing: .02em; }
-  .rp-foot{ display: flex; align-items: baseline; justify-content: space-between; border-top: 1px solid #e8ecef; padding: 10px 0 8px; font-size: 10.5px; color: #566370; }
+  .rp-foot{ display: flex; align-items: center; border-top: 1px solid #e8ecef; padding: 9px 0 7px; font-size: 9px; color: #566370; white-space: nowrap; }
+  .rp-foot-col{ text-align: center; }
+  .rp-foot-col.foot-marca{ flex: 0.7; }
+  .rp-foot-col.foot-sistema{ flex: 2.6; }
+  .rp-foot-col.foot-solicitacao{ flex: 1.5; }
+  .rp-foot-col.foot-pagina{ flex: 0.9; }
+  .rp-foot-pipe{ color: #b7c0c7; padding: 0 3px; }
   .rp-foot b{ color: var(--grafite); }
-  .rp-foot-pipe{ color: #b7c0c7; }
 
   /* ===== Páginas de anexo (renderizadas em HTML, mesmo estilo da página 1) ===== */
   .ax-page{ width: 794px; min-height: 1123px; background: #fff; padding: 30px 40px 0; display: flex; flex-direction: column; box-sizing: border-box; font-family: var(--font-corpo); color: var(--grafite); }
@@ -377,7 +388,6 @@
   .ax-footer-bar{ height: 7px; margin: 0 -40px; background: linear-gradient(90deg, #0b1e3a 0%, var(--navy) 10%, var(--navy) 80%, var(--verde-vivo) 90%, var(--verde-vivo) 100%); }
 
   /* ===== Ajustes finos aprovados (página 1) ===== */
-  .rp-a4{ padding: 40px 64px 0; }
   .report-preview .rp-title{ font-size: 21px; color: #02356e; margin-bottom: 8px; }
   .report-preview .rp-kicker{ font-size: 12.5px; color: #3aa335; }
   .report-preview .rp-kicker i{ background: #3aa335; }
@@ -2534,7 +2544,7 @@ function LocalidadeSelect({ value, onChange, estados, estadosErro, municipiosCac
   );
 }
 
-function ReportPreview({ form, modoPdf, paginaTexto }) {
+function dadosRelatorioPreview(form) {
   const periodo = form.dataSaida && form.dataRetorno
     ? `${formatDateBR(form.dataSaida)} a ${formatDateBR(form.dataRetorno)}`
     : (formatDateBR(form.dataSaida) || formatDateBR(form.dataRetorno) || "—");
@@ -2556,30 +2566,26 @@ function ReportPreview({ form, modoPdf, paginaTexto }) {
   if (form.anexos?.devolucao_translado?.length) docsPreview.push({ nome: "Devolução do saldo de translado" });
   if (form.anexos?.comprobatorio?.length) docsPreview.push({ nome: "Outros documentos comprobatórios" });
   const atestoPreview = "Atesto e certifico que as informações constantes no presente documento demonstram efetivamente a realização e a efetividade da viagem, e que os comprovantes de despesa anexos a esta prestação de contas foram efetivamente realizados no estrito interesse da administração pública, conforme o Decreto Estadual n.º 6.358/2024.";
-  return (
-    <div className={"report-preview" + (modoPdf ? " rp-a4" : "")}>
-      <div className="rp-topbar" />
-      <div className="rp-logos">
-        <img src={DETRAN_LOGO} alt="DetranPR" />
-        <div className="rp-logo-col">
-          <img src={PARANA_LOGO} alt="Governo do Paraná" />
-        </div>
-      </div>
-      <div className="rp-title">RELATÓRIO TÉCNICO DE VIAGEM</div>
-      <div className="rp-kicker"><i />PRESTAÇÃO DE CONTAS<i /></div>
-      <div className="rp-subtitle"><span className="rp-sv-box">S.V. &nbsp;Nº&nbsp; {form.numeroSolicitacao || "________"}</span></div>
+  return { periodo, tipoViagem, cargoLinha, tipoPrestacao, docsPreview, atestoPreview };
+}
 
+// Blocos do relatório, um por bloco visual (cada um é uma unidade que NUNCA é
+// cortada ao meio quando o PDF precisa quebrar em mais de uma página).
+function RelatorioBlocos({ form }) {
+  const d = dadosRelatorioPreview(form);
+  return (
+    <>
       <div className="rp-card">
         <div className="rp-card-tab"><Icon name="maleta" size={14} /> RESUMO DA VIAGEM</div>
         <div className="rp-resumo-grid">
           <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="pessoa" size={15} /></span><span>Viajante:</span><strong>{form.nomeViajante || "—"}</strong></div>
-          <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="maleta" size={15} /></span><span>Tipo de viagem:</span><strong>{tipoViagem}</strong></div>
+          <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="maleta" size={15} /></span><span>Tipo de viagem:</span><strong>{d.tipoViagem}</strong></div>
           <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="pin" size={15} /></span><span>Destino:</span><strong>{form.destino || "—"}</strong></div>
           <div className="rp-resumo-item rp-resumo-situacao">
             <div className="rp-situacao-head"><span className="rp-ri-icon"><Icon name="alvo" size={15} /></span><span>Situação do roteiro:</span></div>
-            <span className={"rp-selo " + (form.tipoPrestacao === "roteiro_sem_alteracao" ? "ok" : "warn")}><Icon name="check" size={12} /> {tipoPrestacao}</span>
+            <span className={"rp-selo " + (form.tipoPrestacao === "roteiro_sem_alteracao" ? "ok" : "warn")}><Icon name="check" size={12} /> {d.tipoPrestacao}</span>
           </div>
-          <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="calendario" size={15} /></span><span>Período:</span><strong>{periodo}</strong></div>
+          <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="calendario" size={15} /></span><span>Período:</span><strong>{d.periodo}</strong></div>
         </div>
       </div>
 
@@ -2609,7 +2615,7 @@ function ReportPreview({ form, modoPdf, paginaTexto }) {
       <div className="rp-card">
         <div className="rp-card-tab"><Icon name="paperclip" size={14} /> DOCUMENTOS ANEXADOS</div>
         <div className="rp-doclist">
-          {docsPreview.length ? docsPreview.map((item, i) => (
+          {d.docsPreview.length ? d.docsPreview.map((item, i) => (
             <div className="rp-doc-check" key={i}>
               <span className="rp-check-dot"><Icon name="check" size={12} /></span>
               <span>{item.nome}{item.detalhe && <div className="rp-doc-detalhe">{item.detalhe}</div>}</span>
@@ -2618,31 +2624,66 @@ function ReportPreview({ form, modoPdf, paginaTexto }) {
         </div>
       </div>
 
-      <div className="rp-declaracao">
-        <div className="rp-declaracao-icon"><SvgEscudo size={38} /></div>
-        <div>
-          <div className="rp-declaracao-title">DECLARAÇÃO DO VIAJANTE</div>
-          <div className="rp-declaracao-text">{atestoPreview}</div>
+      <div className="rp-decl-assin">
+        <div className="rp-declaracao">
+          <div className="rp-declaracao-icon"><SvgEscudo size={38} /></div>
+          <div>
+            <div className="rp-declaracao-title">DECLARAÇÃO DO VIAJANTE</div>
+            <div className="rp-declaracao-text">{d.atestoPreview}</div>
+          </div>
+        </div>
+        <div className="rp-sign">
+          <div className="rp-sign-note">Assinado eletronicamente por</div>
+          <div className="rp-sign-line" />
+          <div className="rp-sign-name">{(form.nomeViajante || "Nome do viajante").toUpperCase()}</div>
+          <div className="rp-sign-role">{d.cargoLinha || "Cargo/Função — Setor"}</div>
         </div>
       </div>
+    </>
+  );
+}
 
-      <div className="rp-sign">
-        <div className="rp-sign-note">Assinado eletronicamente por</div>
-        <div className="rp-sign-line" />
-        <div className="rp-sign-name">{(form.nomeViajante || "Nome do viajante").toUpperCase()}</div>
-        <div className="rp-sign-role">{cargoLinha || "Cargo/Função — Setor"}</div>
+// Corpo completo do relatório (sem cabeçalho/rodapé próprios) — usado só na
+// geração do PDF, para medir e fatiar em quantas páginas A4 forem necessárias.
+function RelatorioCorpo({ form }) {
+  return (
+    <div className="rp-corpo">
+      <div className="rp-titleblock">
+        <div className="rp-title">RELATÓRIO TÉCNICO DE VIAGEM</div>
+        <div className="rp-kicker"><i />PRESTAÇÃO DE CONTAS<i /></div>
+        <div className="rp-subtitle"><span className="rp-sv-box">S.V. &nbsp;Nº&nbsp; {form.numeroSolicitacao || "________"}</span></div>
       </div>
+      <RelatorioBlocos form={form} />
+    </div>
+  );
+}
+
+function ReportPreview({ form }) {
+  return (
+    <div className="report-preview">
+      <div className="rp-topbar" />
+      <div className="rp-logos">
+        <img src={DETRAN_LOGO} alt="DetranPR" />
+        <div className="rp-logo-col">
+          <img src={PARANA_LOGO} alt="Governo do Paraná" />
+        </div>
+      </div>
+      <div className="rp-title">RELATÓRIO TÉCNICO DE VIAGEM</div>
+      <div className="rp-kicker"><i />PRESTAÇÃO DE CONTAS<i /></div>
+      <div className="rp-subtitle"><span className="rp-sv-box">S.V. &nbsp;Nº&nbsp; {form.numeroSolicitacao || "________"}</span></div>
+
+      <RelatorioBlocos form={form} />
 
       <div className="rp-footer">
         <div className="rp-foot-bar" />
         <div className="rp-foot">
-          <span><b>DETRAN/PR</b></span>
+          <div className="rp-foot-col foot-marca"><b>DETRAN/PR</b></div>
           <span className="rp-foot-pipe">|</span>
-          <span>Sistema de Prestação de Contas de Viagem</span>
+          <div className="rp-foot-col foot-sistema">Sistema de Prestação de Contas de Viagem</div>
           <span className="rp-foot-pipe">|</span>
-          <span>Solicitação: {form.numeroSolicitacao || "—"}</span>
+          <div className="rp-foot-col foot-solicitacao">Solicitação: {form.numeroSolicitacao || "—"}</div>
           <span className="rp-foot-pipe">|</span>
-          <span>{paginaTexto || "Página 1 de 1"}</span>
+          <div className="rp-foot-col foot-pagina">Página 1 de 1</div>
         </div>
       </div>
     </div>
@@ -3539,282 +3580,9 @@ function App() {
       const contentW = PAGE_W - margin * 2;
 
       // Paleta institucional (DETRAN/PR)
-      const COR = {
-        azul: [0, 81, 134],
-        azulEscuro: [1, 58, 97],
-        azulTint: [234, 241, 246],
-        verde: [83, 175, 49],
-        verdeTexto: [44, 90, 28],
-        cinza: [107, 102, 100],
-        cinzaClaro: [243, 245, 246],
-        borda: [221, 226, 230],
-        texto: [28, 36, 48],
-      };
-
       let y = 0;
-      let paginaAtual = 1;
-      let paginaAtualJaTemRodape = false;
 
-      function desenharTopo() {
-        doc.setFillColor(...COR.azulEscuro);
-        doc.rect(0, 0, PAGE_W, 5, "F");
-      }
-
-      function desenharCabecalho() {
-        desenharTopo();
-        const logoY = 28;
-        const detranH = 42, detranW = detranH / (575 / 2123);
-        const paranaH = 42, paranaW = paranaH / (129 / 297);
-        try {
-          doc.addImage(DETRAN_LOGO, "PNG", margin, logoY, detranW, detranH);
-        } catch (e) { /* segue sem a imagem se algo falhar */ }
-        try {
-          doc.addImage(PARANA_LOGO, "PNG", PAGE_W - margin - paranaW, logoY + (detranH - paranaH) / 2, paranaW, paranaH);
-        } catch (e) { /* segue sem a imagem se algo falhar */ }
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8.5);
-        doc.setTextColor(...COR.cinza);
-        doc.text(`Página ${paginaAtual}`, PAGE_W - margin, logoY + detranH + 10, { align: "right" });
-
-        const barY = logoY + detranH + 16;
-        const barH = 4.5;
-        doc.setFillColor(...COR.azul);
-        doc.rect(margin, barY, contentW, barH, "F");
-        const cutStartX = margin + contentW * 0.80;
-        doc.setFillColor(...COR.verde);
-        doc.lines(
-          [[contentW * 0.20, 0], [0, barH], [-(contentW * 0.14), 0]],
-          cutStartX, barY, [1, 1], "F", true
-        );
-        y = barY + barH + 26;
-      }
-
-      function desenharRodape() {
-        const enderecoTxt = "DETRAN-PR — Av. Victor Ferreira do Amaral, 2940 — Tarumã — 82800-900 — Curitiba — PR — 41 3361-1212";
-        const siteTxt = "www.detran.pr.gov.br";
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(7.5);
-        const enderecoW = doc.getTextWidth(enderecoTxt);
-        const siteW = doc.getTextWidth(siteTxt);
-        const cabeNaMesmaLinha = (enderecoW + siteW + 24) <= contentW;
-
-        if (cabeNaMesmaLinha) {
-          const textoY = PAGE_H - 38;
-          doc.setTextColor(...COR.cinza);
-          doc.text(enderecoTxt, margin, textoY);
-          doc.setTextColor(...COR.azul);
-          doc.text(siteTxt, PAGE_W - margin, textoY, { align: "right" });
-        } else {
-          const linha1Y = PAGE_H - 46;
-          const linha2Y = PAGE_H - 35;
-          doc.setTextColor(...COR.cinza);
-          doc.text(enderecoTxt, margin, linha1Y);
-          doc.setTextColor(...COR.azul);
-          doc.text(siteTxt, margin, linha2Y);
-        }
-
-        const barY = PAGE_H - 26;
-        const barH = 4.5;
-        doc.setFillColor(...COR.azul);
-        doc.rect(margin, barY, contentW, barH, "F");
-        const cutStartX = margin + contentW * 0.80;
-        doc.setFillColor(...COR.verde);
-        doc.lines(
-          [[contentW * 0.20, 0], [0, barH], [-(contentW * 0.14), 0]],
-          cutStartX, barY, [1, 1], "F", true
-        );
-      }
-
-      function desenharNumeroPagina() {
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8.5);
-        doc.setTextColor(...COR.cinza);
-        doc.text(`Página ${paginaAtual}`, PAGE_W - margin, 24, { align: "right" });
-      }
-
-      function novaPagina(comCabecalho) {
-        if (!paginaAtualJaTemRodape) desenharRodape();
-        doc.addPage();
-        paginaAtual += 1;
-        paginaAtualJaTemRodape = false;
-        if (comCabecalho) {
-          desenharCabecalho();
-        } else {
-          desenharTopo();
-          desenharNumeroPagina();
-          y = 30;
-        }
-      }
-
-      function garantirEspaco(altura) {
-        if (y + altura > PAGE_H - 64) novaPagina(false);
-      }
-
-      function desenharIconeBadge(icone, cx, cy, r) {
-        doc.setFillColor(...COR.azulTint);
-        doc.circle(cx, cy, r, "F");
-        doc.setDrawColor(...COR.azul);
-        doc.setFillColor(...COR.azul);
-        doc.setLineWidth(1);
-        const s = r * 0.5;
-        switch (icone) {
-          case "pessoa":
-            doc.circle(cx, cy - s * 0.4, s * 0.42, "F");
-            doc.ellipse(cx, cy + s * 0.55, s * 0.68, s * 0.42, "F");
-            break;
-          case "pin":
-            doc.circle(cx, cy - s * 0.15, s * 0.42, "S");
-            doc.triangle(cx - s * 0.3, cy + s * 0.1, cx + s * 0.3, cy + s * 0.1, cx, cy + s * 0.8, "F");
-            break;
-          case "calendario":
-            doc.roundedRect(cx - s * 0.6, cy - s * 0.45, s * 1.2, s * 0.95, 1, 1, "S");
-            doc.line(cx - s * 0.6, cy - s * 0.12, cx + s * 0.6, cy - s * 0.12);
-            doc.line(cx - s * 0.3, cy - s * 0.62, cx - s * 0.3, cy - s * 0.28);
-            doc.line(cx + s * 0.3, cy - s * 0.62, cx + s * 0.3, cy - s * 0.28);
-            break;
-          case "maleta":
-            doc.roundedRect(cx - s * 0.62, cy - s * 0.22, s * 1.24, s * 0.78, 1, 1, "S");
-            doc.roundedRect(cx - s * 0.24, cy - s * 0.55, s * 0.48, s * 0.34, 1, 1, "S");
-            break;
-          case "doc":
-            doc.roundedRect(cx - s * 0.46, cy - s * 0.68, s * 0.92, s * 1.36, 1, 1, "S");
-            doc.line(cx - s * 0.22, cy - s * 0.2, cx + s * 0.22, cy - s * 0.2);
-            doc.line(cx - s * 0.22, cy + s * 0.08, cx + s * 0.22, cy + s * 0.08);
-            doc.line(cx - s * 0.22, cy + s * 0.36, cx + s * 0.1, cy + s * 0.36);
-            break;
-          case "alvo":
-            doc.circle(cx, cy, s * 0.68, "S");
-            doc.circle(cx, cy, s * 0.34, "S");
-            doc.circle(cx, cy, s * 0.1, "F");
-            break;
-          case "check":
-            doc.circle(cx, cy, s * 0.68, "S");
-            doc.lines([[s * 0.24, -s * 0.26], [s * 0.42, s * 0.5]], cx - s * 0.36, cy + s * 0.06, [1, 1], "S");
-            break;
-          case "info":
-            doc.circle(cx, cy, s * 0.68, "S");
-            doc.circle(cx, cy - s * 0.32, 1, "F");
-            doc.line(cx, cy - s * 0.02, cx, cy + s * 0.42);
-            break;
-          default:
-            break;
-        }
-        doc.setLineWidth(0.75);
-      }
-
-      function tituloComIcone(icone, texto) {
-        const cx0 = margin + 13, r = 13;
-        const textX = cx0 + r + 11;
-        const maxTextW = contentW - (r * 2 + 11) - 55;
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(13.5);
-        const linhas = doc.splitTextToSize(texto, maxTextW);
-        const altura = Math.max(34, 12 + linhas.length * 16);
-        garantirEspaco(altura);
-        const cy = y + 10;
-        desenharIconeBadge(icone, cx0, cy, r);
-        doc.setTextColor(...COR.texto);
-        doc.text(linhas, textX, y + 14);
-        if (linhas.length === 1) {
-          const textW = doc.getTextWidth(linhas[0]);
-          const lineStartX = textX + textW + 10;
-          const lineEndX = margin + contentW - 16;
-          if (lineEndX - lineStartX > 20) {
-            doc.setDrawColor(...COR.borda);
-            doc.setLineDashPattern([2, 1.5], 0);
-            doc.setLineWidth(0.8);
-            doc.line(lineStartX, cy, lineEndX, cy);
-            doc.setLineDashPattern([], 0);
-            doc.setFillColor(...COR.azul);
-            doc.triangle(lineEndX + 3, cy - 5, lineEndX + 14, cy, lineEndX + 3, cy + 5, "F");
-          }
-        }
-        y += altura;
-      }
-
-      function tabelaCampos(campos) {
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(12.5);
-        const alturas = campos.map(c => {
-          const linhas = doc.splitTextToSize(String(c.valor || "—"), contentW - 56);
-          return { linhas, altura: Math.max(38, 20 + linhas.length * 15) };
-        });
-        const alturaTotal = alturas.reduce((acc, a) => acc + a.altura, 0);
-        garantirEspaco(alturaTotal + 12);
-        const startY = y;
-        doc.setDrawColor(...COR.borda);
-        doc.setLineWidth(1);
-        doc.roundedRect(margin, startY, contentW, alturaTotal, 6, 6, "S");
-        let cursorY = startY;
-        campos.forEach((c, i) => {
-          const { linhas, altura } = alturas[i];
-          if (i > 0) {
-            doc.setDrawColor(...COR.borda);
-            doc.setLineWidth(0.75);
-            doc.line(margin, cursorY, margin + contentW, cursorY);
-          }
-          if (c.icone) desenharIconeBadge(c.icone, margin + 21, cursorY + altura / 2, 11);
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(9.5);
-          doc.setTextColor(...COR.cinza);
-          doc.text(c.label.toUpperCase(), margin + 42, cursorY + 15);
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(12.5);
-          doc.setTextColor(...COR.texto);
-          doc.text(linhas, margin + 42, cursorY + 30);
-          cursorY += altura;
-        });
-        y = startY + alturaTotal + 12;
-      }
-
-      function caixaCampo(label, valor, icone) {
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(12.5);
-        const indent = icone ? 42 : 14;
-        const linhas = doc.splitTextToSize(String(valor || "—"), contentW - indent - 14);
-        const altura = Math.max(46, 28 + linhas.length * 15);
-        garantirEspaco(altura + 9);
-        doc.setFillColor(...COR.cinzaClaro);
-        doc.roundedRect(margin, y, contentW, altura, 5, 5, "F");
-        if (icone) desenharIconeBadge(icone, margin + 21, y + altura / 2, 12);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(9.5);
-        doc.setTextColor(...COR.cinza);
-        doc.text(label.toUpperCase(), margin + indent, y + 16);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(13);
-        doc.setTextColor(...COR.texto);
-        doc.text(linhas, margin + indent, y + 32);
-        y += altura + 9;
-      }
-
-      // ---- Renderização em HTML: todas as páginas do PDF usam o mesmo visual do sistema ----
       if (!window.html2canvas) throw new Error("Gerador visual indisponível");
-
-      async function htmlParaImagem(elemento) {
-        const container = document.createElement("div");
-        container.style.cssText = "position:fixed;left:-12000px;top:0;width:794px;background:#ffffff;z-index:-1;";
-        document.body.appendChild(container);
-        const raiz = ReactDOM.createRoot(container);
-        raiz.render(elemento);
-        await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 70)));
-        const imagens = Array.from(container.querySelectorAll("img"));
-        await Promise.all(imagens.map(im => im.complete ? Promise.resolve() : new Promise(res => { im.onload = im.onerror = res; })));
-        const canvas = await window.html2canvas(container, { scale: 2, backgroundColor: "#ffffff", useCORS: true, logging: false, windowWidth: 794 });
-        raiz.unmount();
-        container.remove();
-        return canvas.toDataURL("image/jpeg", 0.92);
-      }
-
-      function adicionarPaginaImagem(imgData, primeira) {
-        if (!primeira) doc.addPage();
-        const props = doc.getImageProperties(imgData);
-        const prop = props.width / props.height;
-        let w = PAGE_W, h = w / prop;
-        if (h > PAGE_H) { h = PAGE_H; w = h * prop; }
-        const fmt = imgData.startsWith("data:image/png") ? "PNG" : "JPEG";
-        doc.addImage(imgData, fmt, (PAGE_W - w) / 2, (PAGE_H - h) / 2, w, h);
-      }
 
       // ---- Páginas de comprovante (uma para cada arquivo anexado) ----
       async function obterPaginasComoImagens(meta, contentDataUrl) {
@@ -3890,18 +3658,15 @@ function App() {
       await prepararDocs(docs.filter(d => d.id === "comprobatorio"));
 
       const totalAnexosPdf = anexosPreparados.length;
-      let totalPaginasPdf = 1;
+      let totalPaginasAnexos = 0;
       anexosPreparados.forEach(a => {
-        if (a.tipo === "doc") totalPaginasPdf += Math.max(1, a.imagens.length);
-        else totalPaginasPdf += a.itens.reduce((acc, t) => acc + Math.max(1, Math.ceil((t.imagens.length || 1) / 2)), 0) + 1;
+        if (a.tipo === "doc") totalPaginasAnexos += Math.max(1, a.imagens.length);
+        else totalPaginasAnexos += a.itens.reduce((acc, t) => acc + Math.max(1, Math.ceil((t.imagens.length || 1) / 2)), 0) + 1;
       });
 
-      // ---- Página 1 ----
-      const imgPagina1 = await htmlParaImagem(<ReportPreview form={form} modoPdf paginaTexto={`Página 1 de ${totalPaginasPdf}`} />);
-      adicionarPaginaImagem(imgPagina1, true);
-
-      // ---- Páginas de anexo (desenhadas diretamente no PDF — rápido) ----
-      let paginaPdfAtual = 1; // a página 1 é o relatório técnico
+      // ---- Moldura única (cabeçalho/rodapé) usada em toda página do PDF ----
+      let paginaPdfAtual = 0; // incrementado a cada cabecalhoAnexo()
+      let totalPaginasPdf = 0; // definido mais abaixo, depois de medir o relatório
 
       // Paleta aproximada do layout aprovado
       const MX = {
@@ -3921,8 +3686,8 @@ function App() {
         azulPillBorda: [216, 230, 242],
       };
 
-      function cabecalhoAnexo() {
-        doc.addPage();
+      function cabecalhoAnexo(criarNovaPagina = true) {
+        if (criarNovaPagina) doc.addPage();
         paginaPdfAtual += 1;
         const logoY = 30;
         const detranH = 30, detranW = detranH / (575 / 2123);
@@ -4007,27 +3772,88 @@ function App() {
           `Solicitação: ${form.numeroSolicitacao || "—"}`,
           `Página ${paginaPdfAtual} de ${totalPaginasPdf}`,
         ];
-        doc.setFontSize(8.7);
-        const larguras = segmentos.map(s => doc.getTextWidth(s));
-        const larguraPipe = doc.getTextWidth("  |  ");
-        const larguraTexto = larguras.reduce((a, b) => a + b, 0) + larguraPipe * (segmentos.length - 1);
-        const espacoExtra = Math.max(0, contentW - larguraTexto);
-        const folga = espacoExtra / (segmentos.length - 1); // espaça os blocos até ocupar toda a faixa
-        let x = margin;
+        const pesos = [0.7, 2.6, 1.5, 0.9];
+        const somaPesos = pesos.reduce((a, b) => a + b, 0);
+        doc.setFontSize(8);
+        let xAtual = margin;
         segmentos.forEach((texto, i) => {
+          const colW = (contentW * pesos[i]) / somaPesos;
+          if (i > 0) {
+            doc.setTextColor(...MX.cinzaTxt);
+            doc.text("|", xAtual, linhaY);
+          }
           doc.setFont("helvetica", i === 0 ? "bold" : "normal");
           doc.setTextColor(...(i === 0 ? MX.texto : MX.cinzaTxt));
-          doc.text(texto, x, linhaY);
-          x += larguras[i];
-          if (i < segmentos.length - 1) {
-            doc.setFont("helvetica", "normal");
-            doc.setTextColor(...MX.cinzaTxt);
-            doc.text("|", x + larguraPipe / 2, linhaY, { align: "center" });
-            x += larguraPipe + folga;
-          }
+          doc.text(texto, xAtual + colW / 2, linhaY, { align: "center" });
+          xAtual += colW;
         });
         // (a barra grossa de baixo foi removida — a faixa fina acima do texto já identifica a página)
       }
+
+      // ---- Corpo do relatório técnico: mede os cards de verdade e quebra em
+      // quantas páginas A4 forem necessárias, sem cortar nenhum card ao meio ----
+      async function gerarPaginasRelatorio() {
+        const PX_POR_PT = 794 / PAGE_W;
+        const larguraCorpo = Math.round(contentW * PX_POR_PT);
+        const container = document.createElement("div");
+        container.style.cssText = `position:fixed;left:-12000px;top:0;width:${larguraCorpo}px;background:#ffffff;z-index:-1;`;
+        document.body.appendChild(container);
+        const raiz = ReactDOM.createRoot(container);
+        raiz.render(<div className="rp-captura"><RelatorioCorpo form={form} /></div>);
+        await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 70)));
+        const imagensImg = Array.from(container.querySelectorAll("img"));
+        await Promise.all(imagensImg.map(im => im.complete ? Promise.resolve() : new Promise(res => { im.onload = im.onerror = res; })));
+
+        const corpoEl = container.querySelector(".rp-corpo");
+        const containerTop = corpoEl.getBoundingClientRect().top;
+        const blocos = Array.from(corpoEl.children).map(el => {
+          const r = el.getBoundingClientRect();
+          return { topo: r.top - containerTop, fundo: r.bottom - containerTop };
+        });
+
+        const canvasCompleto = await window.html2canvas(container, { scale: 2, backgroundColor: "#ffffff", useCORS: true, logging: false, windowWidth: larguraCorpo });
+        raiz.unmount();
+        container.remove();
+        const escala = canvasCompleto.width / larguraCorpo;
+
+        // Mesma geometria usada em cabecalhoAnexo()/rodapePaginaAnexo(): cabeçalho
+        // termina perto de y=101.5pt; o rodapé reserva os últimos ~72pt da página.
+        const alturaHeaderPt = 101.5;
+        const alturaFooterReservaPt = 72;
+        const alturaUtilPaginaPx = (PAGE_H - alturaHeaderPt - alturaFooterReservaPt) * PX_POR_PT;
+
+        const cortes = [];
+        let inicioAtual = 0;
+        let fimUltimoQueCoube = 0;
+        blocos.forEach(bloco => {
+          if (bloco.fundo - inicioAtual > alturaUtilPaginaPx && fimUltimoQueCoube > inicioAtual) {
+            cortes.push({ inicio: inicioAtual, fim: fimUltimoQueCoube });
+            inicioAtual = fimUltimoQueCoube;
+          }
+          fimUltimoQueCoube = bloco.fundo;
+        });
+        cortes.push({ inicio: inicioAtual, fim: fimUltimoQueCoube });
+
+        return cortes.map(({ inicio, fim }) => {
+          const alturaCss = Math.max(1, fim - inicio);
+          const cnv = document.createElement("canvas");
+          cnv.width = canvasCompleto.width;
+          cnv.height = Math.round(alturaCss * escala);
+          const ctx = cnv.getContext("2d");
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, cnv.width, cnv.height);
+          ctx.drawImage(canvasCompleto, 0, inicio * escala, canvasCompleto.width, alturaCss * escala, 0, 0, cnv.width, cnv.height);
+          return { dataUrl: cnv.toDataURL("image/jpeg", 0.92), alturaPt: alturaCss / PX_POR_PT };
+        });
+      }
+
+      const paginasRelatorio = await gerarPaginasRelatorio();
+      totalPaginasPdf = paginasRelatorio.length + totalPaginasAnexos;
+      paginasRelatorio.forEach((pagina, i) => {
+        cabecalhoAnexo(i > 0); // a primeira página do PDF já existe por padrão — não criar outra
+        doc.addImage(pagina.dataUrl, "JPEG", margin, y, contentW, pagina.alturaPt);
+        rodapePaginaAnexo();
+      });
 
       function paginaAnexoDoc(numero, titulo, imagem, continuacao, redigido, tipoIcone) {
         cabecalhoAnexo();
