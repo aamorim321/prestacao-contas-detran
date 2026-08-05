@@ -2065,6 +2065,15 @@ function loadImageEl(src) {
   });
 }
 
+// Prefixo único de chave de rascunho — usado em TODO lugar que salva, lê ou
+// exclui um rascunho no IndexedDB. Nunca escreva "rascunho:" na mão em outro
+// ponto do código; use sempre esta função, para nunca mais haver duas chaves
+// diferentes apontando para o mesmo rascunho.
+const PREFIXO_RASCUNHO = "rascunho:";
+function criarChaveRascunho(token) {
+  return token ? `${PREFIXO_RASCUNHO}${token}` : null;
+}
+
 const DraftDB = {
   dbName: "detran-prestacao-contas",
   storeName: "rascunhos",
@@ -2760,7 +2769,7 @@ function TelaMinhasPrestacoes() {
     const rotulo = item.numeroSolicitacao ? `S.V. ${item.numeroSolicitacao}` : "sem número de solicitação";
     if (!window.confirm(`Excluir a prestação ${rotulo}?\n\nEla será apagada deste navegador e não poderá ser recuperada.`)) return;
     try {
-      const chave = `prestacao:${item.token}`;
+      const chave = criarChaveRascunho(item.token);
       const ids = item.arquivoIds || [];
       await Promise.all([DraftDB.delete(chave), ...ids.map(id => DraftDB.delete(`${chave}:arquivo:${id}`))]);
     } catch (e) { /* remove da lista mesmo se a limpeza falhar */ }
@@ -2944,11 +2953,13 @@ function App() {
   const [pdfConcluido, setPdfConcluido] = useState(false);
   const [rascunhoBaixado, setRascunhoBaixado] = useState(false);
   const [pdfErro, setPdfErro] = useState(null);
+  const [pdfAviso, setPdfAviso] = useState(null);
+  const [avisoArmazenamento, setAvisoArmazenamento] = useState(null);
   const [redactTarget, setRedactTarget] = useState(null);
   const [mostrarPreview, setMostrarPreview] = useState(false);
   const [editQueue, setEditQueue] = useState([]);
   const saveTimer = useRef(null);
-  const key = token ? `rascunho:${token}` : null;
+  const key = criarChaveRascunho(token);
   const storageDisponivel = typeof window.indexedDB !== "undefined";
 
   useEffect(() => {
@@ -3026,7 +3037,22 @@ function App() {
     return () => clearTimeout(saveTimer.current);
   }, [form, key, loadedOnce, createdAt, step, modoInicio, pdfGeradoUmaVez]);
 
-  const update = useCallback((patch) => setForm((f) => ({ ...f, ...patch })), []);
+  const update = useCallback((patch) => {
+    const mudaOAtesto = Object.prototype.hasOwnProperty.call(patch, "atesto");
+    setForm(f => {
+      const proximo = { ...f, ...patch };
+      // Qualquer alteração de dado (que não seja o próprio ato de atestar)
+      // invalida a conferência e o PDF já gerado — evita assinar ou baixar
+      // um PDF que não reflete mais o que está preenchido.
+      if (!mudaOAtesto) proximo.atesto = false;
+      return proximo;
+    });
+    if (!mudaOAtesto) {
+      setConferencia({ dados: false, transporte: false, documentos: false, atesto: false });
+      setPdfConcluido(false);
+      setPdfGeradoUmaVez(false);
+    }
+  }, []);
 
   function handleSelectTransporte(transporteId) {
     if (form.transporte === transporteId) return;
@@ -3038,6 +3064,7 @@ function App() {
       const ok = window.confirm("Ao mudar o meio de transporte, os comprovantes e as informações já preenchidas nesta etapa serão apagados. Deseja continuar?");
       if (!ok) return;
     }
+    excluirConteudosArquivos(coletarIdsAnexos(form.anexos, form.translados));
     setForm(f => ({
       ...f,
       transporte: transporteId,
@@ -3099,14 +3126,41 @@ function App() {
   const MAX_ANEXO_BYTES = 8 * 1024 * 1024;
 
   async function persistFile(fileId, dataUrl) {
-    if (key && storageDisponivel) {
-      try { await DraftDB.set(`${key}:arquivo:${fileId}`, dataUrl); } catch (e) { /* segue só em memória */ }
+    if (!key || !storageDisponivel) return { sucesso: false, motivo: "armazenamento_indisponivel" };
+    try {
+      await DraftDB.set(`${key}:arquivo:${fileId}`, dataUrl);
+      return { sucesso: true };
+    } catch (e) {
+      return { sucesso: false, motivo: "falha_armazenamento" };
     }
+  }
+  async function persistFileComAviso(fileId, dataUrl) {
+    const resultado = await persistFile(fileId, dataUrl);
+    if (!resultado.sucesso) {
+      setAvisoArmazenamento("Não foi possível salvar um arquivo anexado neste navegador. Ele continua visível nesta sessão, mas pode se perder se a página for fechada. Baixe o rascunho (arquivo .json) como segurança antes de continuar.");
+    }
+    return resultado;
   }
   async function deleteFileContent(fileId) {
     if (key && storageDisponivel) {
       try { await DraftDB.delete(`${key}:arquivo:${fileId}`); } catch (e) { /* ignora */ }
     }
+  }
+  async function excluirConteudosArquivos(ids) {
+    const idsValidos = [...new Set((ids || []).filter(Boolean))];
+    if (!idsValidos.length) return;
+    await Promise.allSettled(idsValidos.map(id => deleteFileContent(id)));
+    setAnexosContent(atual => {
+      const novo = { ...atual };
+      idsValidos.forEach(id => delete novo[id]);
+      return novo;
+    });
+  }
+  function coletarIdsAnexos(anexos, translados) {
+    const ids = [];
+    Object.values(anexos || {}).forEach(lista => (lista || []).forEach(f => f && f.id && ids.push(f.id)));
+    (translados || []).forEach(t => { if (t && t.arquivo && t.arquivo.id) ids.push(t.arquivo.id); });
+    return ids;
   }
 
   async function attachFiles(docId, fileList) {
@@ -3132,7 +3186,7 @@ function App() {
           applySave: (newDataUrl, newMeta) => {
             const metaFinal = { ...metaBase, ...newMeta };
             setAnexosContent(prev => ({ ...prev, [fileId]: newDataUrl }));
-            persistFile(fileId, newDataUrl);
+            persistFileComAviso(fileId, newDataUrl);
             setForm(f => ({ ...f, anexos: { ...f.anexos, [docId]: [...(f.anexos[docId] || []), metaFinal] } }));
           },
           applyCancel: () => {
@@ -3161,7 +3215,7 @@ function App() {
       meta, dataUrl: anexosContent[fileId],
       onSave: (newDataUrl, newMeta) => {
         setAnexosContent(prev => ({ ...prev, [fileId]: newDataUrl }));
-        persistFile(fileId, newDataUrl);
+        persistFileComAviso(fileId, newDataUrl);
         setForm(f => ({ ...f, anexos: { ...f.anexos, [docId]: (f.anexos[docId] || []).map(x => x.id === fileId ? { ...x, ...newMeta } : x) } }));
         setRedactTarget(null);
       },
@@ -3177,7 +3231,7 @@ function App() {
       meta: item.arquivo, dataUrl: anexosContent[fileId],
       onSave: (newDataUrl, newMeta) => {
         setAnexosContent(prev => ({ ...prev, [fileId]: newDataUrl }));
-        persistFile(fileId, newDataUrl);
+        persistFileComAviso(fileId, newDataUrl);
         updateTranslado(itemId, { arquivo: { ...item.arquivo, ...newMeta } });
         setRedactTarget(null);
       },
@@ -3320,7 +3374,7 @@ function App() {
       const dataUrl = await readFileAsDataURL(file);
       const fileId = uid();
       setAnexosContent(prev => ({ ...prev, [fileId]: dataUrl }));
-      persistFile(fileId, dataUrl);
+      persistFileComAviso(fileId, dataUrl);
       const bytes = new Uint8Array(await file.arrayBuffer());
       const pdf = await window.pdfjsLib.getDocument({ data: bytes }).promise;
       const partes = [];
@@ -3331,6 +3385,8 @@ function App() {
       }
       const extraidos = interpretarTextoSCV(partes.join("\n"));
       setDadosScv(extraidos);
+      const idAnterior = form.scvArquivo?.id;
+      if (idAnterior && idAnterior !== fileId) excluirConteudosArquivos([idAnterior]);
       setForm(f => ({ ...f, scvArquivo: { id:fileId, nome:file.name, tipo:file.type, tamanho:file.size }, scvImportado:true, dadosScvConfirmados:false }));
       setScvEtapaModal(1);
       setScvModal(true);
@@ -3417,8 +3473,12 @@ function App() {
       const dataUrl = resultado.dataUrl;
       const fileId = uid();
       setAnexosContent(prev => ({ ...prev, [fileId]: dataUrl }));
-      persistFile(fileId, dataUrl);
+      persistFileComAviso(fileId, dataUrl);
       const meta = { id: fileId, nome: file.name, tamanho: resultado.tamanho, tipo: resultado.comprimida ? "image/jpeg" : file.type };
+      const anterior = (form.translados || []).find(t => t.id === itemId);
+      if (anterior && anterior.arquivo && anterior.arquivo.id && anterior.arquivo.id !== fileId) {
+        excluirConteudosArquivos([anterior.arquivo.id]);
+      }
       updateTranslado(itemId, { arquivo: meta });
     } catch (e) {
       setFileWarnings(w => ({ ...w, [itemId]: "Não foi possível ler este arquivo." }));
@@ -3531,18 +3591,7 @@ function App() {
     return Math.round((concluidos / itens.length) * 100);
   }
 
-  const progressoEtapa1 = percentualConcluido([
-    !!form.tipoPrestacao,
-    !!form.numeroSolicitacao,
-    !!form.nomeViajante,
-    !!form.origem,
-    !!form.destino,
-    !!form.dataSaida,
-    !!form.dataRetorno && datasValidas,
-    !!form.nomeEvento,
-    !!String(form.motivo || "").trim(),
-    !!String(form.conclusao || "").trim(),
-  ]);
+  const progressoEtapa1 = percentualConcluido(camposObrigatoriosEtapa1.map(c => c.ok));
 
   const tarefasEtapa2 = [!!form.transporte];
   if (mostraTranslado) tarefasEtapa2.push(!!form.usouTranslado);
@@ -3576,6 +3625,7 @@ function App() {
 
   async function gerarPDF() {
     setPdfErro(null);
+    setPdfAviso(null);
     if (!(window.jspdf && window.jspdf.jsPDF)) {
       setPdfErro("A biblioteca de geração de PDF ainda não carregou. Verifique sua conexão e tente novamente em instantes.");
       return;
@@ -3584,6 +3634,10 @@ function App() {
     try {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ unit: "pt", format: "a4" });
+      const avisosPdf = []; // qualquer coisa aqui vira aviso visível — nada falha calado
+      function registrarAvisoPdf(mensagem) {
+        if (!avisosPdf.includes(mensagem)) avisosPdf.push(mensagem);
+      }
       const PAGE_W = 595.28, PAGE_H = 841.89;
       const margin = 48;
       const contentW = PAGE_W - margin * 2;
@@ -3748,8 +3802,8 @@ function App() {
         const logoY = 30;
         const detranH = 30, detranW = detranH / (575 / 2123);
         const paranaH = 33, paranaW = paranaH / (129 / 297);
-        try { doc.addImage(DETRAN_LOGO, "PNG", margin, logoY, detranW, detranH); } catch (e) {}
-        try { doc.addImage(PARANA_LOGO, "PNG", PAGE_W - margin - paranaW, logoY + (detranH - paranaH) / 2, paranaW, paranaH); } catch (e) {}
+        try { doc.addImage(DETRAN_LOGO, "PNG", margin, logoY, detranW, detranH); } catch (e) { registrarAvisoPdf("A logo do DetranPR não pôde ser inserida no cabeçalho."); }
+        try { doc.addImage(PARANA_LOGO, "PNG", PAGE_W - margin - paranaW, logoY + (detranH - paranaH) / 2, paranaW, paranaH); } catch (e) { registrarAvisoPdf("A logo do Governo do Paraná não pôde ser inserida no cabeçalho."); }
         const barY = logoY + detranH + 14;
         doc.setFillColor(...MX.navy);
         doc.roundedRect(margin, barY, contentW, 3.5, 1.75, 1.75, "F");
@@ -3861,122 +3915,254 @@ function App() {
         // (a barra grossa de baixo foi removida — a faixa fina acima do texto já identifica a página)
       }
 
-      // ---- Corpo do relatório técnico: renderiza tudo de uma vez e depois
-      // fatia a IMAGEM já pronta em quantas páginas A4 forem necessárias.
-      // Diferente de tentar prever onde o texto vai quebrar, aqui o corte usa
-      // os pixels reais renderizados — nunca desalinha, mesmo que caia no
-      // meio de um parágrafo. Quando isso acontece, desenha um pequeno
-      // cabeçalho "(CONTINUAÇÃO)" no topo da página seguinte.
-      async function gerarPaginasRelatorio(numeracaoAnexos) {
-        const PX_POR_PT = 794 / PAGE_W;
-        const larguraCorpo = Math.round(contentW * PX_POR_PT);
-        const alturaHeaderPt = 101.5;
-        const alturaFooterReservaPt = 72;
-        const alturaUtilPaginaPx = (PAGE_H - alturaHeaderPt - alturaFooterReservaPt) * PX_POR_PT;
-        const ALTURA_CABECALHO_CONTINUACAO = 46; // px CSS reservados para o cabeçalho sintético
+      // ---- Corpo do relatório técnico: desenhado como TEXTO DE VERDADE
+      // (não mais uma foto da tela). Isso é essencial porque o solicitante
+      // precisa selecionar e copiar esse texto do PDF assinado para colar
+      // no Sistema Central de Viagens (SCV), até que os sistemas sejam
+      // integrados — uma imagem não pode ser copiada, texto real pode.
+      // Bônus técnico: a quebra de página fica mais confiável ainda, porque
+      // quem mede o texto (jsPDF) é o mesmo motor que desenha — não existe
+      // mais o risco de o navegador medir de um jeito e o corte acontecer
+      // de outro (foi essa divergência que causou os bugs de paginação
+      // anteriores).
+      function desenharCorpoRelatorio(numeracaoAnexos, somenteContar) {
+        const d = dadosRelatorioPreview(form, numeracaoAnexos);
+        const Y_TOPO_PAGINA = 101.5; // mesmo valor que cabecalhoAnexo() produz
+        const RODAPE_RESERVA = 72;
+        let paginasRelatorio = 1;
 
-        const container = document.createElement("div");
-        container.style.cssText = `position:fixed;left:-12000px;top:0;width:${larguraCorpo}px;background:#ffffff;z-index:-1;`;
-        document.body.appendChild(container);
-        const raiz = ReactDOM.createRoot(container);
-        raiz.render(<div className="rp-captura"><RelatorioCorpo form={form} numeracaoAnexos={numeracaoAnexos} /></div>);
-        await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 70)));
-        const imagensImg = Array.from(container.querySelectorAll("img"));
-        await Promise.all(imagensImg.map(im => im.complete ? Promise.resolve() : new Promise(res => { im.onload = im.onerror = res; })));
+        function espacoRestante() { return (PAGE_H - RODAPE_RESERVA) - y; }
 
-        const corpoEl = container.querySelector(".rp-corpo");
-        const containerTop = corpoEl.getBoundingClientRect().top;
-        const blocos = Array.from(corpoEl.children).map(el => {
-          const r = el.getBoundingClientRect();
-          const tituloEl = el.querySelector(".rp-sec-title");
-          return {
-            topo: r.top - containerTop,
-            fundo: r.bottom - containerTop,
-            splitavel: !!el.getAttribute("data-campo"),
-            titulo: tituloEl ? tituloEl.textContent.trim() : null,
-          };
-        });
-
-        const canvasCompleto = await window.html2canvas(container, { scale: 2, backgroundColor: "#ffffff", useCORS: true, logging: false, windowWidth: larguraCorpo });
-        raiz.unmount();
-        container.remove();
-        const escala = canvasCompleto.width / larguraCorpo;
-
-        // ---- Anda pela altura acumulada e corta a cada página cheia. Se o
-        // bloco atual não coube por inteiro, mas já cabia em parte, corta NO
-        // MEIO dele (em vez de empurrar o bloco inteiro e deixar buraco) ----
-        const paginas = []; // { inicio, fim, cabecalhoContinuacao }
-        let inicioPagina = 0;
-        let cabecalhoContinuacaoPendente = null;
-        let i = 0;
-        let protecao = 0;
-        while (i < blocos.length && protecao < 500) {
-          protecao += 1;
-          const bloco = blocos[i];
-          const orcamento = alturaUtilPaginaPx - (cabecalhoContinuacaoPendente ? ALTURA_CABECALHO_CONTINUACAO : 0);
-          if (bloco.fundo - inicioPagina <= orcamento) {
-            i += 1;
-            continue; // este bloco cabe inteiro na página atual
+        function novaPagina(tituloContinuacao) {
+          if (!somenteContar) {
+            rodapePaginaAnexo();
+            cabecalhoAnexo(true);
+          } else {
+            y = Y_TOPO_PAGINA;
           }
-          const alturaUsada = bloco.topo - inicioPagina;
-          const espacoRestante = orcamento - alturaUsada;
-          if (espacoRestante < 60 || !bloco.splitavel) {
-            // não vale a pena (ou não é possível) cortar no meio deste bloco —
-            // fecha a página aqui; ele recomeça inteiro na página seguinte
-            paginas.push({ inicio: inicioPagina, fim: bloco.topo, cabecalhoContinuacao: cabecalhoContinuacaoPendente });
-            cabecalhoContinuacaoPendente = null;
-            inicioPagina = bloco.topo;
-            continue;
+          paginasRelatorio += 1;
+          if (tituloContinuacao) {
+            if (!somenteContar) {
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(11);
+              doc.setTextColor(...MX.navy);
+              doc.text(String(tituloContinuacao).toUpperCase() + " (CONTINUAÇÃO)", margin, y);
+            }
+            y += 22;
           }
-          // corta no meio deste card de texto
-          const fimDaPagina = inicioPagina + orcamento;
-          paginas.push({ inicio: inicioPagina, fim: fimDaPagina, cabecalhoContinuacao: cabecalhoContinuacaoPendente });
-          cabecalhoContinuacaoPendente = (bloco.titulo || "").replace(/\s*\(CONTINUA[ÇC][ÃA]O\)\s*$/i, "") + " (CONTINUAÇÃO)";
-          inicioPagina = fimDaPagina;
-          blocos[i] = { ...bloco, topo: fimDaPagina };
         }
-        paginas.push({ inicio: inicioPagina, fim: blocos.length ? blocos[blocos.length - 1].fundo : inicioPagina, cabecalhoContinuacao: cabecalhoContinuacaoPendente });
 
-        return paginas.map(({ inicio, fim, cabecalhoContinuacao }) => {
-          const alturaConteudo = Math.max(1, fim - inicio);
-          const alturaCabecalho = cabecalhoContinuacao ? ALTURA_CABECALHO_CONTINUACAO : 0;
-          const cnv = document.createElement("canvas");
-          cnv.width = canvasCompleto.width;
-          cnv.height = Math.round((alturaConteudo + alturaCabecalho) * escala);
-          const ctx = cnv.getContext("2d");
-          ctx.fillStyle = "#ffffff";
-          ctx.fillRect(0, 0, cnv.width, cnv.height);
-          ctx.drawImage(
-            canvasCompleto,
-            0, inicio * escala, canvasCompleto.width, alturaConteudo * escala,
-            0, alturaCabecalho * escala, cnv.width, alturaConteudo * escala
-          );
-          if (cabecalhoContinuacao) {
-            const s = escala;
-            ctx.fillStyle = "#02356e";
-            ctx.font = `bold ${12.5 * s}px "IBM Plex Sans", Arial, sans-serif`;
-            ctx.textBaseline = "middle";
-            ctx.fillText(cabecalhoContinuacao.toUpperCase(), 0, 21 * s);
+        // Para blocos pequenos que não fazem sentido cortar no meio
+        // (título de seção, card resumo, assinatura).
+        function garantirEspacoBloco(altura) {
+          if (espacoRestante() < altura) novaPagina(null);
+        }
+
+        // Para parágrafos longos (Descrição, Objetivo, Conclusão,
+        // Informações complementares) — quebra linha a linha, e se precisar
+        // mudar de página no meio do parágrafo, repete o título com
+        // "(CONTINUAÇÃO)" no topo da página seguinte.
+        function desenharParagrafo(texto, opts = {}) {
+          const tamanho = opts.tamanho || 10.5;
+          const alturaLinha = opts.alturaLinha || tamanho * 1.5;
+          doc.setFont("helvetica", opts.negrito ? "bold" : "normal");
+          doc.setFontSize(tamanho);
+          const linhas = doc.splitTextToSize(String(texto ?? "").trim() || "—", opts.largura || contentW);
+          linhas.forEach(linha => {
+            if (espacoRestante() < alturaLinha) novaPagina(opts.tituloContinuacao);
+            if (!somenteContar) {
+              doc.setFont("helvetica", opts.negrito ? "bold" : "normal");
+              doc.setFontSize(tamanho);
+              doc.setTextColor(...(opts.cor || MX.texto));
+              doc.text(linha, opts.x || margin, y);
+            }
+            y += alturaLinha;
+          });
+        }
+
+        // ---- Bloco de título (só na primeira página) ----
+        if (!somenteContar) {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(19);
+          doc.setTextColor(...MX.navy);
+          doc.text("RELATÓRIO TÉCNICO DE VIAGEM", margin, y);
+        }
+        y += 24;
+        if (!somenteContar) {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(9.5);
+          doc.setTextColor(...MX.verdeIcone);
+          doc.text("• PRESTAÇÃO DE CONTAS •", margin, y);
+        }
+        y += 22;
+        if (!somenteContar) {
+          const svTexto = `S.V. Nº ${form.numeroSolicitacao || "________"}`;
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(10);
+          const tw = doc.getTextWidth(svTexto);
+          doc.setFillColor(...MX.cinzaFundo);
+          doc.roundedRect(margin, y - 12, tw + 20, 20, 5, 5, "F");
+          doc.setTextColor(...MX.navy);
+          doc.text(svTexto, margin + 10, y + 2);
+        }
+        y += 34;
+
+        // ---- Card RESUMO DA VIAGEM ----
+        const linhasResumo = [
+          ["Viajante", form.nomeViajante || "—"],
+          ["Tipo de viagem", d.tipoViagem],
+          ["Destino", form.destino || "—"],
+          ["Situação do roteiro", d.tipoPrestacao],
+          ["Período", d.periodo],
+        ];
+        if (d.saldoADevolver > 0.009) linhasResumo.push(["Saldo a devolver", moedaBR(d.saldoADevolver)]);
+        const alturaLinhaResumo = 17;
+        const alturaCardResumo = 30 + linhasResumo.length * alturaLinhaResumo + 12;
+        garantirEspacoBloco(alturaCardResumo + 14);
+        const topoCardResumo = y + 14;
+        if (!somenteContar) {
+          doc.setDrawColor(...MX.cinzaBorda);
+          doc.setFillColor(...MX.cinzaFundo);
+          doc.setLineWidth(1);
+          doc.roundedRect(margin, topoCardResumo, contentW, alturaCardResumo, 8, 8, "FD");
+          doc.setFillColor(...MX.verdeIcone);
+          doc.roundedRect(margin + 14, topoCardResumo - 10, 148, 20, 6, 6, "F");
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(9);
+          doc.setTextColor(255, 255, 255);
+          doc.text("RESUMO DA VIAGEM", margin + 14 + 74, topoCardResumo - 10 + 13.5, { align: "center" });
+        }
+        y = topoCardResumo + 30;
+        linhasResumo.forEach(([label, valor]) => {
+          if (!somenteContar) {
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(9.5);
+            doc.setTextColor(...MX.cinzaTxt);
+            doc.text(label + ":", margin + 14, y);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(10);
+            doc.setTextColor(...MX.texto);
+            doc.text(String(valor), margin + 165, y);
           }
-          return { dataUrl: cnv.toDataURL("image/jpeg", 0.92), alturaPt: (alturaConteudo + alturaCabecalho) / PX_POR_PT };
+          y += alturaLinhaResumo;
         });
-      }
+        y = topoCardResumo + alturaCardResumo + 24;
 
+        // ---- As 4 seções de texto (podem quebrar página no meio) ----
+        function desenharSecaoTexto(numero, titulo, texto) {
+          garantirEspacoBloco(52); // evita título "órfão" sozinho no fim da página
+          if (!somenteContar) {
+            doc.setFillColor(...MX.verdeIcone);
+            doc.circle(margin + 9, y - 3, 9, "F");
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(9.5);
+            doc.setTextColor(255, 255, 255);
+            doc.text(String(numero), margin + 9, y - 0.5, { align: "center" });
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(12.5);
+            doc.setTextColor(...MX.navy);
+            doc.text(titulo, margin + 27, y);
+          }
+          y += 22;
+          desenharParagrafo(texto, { tamanho: 10.5, alturaLinha: 15.5, tituloContinuacao: titulo });
+          y += 18;
+        }
+        desenharSecaoTexto("1", "DESCRIÇÃO DO EVENTO", form.nomeEvento);
+        desenharSecaoTexto("2", "OBJETIVO DA PARTICIPAÇÃO", form.motivo);
+        desenharSecaoTexto("3", "CONCLUSÃO", form.conclusao);
+        if (String(form.infoComplementares || "").trim()) {
+          desenharSecaoTexto("4", "INFORMAÇÕES COMPLEMENTARES", form.infoComplementares);
+        }
+
+        // ---- Card DOCUMENTOS ANEXADOS (lista, item a item, pode fluir
+        // para a página seguinte sem precisar de moldura cortada ao meio) ----
+        garantirEspacoBloco(40);
+        if (!somenteContar) {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(12.5);
+          doc.setTextColor(...MX.navy);
+          doc.text("DOCUMENTOS ANEXADOS", margin, y);
+        }
+        y += 22;
+        const itensDoc = d.docsPreview.length ? d.docsPreview : [{ nome: "—" }];
+        itensDoc.forEach((item, i) => {
+          const alturaItem = item.detalhe ? 30 : 16;
+          if (espacoRestante() < alturaItem) novaPagina("DOCUMENTOS ANEXADOS");
+          if (!somenteContar) {
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            doc.setTextColor(...MX.texto);
+            doc.text(`${i + 1}. ✓ ${item.nome}`, margin, y);
+          }
+          y += 16;
+          if (item.detalhe) {
+            if (!somenteContar) {
+              doc.setFont("helvetica", "italic");
+              doc.setFontSize(9);
+              doc.setTextColor(...MX.cinzaTxt);
+              doc.text(String(item.detalhe), margin + 14, y);
+            }
+            y += 14;
+          }
+        });
+        y += 16;
+
+        // ---- Declaração do viajante + assinatura ----
+        garantirEspacoBloco(30);
+        if (!somenteContar) {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(11.5);
+          doc.setTextColor(...MX.navy);
+          doc.text("DECLARAÇÃO DO VIAJANTE", margin, y);
+        }
+        y += 18;
+        desenharParagrafo(d.atestoPreview, { tamanho: 9.5, alturaLinha: 13.5, cor: MX.cinzaTxt, tituloContinuacao: "DECLARAÇÃO DO VIAJANTE" });
+        y += 22;
+        garantirEspacoBloco(58);
+        if (!somenteContar) {
+          doc.setDrawColor(...MX.cinzaBorda);
+          doc.setLineWidth(1);
+          doc.line(margin, y, margin + 220, y);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(8.5);
+          doc.setTextColor(...MX.cinzaTxt);
+          doc.text("Assinado eletronicamente por", margin, y - 6);
+        }
+        y += 15;
+        if (!somenteContar) {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(10.5);
+          doc.setTextColor(...MX.texto);
+          doc.text((form.nomeViajante || "Nome do viajante").toUpperCase(), margin, y);
+        }
+        y += 14;
+        if (!somenteContar) {
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(9.5);
+          doc.setTextColor(...MX.cinzaTxt);
+          doc.text(d.cargoLinha || "Cargo/Função — Setor", margin, y);
+        }
+        y += 14;
+
+        return { paginas: paginasRelatorio };
+      }
 
       // Supõe relatório = 1 página; se der errado (textos longos empurrando
-      // para uma 2ª+ página), corrige a numeração e refaz só essa parte.
+      // para uma 2ª+ página), corrige a numeração e refaz só a contagem
+      // (o desenho de verdade só acontece uma vez, no final, já com a
+      // numeração de anexos correta).
       let numeracaoAnexos = calcularNumeracaoAnexos(2);
-      let paginasRelatorio = await gerarPaginasRelatorio(numeracaoAnexos);
-      if (paginasRelatorio.length !== 1) {
-        numeracaoAnexos = calcularNumeracaoAnexos(paginasRelatorio.length + 1);
-        paginasRelatorio = await gerarPaginasRelatorio(numeracaoAnexos);
+      y = 101.5;
+      let contagemRelatorio = desenharCorpoRelatorio(numeracaoAnexos, true);
+      if (contagemRelatorio.paginas !== 1) {
+        numeracaoAnexos = calcularNumeracaoAnexos(contagemRelatorio.paginas + 1);
+        y = 101.5;
+        contagemRelatorio = desenharCorpoRelatorio(numeracaoAnexos, true);
       }
-      totalPaginasPdf = paginasRelatorio.length + totalPaginasAnexos;
-      paginasRelatorio.forEach((pagina, i) => {
-        cabecalhoAnexo(i > 0); // a primeira página do PDF já existe por padrão — não criar outra
-        doc.addImage(pagina.dataUrl, "JPEG", margin, y, contentW, pagina.alturaPt);
-        rodapePaginaAnexo();
-      });
+      totalPaginasPdf = contagemRelatorio.paginas + totalPaginasAnexos;
+      cabecalhoAnexo(false); // a 1ª página do PDF já existe — só desenha o cabeçalho nela
+      desenharCorpoRelatorio(numeracaoAnexos, false);
+      rodapePaginaAnexo(); // rodapé da última página do relatório
 
       function paginaAnexoDoc(numero, titulo, imagem, continuacao, redigido, tipoIcone) {
         cabecalhoAnexo();
@@ -4000,7 +4186,9 @@ function App() {
             const esc = Math.min(maxW / props.width, maxH / props.height);
             const w = props.width * esc, h = props.height * esc;
             doc.addImage(imagem, margin + (contentW - w) / 2, frameTop + (frameH - h) / 2, w, h);
-          } catch (e) {}
+          } catch (e) {
+            registrarAvisoPdf(`Não foi possível inserir a imagem do documento "${meta && meta.nome ? meta.nome : ""}" no PDF.`);
+          }
         }
         if (redigido) pilulaDadosOcultados(frameBottom + 6);
         rodapePaginaAnexo();
@@ -4079,7 +4267,9 @@ function App() {
                 doc.setTextColor(...MX.cinzaTxt);
                 doc.text(`Página ${indicePrimeira + i + 1} de ${totalPaginasArquivo}`, cx, areaBottom - 10, { align: "center" });
               }
-            } catch (e) {}
+            } catch (e) {
+              registrarAvisoPdf("Não foi possível inserir uma imagem de comprovante de translado no PDF.");
+            }
           });
         }
         if (t.redigido) pilulaDadosOcultados(areaBottom + 6);
@@ -4186,6 +4376,9 @@ function App() {
         }
       }
 
+      if (avisosPdf.length) {
+        setPdfAviso("O sistema detectou algo inesperado ao montar o PDF (" + avisosPdf.join(" ") + "). O PDF foi gerado mesmo assim, mas confira com atenção antes de assinar — e se possível, avise quem cuida do sistema.");
+      }
       const finalBytes = doc.output("arraybuffer");
       downloadBytes(new Uint8Array(finalBytes), `prestacao_contas_${form.numeroSolicitacao || "sem_numero"}.pdf`);
       setPdfGeradoUmaVez(true);
@@ -4247,12 +4440,14 @@ function App() {
     event.target.value = "";
     if (!arquivo) return;
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       try {
         const dados = JSON.parse(reader.result);
         if (!dados || !dados.form) throw new Error("inválido");
+        const anexosImportados = dados.anexosContent || {};
+        await Promise.all(Object.entries(anexosImportados).map(([id, conteudo]) => persistFile(id, conteudo)));
         setForm({ ...emptyForm, ...dados.form });
-        setAnexosContent(dados.anexosContent || {});
+        setAnexosContent(anexosImportados);
         setConferencia({ dados: false, transporte: false, documentos: false, atesto: false });
         setStep(1);
         setModoInicio("editar");
@@ -4279,6 +4474,9 @@ function App() {
       const continuar = window.confirm("Ao começar uma nova prestação, os dados atuais serão apagados. Deseja continuar?");
       if (!continuar) return;
     }
+    const idsAntigos = coletarIdsAnexos(form.anexos, form.translados);
+    if (form.scvArquivo?.id) idsAntigos.push(form.scvArquivo.id);
+    excluirConteudosArquivos(idsAntigos);
     setForm(emptyForm);
     setAnexosContent({});
     setFileWarnings({});
@@ -4372,6 +4570,13 @@ function App() {
               </section>
 
               <section className="workflow-shell">
+                {avisoArmazenamento && (
+                  <div className="banner warn" style={{ marginBottom: 16 }}>
+                    <Icon name="alert" size={16} />
+                    <span>{avisoArmazenamento}</span>
+                    <button type="button" className="btn-link" style={{ marginLeft: "auto" }} onClick={() => setAvisoArmazenamento(null)}>Entendi</button>
+                  </div>
+                )}
                 <div className="stepper premium-stepper">
                   {steps.map((s, i) => (
                     <React.Fragment key={s.title}>
@@ -4921,6 +5126,7 @@ function App() {
                   )}
 
                   {pdfErro && <div className="banner error" style={{ marginTop: 12, marginBottom: 0 }}><Icon name="alert" size={16} /><span>{pdfErro}</span></div>}
+                  {pdfAviso && <div className="banner warn" style={{ marginTop: 12, marginBottom: 0 }}><Icon name="alert" size={16} /><span>{pdfAviso}</span></div>}
 
                   <div className="banner warn" style={{ marginTop: 16, marginBottom: 0, alignItems: "flex-start" }}>
                     <Icon name="alert" size={17} />
