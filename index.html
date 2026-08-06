@@ -4,8 +4,11 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Sistema de Prestação de Contas — DETRAN/PR</title>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
   :root{
     --azul: #005186;
@@ -199,6 +202,8 @@
   .translado-anexo{ display:flex; align-items:center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
   .translado-anexo .file-chip{ margin: 0; }
   .btn-link-danger{ border:none; background:none; color: var(--vermelho); font-size: 14px; font-weight:600; cursor:pointer; padding: 6px 0; }
+  .translado-delete-action{ display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:36px; line-height:1.2; }
+  .translado-delete-action svg{ flex-shrink:0; }
 
   .checkline{ display:flex; gap: 12px; align-items:flex-start; background: var(--papel); border-radius: var(--r-md); padding: 18px 20px; margin-top: 24px; font-size: 15.5px; color: #384555; }
   .checkline input{ margin-top: 2px; accent-color: var(--azul); width: 17px; height: 17px; flex-shrink: 0; }
@@ -311,7 +316,7 @@
   .rp-sec{ display: flex; gap: 16px; border: 1px solid var(--linha); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; align-items: flex-start; background: #fff; }
   .rp-sec-icon{ width: 36px; height: 36px; border-radius: 10px; background: var(--verde); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .rp-sec-title{ flex: 0 0 190px; font-size: 13px; font-weight: 800; color: var(--azul-escuro); letter-spacing: .02em; line-height: 1.45; padding-top: 2px; }
-  .rp-sec-body{ flex: 1; font-size: 14.5px; line-height: 1.5; text-align: justify; color: #31424f; white-space: pre-wrap; word-break: break-word; padding-top: 2px; }
+  .rp-sec-body{ flex: 1; font-size: 14.5px; line-height: 1.62; text-align: left; color: #31424f; white-space: normal; word-break: normal; overflow-wrap: anywhere; padding-top: 2px; }
   .rp-doclist{ display: flex; flex-direction: column; padding: 10px 18px 14px; }
   .rp-doc-check{ display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid #eef1f3; font-size: 14px; color: #31424f; }
   .rp-doc-num{ font-weight: 700; color: var(--azul); flex-shrink: 0; min-width: 18px; }
@@ -321,6 +326,26 @@
   .rp-declaracao-icon{ width: 40px; height: 40px; border-radius: 50%; background: var(--verde); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .rp-declaracao-title{ font-size: 13.5px; font-weight: 800; color: var(--verde-escuro); margin-bottom: 6px; letter-spacing: .04em; }
   .rp-declaracao-text{ font-size: 13.5px; color: #31424f; text-align: justify; line-height: 1.6; }
+  .rp-text-paragraph{
+    margin: 0 0 12px;
+    text-indent: 1.6em;
+    text-align: justify;
+    text-align-last: left;
+    text-justify: inter-word;
+    word-spacing: normal;
+    letter-spacing: normal;
+    hyphens: auto;
+  }
+  .rp-sec-body.sem-recuo .rp-text-paragraph{
+    text-indent: 0;
+    text-align: left;
+  }
+  .rp-text-paragraph:last-child{ margin-bottom: 0; }
+  .rp-text-bullet{ display:grid; grid-template-columns:16px minmax(0,1fr); gap:6px; align-items:start; margin:0 0 8px; text-align:left; text-indent:0; }
+  .rp-text-bullet:last-child{ margin-bottom:0; }
+  .rp-text-bullet-mark{ font-weight:700; color:var(--azul-escuro); }
+  .rp-text-bullet-content{ min-width:0; overflow-wrap:anywhere; }
+
 
   /* ===== Página 1 — refinamentos para o layout aprovado ===== */
   .rp-logos img:first-child{ height: 42px; }
@@ -475,7 +500,8 @@
   .redact-steps li{ margin: 0 0 7px; }
   .redact-steps li:last-child{ margin-bottom: 0; }
   .inline-doc-card{ margin-top: 16px; padding: 17px 18px; background: #fff; border: 1px solid var(--linha); border-radius: var(--r-md); }
-  .inline-doc-card .doc-item-head{ margin-bottom: 2px; }
+  .inline-doc-card .doc-item-head{ margin-bottom: 2px; align-items:center; flex-wrap:nowrap; }
+  .inline-doc-card .doc-item-head .dot{ align-self:center; margin:0; }
   .residence-alert{ margin-top: 14px; margin-bottom: 0; }
 
   .translado-item-layout{ display:grid; grid-template-columns: minmax(280px, 420px) 1fr; gap:18px; align-items:start; }
@@ -1674,10 +1700,1455 @@
     .whatsapp-float{ right:14px; bottom:14px; width:52px; height:52px; }
   }
 
+
+
+  /* =============================================================
+     REFINAMENTO RESPONSIVO APROVADO — PATCH SEGURO
+     Somente CSS: não altera React, JavaScript ou funções do sistema.
+     ============================================================= */
+
+  /* Ajuda da unidade de lotação: texto auxiliar discreto e permanente */
+  .lotacao-field .field-tooltip{
+    position: static !important;
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+    margin-top: 7px !important;
+    padding: 0 !important;
+    background: transparent !important;
+    color: var(--cinza) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    font-size: 13px !important;
+    line-height: 1.45 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    pointer-events: none !important;
+  }
+  .lotacao-field .field-tooltip::before{ display:none !important; }
+  .lotacao-field .field-tooltip b{ color:var(--grafite); }
+
+  /* Nas etapas 2 e 3, remove o painel introdutório repetido */
+  .dashboard-main:has(.premium-stepper .step-node:nth-child(3).active) .hero-panel,
+  .dashboard-main:has(.premium-stepper .step-node:nth-child(5).active) .hero-panel{
+    display:none !important;
+  }
+
+  /* Cabeçalho de progresso mais limpo */
+  .workflow-shell{
+    background:#fff;
+    border:1px solid var(--linha);
+    border-radius:14px;
+    padding:18px 22px;
+    box-shadow:var(--shadow-card);
+    margin-bottom:18px;
+  }
+  .premium-stepper{ gap:12px; }
+  .premium-stepper .step-circle{ width:34px; height:34px; }
+  .premium-stepper .step-iconbox{ width:38px; height:38px; border-radius:10px; }
+  .premium-stepper .step-label{ font-size:14px; }
+  .premium-stepper .step-desc{ font-size:12px; margin-top:2px; }
+  .premium-stepper .step-connector{ height:3px; margin-top:17px; }
+
+  /* Documentos: cards individuais e hierarquia visual mais leve */
+  .doc-list{ border-top:0; padding-top:8px; }
+  .doc-item-block{
+    border:1px solid #dfe5e8 !important;
+    border-radius:12px;
+    background:#fff;
+    padding:16px 18px !important;
+    margin:12px 0;
+    box-shadow:0 4px 14px rgba(16,24,32,.04);
+  }
+  .doc-item-block:last-child{ border-bottom:1px solid #dfe5e8 !important; }
+  .doc-item-head{ gap:10px; }
+  .doc-name{ font-size:15.5px; }
+  .doc-tag{ margin-top:3px; font-size:12.5px; }
+  .doc-status{
+    margin-left:auto;
+    border-radius:999px;
+    padding:5px 11px;
+    background:var(--verde-tint);
+    border:1px solid #cde8bd;
+    color:var(--verde-escuro) !important;
+    font-size:12px;
+    text-transform:capitalize;
+  }
+  .file-chip-list{ margin-top:12px; gap:8px; }
+  .file-chip{
+    padding:12px 14px;
+    border:1px solid #e1e6e9;
+    background:#f7f9fa;
+    border-radius:10px;
+  }
+  .file-chip-nome{ font-size:14px; }
+  .file-chip .file-remove{
+    margin-left:0;
+    padding:7px 5px;
+    font-size:13px;
+  }
+  .file-chip .file-remove:first-of-type{ margin-left:auto; }
+  .doc-item-block > .file-btn{
+    margin-top:12px;
+    border-style:dashed;
+    border-color:#76a9d5;
+    color:#1268ad;
+    background:#fff;
+    justify-content:center;
+    min-height:42px;
+  }
+
+  /* Desktop: utiliza a largura sem deixar os controles visualmente pesados */
+  @media (min-width: 981px){
+    .dashboard-shell{ max-width:1280px; margin:0 auto; }
+    .dashboard-main:has(.premium-stepper .step-node:nth-child(3).active) .workflow-shell,
+    .dashboard-main:has(.premium-stepper .step-node:nth-child(5).active) .workflow-shell{
+      padding:16px 22px;
+    }
+    .doc-item-block .file-chip{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto auto;
+      align-items:center;
+      column-gap:18px;
+    }
+    .doc-item-block > .file-btn{ width:min(590px, 100%); margin-left:auto; margin-right:auto; }
+  }
+
+  /* Tablet */
+  @media (min-width: 601px) and (max-width: 980px){
+    .hero-panel{ padding:20px 22px; }
+    .hero-grid{ grid-template-columns:minmax(0,1fr); }
+    .hero-road-art{ display:none; }
+    .workflow-shell{ padding:16px 18px; }
+    .premium-stepper .step-desc{ display:none; }
+    .doc-item-block{ padding:15px 16px !important; }
+  }
+
+  /* Celular */
+  @media (max-width: 600px){
+    .band-inner{ padding-left:14px; padding-right:14px; }
+    .main-wrap .band-inner{ padding-top:14px; }
+    .hero-panel{ padding:18px 16px; border-radius:12px; }
+    .hero-grid{ display:block; }
+    .hero-road-art{ display:none; }
+    .hero-title-row{ gap:11px; align-items:flex-start; }
+    .hero-icon, .hero-icon-wrap{ width:42px; height:42px; }
+    .hero-panel h1{ font-size:23px; line-height:1.12; }
+    .hero-lead{ font-size:14px; line-height:1.45; }
+    .hero-benefits{ margin-top:14px; }
+    .hero-benefit{ min-height:auto; padding:10px 11px; }
+    .hero-benefit-icon{ width:27px; height:27px; }
+    .hero-benefit strong{ font-size:12.5px; }
+    .hero-benefit small{ font-size:11px; }
+
+    .workflow-shell{ padding:13px 12px; border-radius:12px; }
+    .premium-stepper{ overflow:visible; display:grid; grid-template-columns:1fr; gap:7px; }
+    .premium-stepper .step-node{ min-width:0; width:100%; flex:none; display:grid; grid-template-columns:38px 1fr; align-items:center; gap:8px; }
+    .premium-stepper .step-circle{ width:34px; height:34px; margin:0; grid-row:1; }
+    .premium-stepper .step-card-meta{ flex-direction:row; text-align:left; gap:9px; }
+    .premium-stepper .step-iconbox{ width:36px; height:36px; }
+    .premium-stepper .step-label{ text-align:left; font-size:13px; }
+    .premium-stepper .step-desc{ display:block; text-align:left; font-size:11px; }
+    .premium-stepper .step-connector{ width:3px; height:10px; min-width:3px; margin:0 0 0 16px; }
+
+    .doc-item-block{ padding:14px 13px !important; margin:10px 0; }
+    .doc-item-head{ align-items:flex-start; }
+    .doc-status{ margin-left:auto; padding:4px 9px; font-size:11px; }
+    .file-chip{ display:grid; grid-template-columns:1fr auto; gap:6px 10px; padding:11px 12px; }
+    .file-chip-nome{ grid-column:1 / -1; font-size:13px; }
+    .file-chip .file-remove{ font-size:12px; }
+    .file-chip .file-remove:first-of-type{ margin-left:0; }
+    .doc-item-block > .file-btn{ width:100%; }
+
+    .redact-overlay{ padding:8px; }
+    .preview-modal{ width:100%; height:calc(100dvh - 16px); max-height:calc(100dvh - 16px); }
+    .preview-modal-body{ padding:10px; overflow:auto; background:#dfe4e7; }
+    .preview-modal-body .report-preview{ width:700px; min-width:700px; max-width:none; margin:0; padding:28px 30px; transform:scale(calc((100vw - 38px) / 700)); transform-origin:top left; }
+  }
+
+
+
+/* ==================================================
+   CARD DE DOCUMENTOS - DESKTOP LADO A LADO (APROVADO)
+   ================================================== */
+@media (min-width: 1180px){
+  .doc-list{
+    border-top: 0;
+    padding-top: 18px;
+  }
+  .doc-list .section-title{
+    margin-bottom: 14px;
+  }
+  .doc-item-block{
+    display:grid;
+    grid-template-columns: 16px 220px minmax(300px,1fr) auto auto auto;
+    align-items:center;
+    column-gap: 18px;
+    row-gap: 10px;
+    padding: 16px 18px;
+    margin-top: 12px;
+    border: 1px solid var(--linha);
+    border-radius: var(--r-md);
+    background:#fff;
+  }
+  .doc-item-block:last-child{
+    border-bottom: 1px solid var(--linha);
+  }
+  .doc-item-head{
+    display:contents;
+  }
+  .doc-item-head .dot{
+    grid-column: 1;
+    align-self:center;
+  }
+  .doc-item-head .doc-info{
+    grid-column: 2;
+    min-width:0;
+  }
+  .doc-item-head .doc-name{
+    font-size: 15.5px;
+    line-height: 1.35;
+  }
+  .doc-item-head .doc-tag{
+    display:none;
+  }
+  .doc-item-head .doc-status{
+    grid-column: 4;
+    justify-self:start;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #edf6e6;
+    color: var(--verde-escuro);
+    border: 1px solid #cfe1bf;
+    text-transform: none;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .doc-item-head .doc-status.justified{
+    background: #eef7eb;
+  }
+
+  /* arquivo e acoes na mesma linha */
+  .doc-item-block .file-chip-list{
+    grid-column: 3 / 7;
+    margin: 0;
+    display: contents;
+  }
+  .doc-item-block .file-chip{
+    display: contents;
+  }
+  .doc-item-block .file-chip-nome{
+    grid-column: 3;
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 12px 14px;
+    border: 1px solid var(--linha);
+    border-radius: var(--r-sm);
+    background: #fbfcfd;
+    color:#384555;
+    overflow-wrap:anywhere;
+  }
+  .doc-item-block .file-chip-nome::before{
+    content: "📄";
+    flex-shrink:0;
+    font-size: 18px;
+    line-height: 1;
+  }
+  .doc-item-block .redigido-tag{
+    grid-column: 3;
+    margin-top: -4px;
+    justify-self:start;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .doc-item-block .file-chip > .file-remove{
+    margin-left: 0;
+    padding: 6px 0;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  .doc-item-block .file-chip > .file-remove:only-of-type{
+    grid-column: 6;
+    color: var(--vermelho);
+  }
+  .doc-item-block .file-chip > .file-remove:first-of-type:not(:only-of-type){
+    grid-column: 5;
+    color: var(--azul);
+  }
+  .doc-item-block .file-chip > .file-remove:last-of-type:not(:only-of-type){
+    grid-column: 6;
+    color: var(--vermelho);
+  }
+
+  /* botao abaixo da coluna do arquivo */
+  .doc-item-block .file-btn{
+    grid-column: 3;
+    width: 100%;
+    justify-content:center;
+    margin-top: 0;
+    border: 1.5px dashed #a9c6f8;
+    color: var(--azul);
+    background: #fbfdff;
+  }
+  .doc-item-block .file-btn.plus{
+    border-color: #a9c6f8;
+    color: var(--azul);
+  }
+  .doc-item-block .file-btn:hover{
+    border-color: var(--azul);
+    color: var(--azul);
+    background: #f5f9fd;
+  }
+
+  /* elementos especiais continuam ocupando toda a largura */
+  .doc-item-block .choice-panel,
+  .doc-item-block .banner,
+  .doc-item-block .field,
+  .doc-item-block .section-hint{
+    grid-column: 1 / -1;
+  }
+
+  /* justificativa do comprovante de saque */
+  .doc-item-block .choice-panel{
+    margin-top: 2px;
+  }
+}
+
+
+
+/* ==================================================
+   CORREÇÃO FINAL — DOCUMENTOS EM UMA ÚNICA LINHA
+   Sequência: título | arquivo | status | ocultar | excluir
+   ================================================== */
+@media (min-width: 1180px){
+  .doc-item-block{
+    grid-template-columns:
+      12px
+      minmax(165px, .85fr)
+      minmax(250px, 1.45fr)
+      max-content
+      max-content
+      max-content !important;
+    column-gap: 12px !important;
+    row-gap: 10px !important;
+    padding: 15px 16px !important;
+    align-items: center !important;
+    overflow: hidden;
+  }
+
+  /* Primeira linha: todos os elementos lado a lado */
+  .doc-item-head .dot{
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+  .doc-item-head .doc-info{
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: center;
+  }
+  .doc-item-head .doc-status{
+    grid-column: 4 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    justify-self: start !important;
+    padding: 6px 11px !important;
+    font-size: 12.5px !important;
+    line-height: 1 !important;
+    text-transform: capitalize !important;
+  }
+
+  .doc-item-block .file-chip-nome{
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+    min-height: 48px !important;
+    padding: 10px 12px 10px 40px !important;
+    position: relative;
+    font-size: 13px !important;
+    line-height: 1.35;
+    background: #fbfcfd !important;
+  }
+  .doc-item-block .file-chip-nome::before{
+    content: "" !important;
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    width: 17px;
+    height: 20px;
+    transform: translateY(-50%);
+    background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='21' viewBox='0 0 18 21' fill='none'%3E%3Cpath d='M3 1.5h7l5 5v12A1.5 1.5 0 0 1 13.5 20h-10A1.5 1.5 0 0 1 2 18.5V3A1.5 1.5 0 0 1 3.5 1.5Z' stroke='%2302356e' stroke-width='1.6'/%3E%3Cpath d='M10 1.8V7h5.1' stroke='%2302356e' stroke-width='1.6'/%3E%3Cpath d='M5.5 11h6M5.5 14h6' stroke='%2302356e' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E") !important;
+  }
+
+  .doc-item-block .file-chip > .file-remove{
+    grid-row: 1 !important;
+    align-self: center !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 0 !important;
+    padding: 7px 2px !important;
+    font-size: 12.5px !important;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  .doc-item-block .file-chip > .file-remove:first-of-type:not(:only-of-type){
+    grid-column: 5 !important;
+  }
+  .doc-item-block .file-chip > .file-remove:last-of-type:not(:only-of-type),
+  .doc-item-block .file-chip > .file-remove:only-of-type{
+    grid-column: 6 !important;
+  }
+
+  /* Ícone de proteção de dados */
+  .doc-item-block .file-chip > .file-remove:first-of-type:not(:only-of-type)::before{
+    content: "";
+    width: 15px;
+    height: 15px;
+    flex: 0 0 15px;
+    background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M8 1.5 13 3.4v3.8c0 3.2-2 5.8-5 7.3-3-1.5-5-4.1-5-7.3V3.4L8 1.5Z' stroke='%23005186' stroke-width='1.4'/%3E%3Cpath d='M5.2 8s1-1.7 2.8-1.7S10.8 8 10.8 8 9.8 9.7 8 9.7 5.2 8 5.2 8Z' stroke='%23005186' stroke-width='1.2'/%3E%3Ccircle cx='8' cy='8' r='.8' fill='%23005186'/%3E%3C/svg%3E");
+  }
+
+  /* Ícone de excluir */
+  .doc-item-block .file-chip > .file-remove:last-of-type:not(:only-of-type)::before,
+  .doc-item-block .file-chip > .file-remove:only-of-type::before{
+    content: "";
+    width: 14px;
+    height: 15px;
+    flex: 0 0 14px;
+    background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='16' viewBox='0 0 15 16' fill='none'%3E%3Cpath d='M2.5 4h10M5.2 4V2.3h4.6V4M4 6.1l.6 7.1h5.8l.6-7.1M6.2 7.2v4.3M8.8 7.2v4.3' stroke='%2396222f' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+
+  /* Segunda linha: botão somente abaixo do arquivo */
+  .doc-item-block .file-btn{
+    grid-column: 3 !important;
+    grid-row: 2 !important;
+    min-height: 42px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 9px 14px !important;
+    font-size: 13.5px !important;
+  }
+
+  /* Tag de dados ocultados fica junto ao arquivo, sem criar nova coluna */
+  .doc-item-block .redigido-tag{
+    grid-column: 3 !important;
+    grid-row: 2 !important;
+    justify-self: start;
+    align-self: center;
+    margin: 0 0 0 12px !important;
+    z-index: 1;
+  }
+}
+
+
+
+/* ==================================================
+   AJUDA COMPACTA E CONTEÚDO EM LARGURA TOTAL
+   ================================================== */
+.app-grid,
+.app-grid.preview-mode{
+  grid-template-columns: minmax(0, 1fr) !important;
+  position: relative;
+}
+.sidebar.compact-help{
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: auto;
+  display: block;
+  z-index: 40;
+}
+.help-details{
+  position: relative;
+}
+.help-trigger{
+  list-style: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #bfd3df;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--azul);
+  box-shadow: 0 5px 16px rgba(16,24,32,.13);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s, transform .15s;
+}
+.help-trigger::-webkit-details-marker{ display:none; }
+.help-trigger::marker{ display:none; content:""; }
+.help-trigger:hover{
+  border-color: var(--azul);
+  background: var(--azul-tint);
+  transform: translateY(-1px);
+}
+.help-trigger:focus-visible{
+  outline: 3px solid rgba(11,111,174,.25);
+  outline-offset: 2px;
+}
+.help-details[open] .help-trigger{
+  background: var(--azul);
+  color: #fff;
+  border-color: var(--azul);
+}
+.help-popover{
+  position: absolute;
+  top: 50px;
+  right: 0;
+  width: 330px;
+  max-width: calc(100vw - 48px);
+  margin: 0;
+  padding: 20px 22px;
+  box-shadow: 0 18px 42px rgba(16,24,32,.20);
+  border-color: #cbd8df;
+  animation: helpOpen .14s ease-out;
+}
+.help-popover::before{
+  content:"";
+  position:absolute;
+  top:-7px;
+  right:13px;
+  width:12px;
+  height:12px;
+  background:#fff;
+  border-left:1px solid #cbd8df;
+  border-top:1px solid #cbd8df;
+  transform:rotate(45deg);
+}
+.help-popover h3{
+  margin-bottom: 12px;
+  font-size: 17px;
+}
+.help-popover ul{
+  font-size: 14px;
+  line-height: 1.65;
+}
+@keyframes helpOpen{
+  from{ opacity:0; transform:translateY(-5px); }
+  to{ opacity:1; transform:translateY(0); }
+}
+@media (max-width: 720px){
+  .sidebar.compact-help{
+    top: 12px;
+    right: 12px;
+  }
+  .help-trigger{
+    width: 38px;
+    height: 38px;
+  }
+  .help-popover{
+    top: 46px;
+    width: min(320px, calc(100vw - 52px));
+    padding: 18px;
+  }
+}
+
+
+
+/* ==================================================
+   ALINHAMENTO FINAL DOS DOCUMENTOS — DESKTOP
+   Colunas fixas: título | arquivo | status | ocultar | excluir
+   ================================================== */
+@media (min-width: 1180px){
+  .doc-item-block{
+    grid-template-columns:
+      12px
+      250px
+      minmax(280px, 1fr)
+      94px
+      174px
+      116px !important;
+    column-gap: 12px !important;
+    align-items: start !important;
+    overflow: visible !important;
+  }
+
+  /* Mantém todos os títulos na mesma coluna e permite quebra natural. */
+  .doc-item-head .doc-info{
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    width: 250px;
+    max-width: 250px;
+    min-width: 0;
+    align-self: center !important;
+  }
+  .doc-item-head .doc-name{
+    width: 100%;
+    max-width: 250px;
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    hyphens: none;
+    line-height: 1.35 !important;
+  }
+  #doc-saque .doc-name{
+    max-width: 235px;
+  }
+  .doc-item-head .dot{
+    align-self: center !important;
+  }
+
+  /* A lista de arquivos usa as mesmas quatro colunas do card.
+     Isso também mantém o alinhamento quando houver mais de um arquivo. */
+  .doc-item-block .file-chip-list{
+    grid-column: 3 / 7 !important;
+    grid-row: 1 !important;
+    display: grid !important;
+    grid-template-columns: subgrid;
+    align-self: start;
+    gap: 8px 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .doc-item-block .file-chip{
+    grid-column: 1 / -1;
+    display: grid !important;
+    grid-template-columns: subgrid;
+    align-items: center !important;
+    gap: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+  }
+  .doc-item-block .file-chip-nome{
+    grid-column: 1 !important;
+    grid-row: auto !important;
+    width: 100%;
+    max-width: none;
+  }
+
+  /* O status geral ocupa sempre a mesma coluna. */
+  .doc-item-head .doc-status{
+    grid-column: 4 !important;
+    grid-row: 1 !important;
+    width: max-content;
+    max-width: 94px;
+    justify-self: center !important;
+    align-self: start !important;
+    margin-top: 10px;
+  }
+
+  /* Ações de cada arquivo. */
+  .doc-item-block .file-chip > .file-remove:first-of-type:not(:only-of-type){
+    grid-column: 3 !important;
+    grid-row: auto !important;
+    justify-self: center;
+  }
+  .doc-item-block .file-chip > .file-remove:last-of-type:not(:only-of-type),
+  .doc-item-block .file-chip > .file-remove:only-of-type{
+    grid-column: 4 !important;
+    grid-row: auto !important;
+    justify-self: center;
+  }
+
+  /* Quando os dados já foram ocultados, o selo substitui a ação azul. */
+  .doc-item-block .redigido-tag{
+    grid-column: 3 !important;
+    grid-row: auto !important;
+    align-self: center !important;
+    justify-self: center !important;
+    margin: 0 !important;
+    padding: 5px 10px !important;
+    z-index: auto !important;
+    white-space: nowrap;
+  }
+
+  /* Botão fica somente abaixo da coluna do arquivo. */
+  .doc-item-block > .file-btn{
+    grid-column: 3 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  /* O painel de escolha inicia abaixo de toda a linha do documento. */
+  .doc-item-block .choice-panel{
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
+  }
+}
+
+
+  .balance-grid.translado-resumo{ grid-template-columns:repeat(4,1fr); }
+  @media (max-width: 980px){ .balance-grid.translado-resumo{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width: 560px){ .balance-grid.translado-resumo{ grid-template-columns:1fr; } }
+
+
+
+/* Avisos temporários: aparecem, permanecem legíveis e somem sozinhos. */
+.banner.aviso-temporario{
+  overflow: hidden;
+  max-height: 160px;
+  animation: avisoTemporario 7s ease forwards;
+}
+@keyframes avisoTemporario{
+  0%, 72%{
+    opacity: 1;
+    max-height: 160px;
+    margin-top: 12px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+  88%{
+    opacity: 0;
+    max-height: 160px;
+    margin-top: 12px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+  100%{
+    opacity: 0;
+    max-height: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-width: 0;
+  }
+}
+
+
+
+  /* Estado inicial exibido enquanto React e as dependências são carregados. */
+  .app-boot{
+    min-height:100vh; display:flex; flex-direction:column; background:var(--papel); color:var(--grafite);
+  }
+  .app-boot-bar{ height:42px; background:var(--navy); }
+  .app-boot-main{ flex:1; display:flex; align-items:center; justify-content:center; padding:28px; }
+  .app-boot-card{
+    width:min(430px,100%); background:#fff; border:1px solid var(--linha); border-radius:var(--r-lg);
+    box-shadow:var(--shadow-card); padding:28px; text-align:center;
+  }
+  .app-boot-mark{
+    width:52px; height:52px; margin:0 auto 16px; border-radius:16px; background:var(--azul-tint);
+    color:var(--azul); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:22px;
+  }
+  .app-boot-title{ margin:0 0 7px; font-size:19px; font-weight:700; color:var(--azul-escuro); }
+  .app-boot-text{ margin:0; font-size:14px; color:var(--cinza); }
+  .app-boot-progress{
+    width:150px; height:4px; margin:20px auto 0; border-radius:999px; background:#e2e7e5; overflow:hidden;
+  }
+  .app-boot-progress::after{
+    content:""; display:block; width:45%; height:100%; border-radius:inherit; background:var(--verde-vivo);
+    animation:appBootMove 1.05s ease-in-out infinite alternate;
+  }
+  @keyframes appBootMove{ from{ transform:translateX(-70%); } to{ transform:translateX(190%); } }
+  @media (prefers-reduced-motion: reduce){ .app-boot-progress::after{ animation:none; width:100%; } }
+
+
+
+/* =============================================================
+   EXPERIÊNCIA MOBILE E TABLET — PREVIEWS, PINÇA E WHATSAPP
+   Mantém o layout desktop e altera apenas visualização responsiva.
+   ============================================================= */
+.pinch-viewer{ min-width:0; display:flex; flex-direction:column; gap:8px; height:100%; }
+.pinch-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 10px; border-radius:10px; background:#fff; border:1px solid #d7dee3; }
+.pinch-hint{ font-size:12.5px; color:var(--cinza); line-height:1.35; }
+.pinch-controls{ display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.pinch-controls button{ min-width:38px; min-height:36px; padding:6px 10px; border:1px solid var(--linha); border-radius:8px; background:#fff; color:var(--azul-escuro); font:inherit; font-size:15px; font-weight:700; cursor:pointer; }
+.pinch-controls button:disabled{ opacity:.4; cursor:default; }
+.pinch-controls .pinch-fit{ min-width:112px; font-size:12.5px; }
+.pinch-viewport{ min-width:0; height:min(72vh,760px); overflow:auto; border-radius:10px; background:#cfd6da; box-shadow:inset 0 0 0 1px rgba(0,0,0,.08); touch-action:none; overscroll-behavior:contain; }
+.pinch-stage{ position:relative; margin:0 auto; }
+.pinch-content{ position:absolute; left:0; top:0; transform-origin:top left; will-change:transform; }
+.pinch-content .report-preview{ width:700px !important; min-width:700px !important; max-width:none !important; margin:0 !important; transform:none !important; box-sizing:border-box; }
+.report-preview-modal{ width:min(900px, 100%); max-height:96vh; }
+.report-preview-modal-body{ padding:10px; overflow:hidden; background:#e1e6e9; }
+.report-preview-actions{ justify-content:space-between; }
+.preview-accessibility-note, .file-view-name{ color:var(--cinza); font-size:12.5px; line-height:1.35; margin-top:3px; }
+.file-view-modal{ width:min(980px,100%); max-height:96vh; }
+.file-view-body{ padding:10px; overflow:hidden; background:#e1e6e9; }
+.file-view-iframe{ display:block; width:100%; height:min(72vh,780px); border:0; border-radius:10px; background:#fff; }
+.file-view-image{ display:block; width:900px; height:auto; background:#fff; }
+.file-view-actions{ justify-content:flex-end; }
+.file-view-actions a{ text-decoration:none; }
+
+.translado-thumb-button{ position:relative; display:block; width:100%; max-width:100%; border:0; padding:0; margin:0; background:transparent; cursor:zoom-in; border-radius:10px; overflow:hidden; color:inherit; }
+.translado-thumb-button img{ display:block; max-width:100%; max-height:440px; margin:0 auto; object-fit:contain; }
+.translado-thumb-caption{ position:absolute; left:50%; bottom:8px; transform:translateX(-50%); padding:6px 10px; border-radius:999px; background:rgba(2,53,110,.88); color:#fff; font-size:12px; font-weight:700; white-space:nowrap; box-shadow:0 3px 10px rgba(0,0,0,.18); }
+
+@media (max-width:980px){
+  html, body, #app-root{ max-width:100%; overflow-x:hidden; }
+  .translado-item{ padding:14px; overflow:hidden; }
+  .translado-item-layout{ grid-template-columns:1fr !important; gap:16px; min-width:0; }
+  .translado-preview-col, .translado-fields-col, .translado-row, .translado-row .field{ min-width:0; }
+  .translado-preview-col{ display:grid; grid-template-columns:minmax(220px, 300px) minmax(0,1fr); gap:12px 16px; align-items:start; }
+  .translado-preview-col > .subsection-label{ grid-column:1 / -1; }
+  .translado-preview-box{ min-height:0; height:210px; padding:8px; }
+  .translado-preview-box img, .translado-thumb-button img{ max-height:192px; }
+  .translado-file-actions{ margin-top:0; align-content:start; display:flex; flex-direction:column; align-items:stretch; gap:8px; }
+  .translado-file-actions .file-remove, .translado-file-actions .btn-link-danger{ width:100%; min-height:42px; margin:0; padding:9px 10px; text-align:center; justify-content:center; border-radius:8px; }
+  .translado-fields-col{ margin-top:2px; }
+  .main-wrap .band-inner{ padding-bottom:96px; }
+  .whatsapp-float{ right:max(14px, env(safe-area-inset-right)); bottom:max(14px, env(safe-area-inset-bottom)); width:52px; height:52px; z-index:88; }
+  .report-preview-modal, .file-view-modal{ width:100%; height:100dvh; max-height:100dvh; border-radius:0; }
+  .report-preview-modal .redact-head, .file-view-modal .redact-head{ padding:12px 14px; }
+  .report-preview-modal-body, .file-view-body{ flex:1; min-height:0; }
+  .pinch-viewport, .file-view-iframe{ height:calc(100dvh - 156px); }
+  .report-preview-actions, .file-view-actions{ padding:10px 14px; flex-wrap:nowrap; }
+}
+
+@media (max-width:600px){
+  .card{ padding-left:16px; padding-right:16px; }
+  .translado-item{ margin-left:-4px; margin-right:-4px; padding:12px; border-radius:12px; }
+  .translado-preview-col{ display:block; }
+  .translado-preview-box{ width:100%; height:172px; margin-top:8px; }
+  .translado-preview-box img, .translado-thumb-button img{ max-height:156px; }
+  .translado-file-actions{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+  .translado-file-actions .file-remove, .translado-file-actions .btn-link-danger{ min-width:0; white-space:normal; }
+  .translado-file-actions > :only-child{ grid-column:1 / -1; }
+  .translado-fields-col{ margin-top:18px; padding-top:16px; border-top:1px dashed var(--linha); }
+  .translado-row{ display:block !important; }
+  .translado-row .field + .field{ margin-top:14px; }
+  .pinch-toolbar{ align-items:flex-start; padding:8px; }
+  .pinch-hint{ max-width:145px; font-size:11.5px; }
+  .pinch-controls{ gap:4px; }
+  .pinch-controls button{ min-width:34px; min-height:34px; padding:5px 8px; }
+  .pinch-controls .pinch-fit{ min-width:88px; font-size:11px; }
+  .preview-accessibility-note{ display:none; }
+  .report-preview-actions .btn, .file-view-actions .btn{ width:auto; min-width:112px; }
+  .whatsapp-float{ width:48px; height:48px; right:12px; bottom:max(12px, env(safe-area-inset-bottom)); }
+}
+
+
+
+/* =============================================================
+   AJUSTES FINAIS RESPONSIVOS — STEPPER E MINIATURA DE TRANSLADO
+   ============================================================= */
+
+/* Desktop: miniatura compacta e campos com mais espaço. */
+@media (min-width: 981px){
+  .translado-item-layout{
+    grid-template-columns:minmax(190px, 240px) minmax(0, 1fr);
+    gap:18px;
+  }
+  .translado-preview-col{ min-width:0; }
+  .translado-preview-box{
+    width:100%;
+    height:180px;
+    min-height:180px;
+    padding:8px;
+  }
+  .translado-preview-box img,
+  .translado-thumb-button img{
+    max-width:100%;
+    max-height:164px;
+    object-fit:contain;
+  }
+  .translado-thumb-caption{
+    padding:5px 9px;
+    font-size:11.5px;
+  }
+  .translado-file-actions{
+    gap:8px;
+    margin-top:9px;
+  }
+}
+
+/* Celular: a linha de progresso fica abaixo do conteúdo da etapa,
+   sem atravessar o ícone ou o texto. */
+@media (max-width: 600px){
+  .premium-stepper .step-node{
+    position:relative;
+    padding-bottom:8px;
+  }
+  .premium-stepper .step-node::after{
+    top:auto !important;
+    bottom:0;
+    left:82px !important;
+    right:10px !important;
+    height:3px !important;
+    z-index:0;
+  }
+  .premium-stepper .step-circle,
+  .premium-stepper .step-card-meta{
+    position:relative;
+    z-index:1;
+  }
+}
+
+/* Tablet estreito: mantém a linha afastada dos ícones. */
+@media (min-width: 601px) and (max-width: 900px){
+  .premium-stepper .step-node::after{
+    left:96px;
+    right:14px;
+  }
+}
+
+
+
+/* ==================================================
+   RELATÓRIO FINAL — TIPOGRAFIA SEGURA
+   Textos preenchidos pelo viajante ficam alinhados à esquerda.
+   Somente a declaração institucional permanece justificada.
+   ================================================== */
+.rp-captura .rp-sec-body{
+  word-spacing:normal !important;
+  letter-spacing:normal !important;
+  word-break:normal !important;
+  overflow-wrap:anywhere;
+}
+.rp-captura .rp-text-paragraph{
+  text-align:justify !important;
+  text-align-last:left !important;
+  text-justify:inter-word !important;
+}
+.rp-captura .rp-sec-body.sem-recuo .rp-text-paragraph,
+.rp-captura .rp-text-bullet{
+  text-align:left !important;
+}
+.rp-captura .rp-declaracao-text{
+  text-align:justify !important;
+  text-justify:inter-word !important;
+  word-spacing:normal !important;
+  letter-spacing:normal !important;
+  hyphens:none;
+}
+
+
+
+/* =============================================================
+   DESIGN SYSTEM FINAL — PADRÃO FIFA
+   Uma única camada para botões, orientações contextuais, tooltips
+   e os refinamentos responsivos aprovados.
+   ============================================================= */
+:root{
+  --action-height:44px;
+  --action-radius:9px;
+  --action-border:#cfd8dc;
+  --action-shadow:0 1px 2px rgba(16,24,32,.04);
+}
+
+/* Orientações aparecem somente enquanto ajudam no preenchimento. */
+.field-guidance{
+  animation:fieldGuideIn .16s ease-out;
+}
+@keyframes fieldGuideIn{
+  from{ opacity:0; transform:translateY(-2px); }
+  to{ opacity:1; transform:translateY(0); }
+}
+
+/* O tooltip da unidade abre apenas pelo ícone de ajuda — nunca pelo foco do select. */
+.lotacao-field:hover .field-tooltip,
+.lotacao-field:focus-within .field-tooltip{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transform:translateY(-4px);
+}
+.field-help-icon:hover + .field-tooltip,
+.field-help-icon:focus + .field-tooltip,
+.field-help-icon:focus-visible + .field-tooltip{
+  opacity:1;
+  visibility:visible;
+  transform:translateY(0);
+}
+
+/* Base visual compartilhada pelas ações principais e secundárias. */
+.btn,
+.file-btn,
+.toggle-btn,
+.translado-action{
+  min-height:var(--action-height);
+  padding:10px 18px;
+  border:1.5px solid var(--action-border);
+  border-radius:var(--action-radius);
+  background:#fff;
+  color:#344550;
+  box-shadow:var(--action-shadow);
+  font-family:var(--font-corpo);
+  font-size:14.5px;
+  font-weight:700;
+  line-height:1.2;
+  text-align:center;
+  text-decoration:none;
+  white-space:normal;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  transition:color .15s ease, background .15s ease, border-color .15s ease,
+             box-shadow .15s ease, transform .05s ease;
+}
+.btn:hover,
+.btn-ghost:hover{
+  color:var(--azul);
+  border-color:var(--azul);
+  background:var(--azul-tint);
+  box-shadow:0 4px 12px rgba(0,81,134,.10);
+}
+.btn:active,
+.file-btn:active,
+.toggle-btn:active,
+.translado-action:active{
+  transform:translateY(1px);
+}
+.btn:focus-visible,
+.file-btn:focus-visible,
+.toggle-btn:focus-visible,
+.translado-action:focus-visible,
+.file-remove:focus-visible,
+.btn-link-danger:focus-visible{
+  outline:3px solid rgba(11,111,174,.24);
+  outline-offset:2px;
+}
+.btn:disabled,
+.toggle-btn:disabled,
+.translado-action:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+  transform:none;
+  box-shadow:none;
+}
+
+/* Hierarquia: uma ação principal preenchida por bloco; demais contornadas. */
+.btn-primary{
+  color:#fff;
+  background:var(--verde-escuro);
+  border-color:var(--verde-escuro);
+  box-shadow:0 3px 10px rgba(44,90,28,.22);
+}
+.btn-primary:hover{
+  color:#fff;
+  background:#234a16;
+  border-color:#234a16;
+  box-shadow:0 5px 14px rgba(44,90,28,.28);
+}
+.btn-secondary{
+  color:#fff;
+  background:var(--azul);
+  border-color:var(--azul);
+  box-shadow:0 3px 10px rgba(0,81,134,.22);
+}
+.btn-secondary:hover{
+  color:#fff;
+  background:var(--azul-escuro);
+  border-color:var(--azul-escuro);
+}
+.btn-ghost{
+  color:#40515c;
+  background:#fff;
+  border-color:var(--action-border);
+  box-shadow:var(--action-shadow);
+}
+
+/* Anexar/adicionar: mesmo modelo do comprovante de translado. */
+.file-btn{
+  color:#365442;
+  border-color:#b9c9bf;
+  background:#fff;
+}
+.file-btn:hover{
+  color:var(--verde-escuro);
+  border-color:var(--verde-escuro);
+  background:var(--verde-tint);
+  box-shadow:0 4px 12px rgba(44,90,28,.10);
+}
+.file-btn.plus{
+  color:var(--azul);
+  border-style:dashed;
+  border-color:#9dbfe8;
+  background:#fbfdff;
+}
+.file-btn.plus:hover{
+  color:var(--azul-escuro);
+  border-color:var(--azul);
+  background:var(--azul-tint);
+}
+
+/* Escolhas binárias mantêm o mesmo corpo visual e estado selecionado claro. */
+.toggle-btn{
+  color:#344550;
+  border-color:var(--action-border);
+  background:#fff;
+}
+.toggle-btn:hover{
+  color:var(--azul);
+  border-color:var(--azul);
+  background:var(--azul-tint);
+}
+.toggle-btn.on{
+  color:var(--azul-escuro);
+  border-color:var(--azul);
+  background:var(--azul-tint);
+  box-shadow:inset 0 0 0 1px rgba(0,81,134,.08);
+}
+
+/* Links de ação também seguem o mesmo padrão visual compacto. */
+.btn-link,
+.pinch-fit{
+  min-height:36px;
+  padding:7px 12px;
+  border:1px solid #b8cfdd;
+  border-radius:8px;
+  background:#fff;
+  color:var(--azul);
+  font-family:var(--font-corpo);
+  font-size:13px;
+  font-weight:700;
+  line-height:1.2;
+  text-decoration:none;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  transition:color .15s, background .15s, border-color .15s, box-shadow .15s;
+}
+.btn-link:hover,
+.pinch-fit:hover{
+  color:var(--azul-escuro);
+  background:var(--azul-tint);
+  border-color:var(--azul);
+  box-shadow:0 4px 12px rgba(0,81,134,.10);
+}
+.btn-link:focus-visible,
+.pinch-fit:focus-visible{
+  outline:3px solid rgba(11,111,174,.24);
+  outline-offset:2px;
+}
+
+/* Ações compactas dentro dos cards de arquivo. */
+.file-chip .file-remove,
+.btn-link-danger{
+  min-height:36px;
+  margin:0;
+  padding:7px 10px;
+  border:1px solid var(--action-border);
+  border-radius:8px;
+  background:#fff;
+  font-family:var(--font-corpo);
+  font-size:12.5px;
+  font-weight:700;
+  line-height:1.2;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  white-space:nowrap;
+  cursor:pointer;
+  transition:color .15s, background .15s, border-color .15s, box-shadow .15s;
+}
+.file-remove-redact{
+  color:var(--azul) !important;
+  border-color:#b8cfdd !important;
+}
+.file-remove-redact:hover{
+  background:var(--azul-tint) !important;
+  border-color:var(--azul) !important;
+}
+.file-remove-delete,
+.btn-link-danger{
+  color:var(--vermelho) !important;
+  border-color:#dfbbc0 !important;
+}
+.file-remove-delete:hover,
+.btn-link-danger:hover{
+  background:var(--vermelho-bg) !important;
+  border-color:var(--vermelho) !important;
+}
+
+/* Ações abaixo da miniatura do translado. */
+.translado-file-actions{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:8px !important;
+  width:100%;
+  margin-top:10px !important;
+}
+.translado-action{
+  width:min(100%,220px);
+}
+.translado-action-redact{
+  color:var(--azul);
+  border-color:#9fbfd3;
+}
+.translado-action-redact:hover{
+  color:var(--azul-escuro);
+  background:var(--azul-tint);
+  border-color:var(--azul);
+}
+.translado-action-delete{
+  color:var(--vermelho);
+  border-color:#dfb6bc;
+}
+.translado-action-delete:hover{
+  color:var(--vermelho);
+  background:var(--vermelho-bg);
+  border-color:var(--vermelho);
+}
+
+/* Anexos diretos: ponto de status sempre ao lado do título. */
+.inline-doc-card .doc-item-head{
+  display:flex !important;
+  align-items:center !important;
+  flex-wrap:nowrap !important;
+  gap:12px !important;
+  width:100%;
+}
+.inline-doc-card .doc-item-head .dot{
+  position:static !important;
+  display:inline-block !important;
+  flex:0 0 9px !important;
+  width:9px !important;
+  height:9px !important;
+  margin:0 !important;
+  align-self:center !important;
+  grid-column:auto !important;
+  grid-row:auto !important;
+}
+.inline-doc-card .doc-item-head .doc-info{
+  flex:1 1 auto !important;
+  min-width:0 !important;
+  grid-column:auto !important;
+  grid-row:auto !important;
+  padding:0 !important;
+}
+.inline-doc-card .doc-item-head .doc-name{
+  margin:0 !important;
+  line-height:1.35;
+}
+.inline-doc-card .doc-item-head .doc-status{
+  flex:0 0 auto;
+  margin-left:auto !important;
+  grid-column:auto !important;
+  grid-row:auto !important;
+  align-self:center !important;
+}
+
+@media (max-width:720px){
+  .field-tooltip{
+    position:absolute;
+    top:30px;
+    left:0;
+    max-width:min(390px, calc(100vw - 44px));
+    margin:0;
+    display:block;
+  }
+  .field-help-icon:hover + .field-tooltip,
+  .field-help-icon:focus + .field-tooltip,
+  .field-help-icon:focus-visible + .field-tooltip{
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+  }
+  .btn,
+  .file-btn,
+  .toggle-btn,
+  .translado-action{
+    min-height:46px;
+    font-size:14px;
+  }
+  .inline-doc-card .doc-item-head{
+    align-items:flex-start !important;
+  }
+  .inline-doc-card .doc-item-head .dot{
+    margin-top:.45em !important;
+  }
+  .translado-action{
+    width:100%;
+  }
+  .file-chip .file-remove,
+  .btn-link-danger{
+    min-height:40px;
+    white-space:normal;
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .btn,
+  .file-btn,
+  .toggle-btn,
+  .translado-action,
+  .file-remove,
+  .field-guidance{
+    transition:none !important;
+    animation:none !important;
+  }
+}
+
+
+
+/* ==================================================
+   AJUDA CONTEXTUAL DA UNIDADE — PADRÃO ÚNICO
+   Hover no computador; toque/clique no celular; foco pelo teclado.
+   ================================================== */
+.field-help-details{
+  position:static;
+  display:inline-flex;
+  align-items:center;
+  margin:0;
+}
+.field-help-icon{
+  list-style:none;
+  width:30px;
+  height:30px;
+  padding:0;
+  border:1px solid #bfd3df;
+  border-radius:50%;
+  background:#fff;
+  color:var(--azul);
+  box-shadow:0 3px 10px rgba(16,24,32,.10);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:background .15s ease, color .15s ease, border-color .15s ease, transform .15s ease;
+}
+.field-help-icon::-webkit-details-marker{ display:none; }
+.field-help-icon::marker{ display:none; content:""; }
+.field-help-icon:hover{
+  border-color:var(--azul);
+  background:var(--azul-tint);
+  transform:translateY(-1px);
+}
+.field-help-icon:focus-visible{
+  outline:3px solid rgba(11,111,174,.24);
+  outline-offset:2px;
+}
+.field-help-details[open] .field-help-icon{
+  border-color:var(--azul);
+  background:var(--azul);
+  color:#fff;
+}
+.field-help-details .field-tooltip{
+  position:absolute;
+  top:36px;
+  left:0;
+  right:auto;
+  z-index:220;
+  display:none;
+  width:min(390px, calc(100vw - 48px));
+  max-width:100%;
+  margin:0;
+  padding:14px 16px;
+  border:1px solid #cbd8df;
+  border-radius:12px;
+  background:#fff;
+  color:#31424f;
+  font-size:13.5px;
+  line-height:1.5;
+  box-shadow:0 16px 36px rgba(16,24,32,.18);
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transform:translateY(-5px);
+  transition:opacity .14s ease, transform .14s ease, visibility .14s ease;
+}
+.field-help-details .field-tooltip::before{
+  display:none;
+}
+.field-help-details:hover .field-tooltip,
+.field-help-details:focus-within .field-tooltip,
+.field-help-details[open] .field-tooltip{
+  display:block;
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateY(0);
+}
+.field-help-details .field-tooltip b{
+  color:var(--grafite);
+}
+@media (max-width:720px){
+  .field-help-icon{
+    width:28px;
+    height:28px;
+  }
+  .field-help-details .field-tooltip{
+    top:34px;
+    width:100%;
+    max-width:none;
+    padding:13px 14px;
+  }
+}
+
+
+
+/* =============================================================
+   PRÉ-VISUALIZAÇÃO OFICIAL DO PDF
+   A prévia exibe o mesmo arquivo binário que será baixado.
+   ============================================================= */
+.report-preview-modal-body.pdf-oficial-body{
+  padding: 0;
+  background: #dfe4e7;
+  overflow: hidden;
+  min-height: 64vh;
+}
+.pdf-oficial-frame{
+  display: block;
+  width: 100%;
+  height: min(76vh, 920px);
+  border: 0;
+  background: #dfe4e7;
+}
+.pdf-preview-loading,
+.pdf-preview-error{
+  min-height: 58vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 28px;
+  text-align: center;
+  color: var(--cinza);
+}
+.pdf-preview-loading strong,
+.pdf-preview-error strong{ color: var(--grafite); }
+.pdf-preview-spinner{
+  width: 38px;
+  height: 38px;
+  border: 4px solid #d8e2e7;
+  border-top-color: var(--azul);
+  border-radius: 50%;
+  animation: pdfPreviewSpin .8s linear infinite;
+}
+@keyframes pdfPreviewSpin{ to{ transform: rotate(360deg); } }
+.pdf-preview-open-link{
+  text-decoration: none;
+}
+@media (max-width: 720px){
+  .report-preview-modal-body.pdf-oficial-body{ min-height: 0; flex: 1; }
+  .pdf-oficial-frame{ height: 100%; min-height: 0; }
+  .report-preview-modal{ height: calc(100dvh - 12px); max-height: calc(100dvh - 12px); }
+  .report-preview-actions{ gap: 8px; }
+  .preview-accessibility-note{ font-size: 12px; }
+}
+
 </style>
 </head>
 <body>
-<div id="app-root"></div>
+<div id="app-root" aria-busy="true">
+  <div class="app-boot" role="status" aria-live="polite">
+    <div class="app-boot-bar"></div>
+    <div class="app-boot-main">
+      <div class="app-boot-card">
+        <div class="app-boot-mark" aria-hidden="true">PC</div>
+        <p class="app-boot-title">Abrindo a prestação de contas</p>
+        <p class="app-boot-text" id="app-boot-status">Carregando os recursos necessários…</p>
+        <div class="app-boot-progress" aria-hidden="true"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<noscript><div style="padding:24px;font-family:Arial,sans-serif">Este sistema precisa do JavaScript ativado para funcionar.</div></noscript>
+<script>
+  window.setTimeout(function(){
+    var status = document.getElementById('app-boot-status');
+    if(status) status.textContent = 'O carregamento está demorando. Verifique a conexão com a internet.';
+  }, 12000);
+</script>
 
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -1811,6 +3282,7 @@ function Icon({ name, size = 18, style, className }) {
     case "info": return <svg {...common}><circle cx="12" cy="12" r="9" /><line x1="12" y1="10.5" x2="12" y2="16" /><circle cx="12" cy="7.3" r="0.9" fill="currentColor" stroke="none" /></svg>;
     case "alert": return <svg {...common}><path d="M12 3.2L21.5 20H2.5L12 3.2Z" /><line x1="12" y1="9.5" x2="12" y2="14" /><circle cx="12" cy="16.8" r="0.9" fill="currentColor" stroke="none" /></svg>;
     case "close": return <svg {...common}><line x1="5" y1="5" x2="19" y2="19" /><line x1="19" y1="5" x2="5" y2="19" /></svg>;
+    case "trash": return <svg {...common}><path d="M4 7h16" /><path d="M9 7V4h6v3" /><path d="M6.5 7l.8 13h9.4l.8-13" /><line x1="10" y1="10.5" x2="10.5" y2="17" /><line x1="14" y1="10.5" x2="13.5" y2="17" /></svg>;
     case "list": return <svg {...common}><line x1="9" y1="6.5" x2="20" y2="6.5" /><line x1="9" y1="12" x2="20" y2="12" /><line x1="9" y1="17.5" x2="20" y2="17.5" /><circle cx="4.5" cy="6.5" r="1" fill="currentColor" stroke="none" /><circle cx="4.5" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="4.5" cy="17.5" r="1" fill="currentColor" stroke="none" /></svg>;
     case "doc": return <svg {...common}><path d="M7 3h7l5 5v13H7z" /><path d="M14 3v5h5" /><line x1="9.5" y1="12" x2="16" y2="12" /><line x1="9.5" y1="16" x2="16" y2="16" /></svg>;
     case "phone": return <svg {...common}><path d="M6.5 3.5h3l1.5 4-2 1.5a11 11 0 005.5 5.5l1.5-2 4 1.5v3a2 2 0 01-2.2 2A17 17 0 014.5 5.7a2 2 0 012-2.2Z" /></svg>;
@@ -2030,6 +3502,7 @@ const emptyForm = {
   infoComplementares: "", transporte: "", tipoPrestacao: "", usouTranslado: "", atesto: false,
   scvImportado: false, scvArquivo: null, dadosScvConfirmados: false,
   saqueComprovante: "", precisaDevolucao: "", valorDevolucao: "", valorTransladoLiberado: "",
+  retiradaTransladoIntegral: "", valorTransladoRetirado: "",
   justificativas: {}, anexos: {}, translados: [],
 };
 
@@ -2120,7 +3593,7 @@ const DraftDB = {
   }
 };
 
-function TransladoPdfThumb({ meta, src }) {
+function TransladoPdfThumb({ meta, src, onOpen }) {
   const [thumb, setThumb] = useState(null);
   const [erro, setErro] = useState(false);
   useEffect(() => {
@@ -2151,9 +3624,10 @@ function TransladoPdfThumb({ meta, src }) {
     return <div className="translado-preview-placeholder"><Icon name="doc" size={28} /><strong>Carregando pré-visualização...</strong></div>;
   }
   return (
-    <a href="#" onClick={e => { e.preventDefault(); abrirEmNovaGuia(src); }} title="Abrir o PDF original em outra guia">
-      <img src={thumb} alt={meta.nome} />
-    </a>
+    <button type="button" className="translado-thumb-button" onClick={onOpen} title="Visualizar arquivo em tamanho maior">
+      <img src={thumb} alt={`Pré-visualização de ${meta.nome}`} />
+      <span className="translado-thumb-caption">Visualizar arquivo</span>
+    </button>
   );
 }
 
@@ -2490,6 +3964,11 @@ function CampoTexto({ as: Tag = "input", value, onChange, ...props }) {
   return <Tag ref={ref} value={value} onChange={handleChange} {...props} />;
 }
 
+function FieldGuide({ show = true, children, className = "" }) {
+  if (!show) return null;
+  return <div className={("char-hint field-guidance " + className).trim()}>{children}</div>;
+}
+
 function LocalidadeSelect({ value, onChange, estados, estadosErro, municipiosCache, garantirMunicipios }) {
   const partes = (value || "").split(" - ");
   const municipioDoValor = partes.length === 2 ? partes[0] : "";
@@ -2565,6 +4044,13 @@ function dadosRelatorioPreview(form, numeracaoAnexos) {
   const tipoPrestacao = form.tipoPrestacao === "roteiro_reduzido" ? "ROTEIRO REDUZIDO" : form.tipoPrestacao === "roteiro_sem_alteracao" ? "ROTEIRO SEM ALTERAÇÃO" : "—";
   const transladosComArquivo = (form.translados || []).filter(t => t.arquivo);
   const totalTranslados = transladosComArquivo.reduce((a, t) => a + parseMoeda(t.valor), 0);
+  const liberadoTranslado = parseMoeda(form.valorTransladoLiberado);
+  const valorRetiradoTranslado = form.retiradaTransladoIntegral === "sim"
+    ? liberadoTranslado
+    : parseMoeda(form.valorTransladoRetirado);
+  const saldoTransladoDevolver = form.usouTranslado === "sim" && form.valorTransladoLiberado
+    ? Math.max(0, valorRetiradoTranslado - totalTranslados)
+    : 0;
   const comPag = (nome, docId, idx = 0) => {
     const p = numeracaoAnexos?.paginaPorDocId?.[docId]?.[idx];
     return p ? `${nome} — pág. ${p}` : nome;
@@ -2582,15 +4068,49 @@ function dadosRelatorioPreview(form, numeracaoAnexos) {
     const pSintese = numeracaoAnexos?.paginaSinteseTranslado;
     docsPreview.push({ nome: pSintese ? `Comprovantes de translado — pág. ${pSintese}` : "Comprovantes de translado", detalhe: `${transladosComArquivo.length} comprovante(s) — Total: ${moedaBR(totalTranslados)}` });
   }
-  if (form.anexos?.devolucao_translado?.length) docsPreview.push({ nome: comPag("Devolução do saldo de translado", "devolucao_translado") });
+  if (saldoTransladoDevolver > 0.009 && form.anexos?.devolucao_translado?.length) docsPreview.push({ nome: comPag("Devolução do saldo de translado", "devolucao_translado") });
   if (form.anexos?.comprobatorio?.length) docsPreview.push({ nome: comPag("Outros documentos comprobatórios", "comprobatorio") });
   const totalTransladoGasto = (form.translados || []).reduce((a, t) => a + parseMoeda(t.valor), 0);
-  const liberadoTranslado = parseMoeda(form.valorTransladoLiberado);
-  const saldoTransladoDevolver = form.usouTranslado === "sim" && form.valorTransladoLiberado ? Math.max(0, liberadoTranslado - totalTransladoGasto) : 0;
   const saldoRoteiroDevolver = form.tipoPrestacao === "roteiro_reduzido" ? parseMoeda(form.valorDevolucao) : 0;
   const saldoADevolver = saldoRoteiroDevolver + saldoTransladoDevolver;
   const atestoPreview = "Atesto e certifico que as informações constantes no presente documento demonstram efetivamente a realização e a efetividade da viagem, e que os comprovantes de despesa anexos a esta prestação de contas foram efetivamente realizados no estrito interesse da administração pública, conforme o Decreto Estadual n.º 6.358/2024.";
   return { periodo, tipoViagem, cargoLinha, tipoPrestacao, docsPreview, atestoPreview, saldoADevolver };
+}
+
+// Converte o texto digitado pelo viajante em blocos semânticos.
+// Linhas com marcador viram itens de lista; linhas comuns consecutivas
+// formam um parágrafo. A mesma estrutura é usada na prévia e no PDF.
+function criarBlocosTextoRelatorio(textoOriginal) {
+  const texto = String(textoOriginal ?? "").replace(/\r/g, "").trim();
+  if (!texto) return [{ tipo: "paragrafo", texto: "—" }];
+
+  const blocos = [];
+  let paragrafo = [];
+  const descarregarParagrafo = () => {
+    if (!paragrafo.length) return;
+    blocos.push({ tipo: "paragrafo", texto: paragrafo.join(" ").replace(/\s+/g, " ").trim() });
+    paragrafo = [];
+  };
+
+  texto.split("\n").forEach(linhaOriginal => {
+    const linha = linhaOriginal.trim();
+    if (!linha) {
+      descarregarParagrafo();
+      return;
+    }
+
+    const item = linha.match(/^([•●▪◦‣⁃*\-–—]|\d+[.)])\s*(.+)$/);
+    if (item) {
+      descarregarParagrafo();
+      blocos.push({ tipo: "lista", marcador: item[1], texto: item[2].replace(/\s+/g, " ").trim() });
+      return;
+    }
+
+    paragrafo.push(linha);
+  });
+  descarregarParagrafo();
+
+  return blocos.length ? blocos : [{ tipo: "paragrafo", texto: "—" }];
 }
 
 // Blocos do relatório, um por bloco visual (cada um é uma unidade que NUNCA é
@@ -2598,11 +4118,22 @@ function dadosRelatorioPreview(form, numeracaoAnexos) {
 function RelatorioBlocos({ form, numeracaoAnexos }) {
   const d = dadosRelatorioPreview(form, numeracaoAnexos);
   function secaoTexto(numero, titulo, icone, textoOriginal, chave) {
+    const blocos = criarBlocosTextoRelatorio(textoOriginal);
+    const semRecuo = chave === "nomeEvento";
     return (
       <div className="rp-sec" data-campo={chave}>
         <div className="rp-sec-icon"><Icon name={icone} size={17} /></div>
         <div className="rp-sec-title">{numero}. {titulo}</div>
-        <div className="rp-sec-body">{textoOriginal || "—"}</div>
+        <div className={"rp-sec-body" + (semRecuo ? " sem-recuo" : "")}>
+          {blocos.map((bloco, indice) => bloco.tipo === "lista" ? (
+            <div className="rp-text-bullet" key={indice}>
+              <span className="rp-text-bullet-mark">{bloco.marcador}</span>
+              <span className="rp-text-bullet-content">{bloco.texto}</span>
+            </div>
+          ) : (
+            <p className="rp-text-paragraph" key={indice}>{bloco.texto}</p>
+          ))}
+        </div>
       </div>
     );
   }
@@ -2673,38 +4204,6 @@ function RelatorioCorpo({ form, numeracaoAnexos }) {
         <div className="rp-subtitle"><span className="rp-sv-box">S.V. &nbsp;Nº&nbsp; {form.numeroSolicitacao || "________"}</span></div>
       </div>
       <RelatorioBlocos form={form} numeracaoAnexos={numeracaoAnexos} />
-    </div>
-  );
-}
-
-function ReportPreview({ form }) {
-  return (
-    <div className="report-preview">
-      <div className="rp-topbar" />
-      <div className="rp-logos">
-        <img src={DETRAN_LOGO} alt="DetranPR" />
-        <div className="rp-logo-col">
-          <img src={PARANA_LOGO} alt="Governo do Paraná" />
-        </div>
-      </div>
-      <div className="rp-title">RELATÓRIO TÉCNICO DE VIAGEM</div>
-      <div className="rp-kicker"><i />PRESTAÇÃO DE CONTAS<i /></div>
-      <div className="rp-subtitle"><span className="rp-sv-box">S.V. &nbsp;Nº&nbsp; {form.numeroSolicitacao || "________"}</span></div>
-
-      <RelatorioBlocos form={form} />
-
-      <div className="rp-footer">
-        <div className="rp-foot-bar" />
-        <div className="rp-foot">
-          <div className="rp-foot-col foot-marca"><b>DETRAN/PR</b></div>
-          <span className="rp-foot-pipe">|</span>
-          <div className="rp-foot-col foot-sistema">Sistema de Prestação de Contas de Viagem</div>
-          <span className="rp-foot-pipe">|</span>
-          <div className="rp-foot-col foot-solicitacao">Solicitação: {form.numeroSolicitacao || "—"}</div>
-          <span className="rp-foot-pipe">|</span>
-          <div className="rp-foot-col foot-pagina">Página 1 de 1</div>
-        </div>
-      </div>
     </div>
   );
 }
@@ -2881,6 +4380,158 @@ function TelaMinhasPrestacoes() {
   );
 }
 
+
+function distanciaEntreToques(touches) {
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+  return Math.hypot(dx, dy);
+}
+
+function PinchZoomViewer({ children, baseWidth = 700, ariaLabel = "Visualização do documento" }) {
+  const viewportRef = useRef(null);
+  const contentRef = useRef(null);
+  const gestureRef = useRef(null);
+  const fitScaleRef = useRef(1);
+  const scaleRef = useRef(1);
+  const [fitScale, setFitScale] = useState(1);
+  const [scale, setScale] = useState(1);
+  const [baseHeight, setBaseHeight] = useState(900);
+
+  const aplicarEscala = useCallback((valor) => {
+    const minimo = fitScaleRef.current;
+    const proximo = Math.min(3, Math.max(minimo, valor));
+    scaleRef.current = proximo;
+    setScale(proximo);
+  }, []);
+
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    const content = contentRef.current;
+    if (!viewport || !content) return;
+
+    const medir = () => {
+      const estavaAjustado = Math.abs(scaleRef.current - fitScaleRef.current) < 0.04;
+      const larguraDisponivel = Math.max(220, viewport.clientWidth - 12);
+      const novoFit = Math.min(1, Math.max(0.28, larguraDisponivel / baseWidth));
+      fitScaleRef.current = novoFit;
+      setFitScale(novoFit);
+      if (estavaAjustado) {
+        scaleRef.current = novoFit;
+        setScale(novoFit);
+      } else if (scaleRef.current < novoFit) {
+        scaleRef.current = novoFit;
+        setScale(novoFit);
+      }
+      setBaseHeight(Math.max(200, content.scrollHeight || content.offsetHeight || 900));
+    };
+
+    medir();
+    const observer = new ResizeObserver(medir);
+    observer.observe(viewport);
+    observer.observe(content);
+    return () => observer.disconnect();
+  }, [baseWidth]);
+
+  const iniciarToque = (event) => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    if (event.touches.length === 2) {
+      event.preventDefault();
+      gestureRef.current = {
+        tipo: "pinch",
+        distancia: distanciaEntreToques(event.touches),
+        escala: scaleRef.current,
+      };
+    } else if (event.touches.length === 1) {
+      gestureRef.current = {
+        tipo: "pan",
+        x: event.touches[0].clientX,
+        y: event.touches[0].clientY,
+        left: viewport.scrollLeft,
+        top: viewport.scrollTop,
+      };
+    }
+  };
+
+  const moverToque = (event) => {
+    const viewport = viewportRef.current;
+    const gesto = gestureRef.current;
+    if (!viewport || !gesto) return;
+    if (gesto.tipo === "pinch" && event.touches.length === 2) {
+      event.preventDefault();
+      const atual = distanciaEntreToques(event.touches);
+      aplicarEscala(gesto.escala * (atual / Math.max(1, gesto.distancia)));
+    } else if (gesto.tipo === "pan" && event.touches.length === 1) {
+      event.preventDefault();
+      viewport.scrollLeft = gesto.left - (event.touches[0].clientX - gesto.x);
+      viewport.scrollTop = gesto.top - (event.touches[0].clientY - gesto.y);
+    }
+  };
+
+  const encerrarToque = () => { gestureRef.current = null; };
+  const ajustar = () => aplicarEscala(fitScaleRef.current);
+  const percentual = Math.round((scale / Math.max(0.01, fitScale)) * 100);
+
+  return (
+    <div className="pinch-viewer">
+      <div className="pinch-toolbar">
+        <span className="pinch-hint">Use dois dedos para ampliar e arraste para navegar.</span>
+        <div className="pinch-controls" aria-label="Controles de zoom">
+          <button type="button" onClick={() => aplicarEscala(scaleRef.current - 0.18)} disabled={scale <= fitScale + 0.01} aria-label="Diminuir zoom">−</button>
+          <button type="button" className="pinch-fit" onClick={ajustar}>Ajustar · {percentual}%</button>
+          <button type="button" onClick={() => aplicarEscala(scaleRef.current + 0.18)} disabled={scale >= 2.99} aria-label="Aumentar zoom">+</button>
+        </div>
+      </div>
+      <div
+        ref={viewportRef}
+        className="pinch-viewport"
+        role="region"
+        aria-label={ariaLabel}
+        onTouchStart={iniciarToque}
+        onTouchMove={moverToque}
+        onTouchEnd={encerrarToque}
+        onTouchCancel={encerrarToque}
+      >
+        <div className="pinch-stage" style={{ width: baseWidth * scale, height: baseHeight * scale }}>
+          <div ref={contentRef} className="pinch-content" style={{ width: baseWidth, transform: `scale(${scale})` }}>
+            {children}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FilePreviewModal({ arquivo, onClose }) {
+  if (!arquivo) return null;
+  return (
+    <div className="redact-overlay file-view-overlay" onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
+      <div className="preview-modal file-view-modal" role="dialog" aria-modal="true" aria-label={`Visualização de ${arquivo.meta.nome}`}>
+        <div className="redact-head">
+          <div>
+            <h3>Visualizar arquivo</h3>
+            <div className="file-view-name">{arquivo.meta.nome}</div>
+          </div>
+          <button className="redact-close" onClick={onClose} aria-label="Fechar visualização"><Icon name="close" size={20} /></button>
+        </div>
+        <div className="preview-modal-body file-view-body">
+          {arquivo.isPdf ? (
+            <iframe className="file-view-iframe" src={arquivo.src} title={arquivo.meta.nome} />
+          ) : (
+            <PinchZoomViewer baseWidth={900} ariaLabel={`Imagem ampliada: ${arquivo.meta.nome}`}>
+              <img className="file-view-image" src={arquivo.src} alt={arquivo.meta.nome} />
+            </PinchZoomViewer>
+          )}
+        </div>
+        <div className="redact-actions file-view-actions">
+          <a className="btn btn-ghost" href={arquivo.src} target="_blank" rel="noreferrer">Abrir em outra guia</a>
+          <button className="btn btn-primary" onClick={onClose}>Fechar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const { token, mostrarLista } = useDraftToken();
   const [step, setStep] = useState(1);
@@ -2908,7 +4559,6 @@ function App() {
   const [dadosScv, setDadosScv] = useState(null);
   const [scvNaoRealizada, setScvNaoRealizada] = useState(false);
   const [pdfGeradoUmaVez, setPdfGeradoUmaVez] = useState(false);
-  const pdfPreviewRef = useRef(null);
 
   const saqueFileInputRef = useRef(null);
 
@@ -2958,10 +4608,34 @@ function App() {
   const [avisoArmazenamento, setAvisoArmazenamento] = useState(null);
   const [redactTarget, setRedactTarget] = useState(null);
   const [mostrarPreview, setMostrarPreview] = useState(false);
+  const [previewPdfUrl, setPreviewPdfUrl] = useState("");
+  const [previewGerando, setPreviewGerando] = useState(false);
+  const [previewErro, setPreviewErro] = useState("");
+  const previewPdfBlobRef = useRef(null);
+  const previewPdfUrlRef = useRef("");
+  const [arquivoVisualizado, setArquivoVisualizado] = useState(null);
   const [editQueue, setEditQueue] = useState([]);
   const saveTimer = useRef(null);
   const key = criarChaveRascunho(token);
   const storageDisponivel = typeof window.indexedDB !== "undefined";
+
+  useEffect(() => {
+    if (!mostrarPreview && !arquivoVisualizado) return;
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = overflowAnterior; };
+  }, [mostrarPreview, arquivoVisualizado]);
+
+
+  useEffect(() => {
+    return () => {
+      if (previewPdfUrlRef.current) {
+        URL.revokeObjectURL(previewPdfUrlRef.current);
+        previewPdfUrlRef.current = "";
+      }
+      previewPdfBlobRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     if (!key) return;
@@ -3107,7 +4781,18 @@ function App() {
   const translados = form.translados || [];
   const totalGastoTranslado = translados.reduce((acc, t) => acc + parseMoeda(t.valor), 0);
   const liberadoTranslado = parseMoeda(form.valorTransladoLiberado);
-  const saldoTranslado = mostraTranslado && form.usouTranslado === "sim" && form.valorTransladoLiberado ? liberadoTranslado - totalGastoTranslado : null;
+  const retiradaTransladoRespondida = form.retiradaTransladoIntegral === "sim" || form.retiradaTransladoIntegral === "nao";
+  const valorRetiradoTranslado = form.retiradaTransladoIntegral === "sim"
+    ? liberadoTranslado
+    : form.retiradaTransladoIntegral === "nao"
+      ? parseMoeda(form.valorTransladoRetirado)
+      : 0;
+  const retiradaAcimaLiberado = retiradaTransladoRespondida && valorRetiradoTranslado > liberadoTranslado + 0.009;
+  const despesasAcimaRetirado = retiradaTransladoRespondida && totalGastoTranslado > valorRetiradoTranslado + 0.009;
+  const valorPermanecidoConta = retiradaTransladoRespondida ? Math.max(0, liberadoTranslado - valorRetiradoTranslado) : null;
+  const saldoTranslado = mostraTranslado && form.usouTranslado === "sim" && form.valorTransladoLiberado && retiradaTransladoRespondida
+    ? Math.max(0, valorRetiradoTranslado - totalGastoTranslado)
+    : null;
   const precisaDevolucaoTranslado = saldoTranslado !== null && saldoTranslado > 0.009;
   const saqueOk = form.saqueComprovante === "sim"
     ? !!(form.anexos.saque && form.anexos.saque.length)
@@ -3117,8 +4802,15 @@ function App() {
     if (d.id === "saque") return !saqueOk;
     return d.obrig && (!form.anexos[d.id] || form.anexos[d.id].length === 0);
   });
+  const retiradaTransladoOk = retiradaTransladoRespondida
+    && valorRetiradoTranslado > 0
+    && !retiradaAcimaLiberado
+    && !despesasAcimaRetirado;
   const transladoOk = !mostraTranslado || form.usouTranslado !== "sim" || (
-    liberadoTranslado > 0 && translados.length > 0 && translados.every(t => t.de && t.para && t.data && parseMoeda(t.valor) > 0 && t.arquivo)
+    liberadoTranslado > 0
+    && retiradaTransladoOk
+    && translados.length > 0
+    && translados.every(t => t.de && t.para && t.data && parseMoeda(t.valor) > 0 && t.arquivo)
   );
   const devolucaoTransladoOk = !precisaDevolucaoTranslado || !!(form.anexos.devolucao_translado && form.anexos.devolucao_translado.length);
   const devolucaoRoteiroOk = form.precisaDevolucao !== "sim" || (parseMoeda(form.valorDevolucao) > 0 && !!(form.anexos.devolucao_roteiro && form.anexos.devolucao_roteiro.length));
@@ -3204,7 +4896,14 @@ function App() {
   }
 
   function removeFile(docId, fileId) {
-    setForm(f => ({ ...f, anexos: { ...f.anexos, [docId]: (f.anexos[docId] || []).filter(x => x.id !== fileId) } }));
+    setForm(f => {
+      const arquivosRestantes = (f.anexos[docId] || []).filter(x => x.id !== fileId);
+      return {
+        ...f,
+        anexos: { ...f.anexos, [docId]: arquivosRestantes },
+        ...(docId === "saque" && arquivosRestantes.length === 0 ? { saqueComprovante: "" } : {})
+      };
+    });
     setAnexosContent(prev => { const n = { ...prev }; delete n[fileId]; return n; });
     deleteFileContent(fileId);
   }
@@ -3525,6 +5224,36 @@ function App() {
     }, 300);
   }
 
+  function abrirArquivoTranslado(meta) {
+    if (!meta) return;
+    const src = anexosContent[meta.id];
+    if (!src) return;
+    const isPdf = meta.tipo === "application/pdf" || /\.pdf$/i.test(meta.nome || "");
+
+    // No desktop, o comprovante abre diretamente em outra guia para preservar
+    // espaço no formulário. Em celular e tablet, mantém o visualizador com zoom.
+    if (window.matchMedia && window.matchMedia("(min-width: 981px)").matches) {
+      try {
+        const mime = meta.tipo || (isPdf ? "application/pdf" : "image/*");
+        const blob = new Blob([dataUrlToBytes(src)], { type: mime });
+        const objectUrl = URL.createObjectURL(blob);
+        const novaGuia = window.open(objectUrl, "_blank");
+        if (novaGuia) novaGuia.opener = null;
+        if (!novaGuia) {
+          URL.revokeObjectURL(objectUrl);
+          setArquivoVisualizado({ meta, src, isPdf });
+          return;
+        }
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+        return;
+      } catch (erro) {
+        // Se o navegador bloquear a abertura, usa o visualizador interno.
+      }
+    }
+
+    setArquivoVisualizado({ meta, src, isPdf });
+  }
+
   function renderTransladoPreview(meta) {
     if (!meta) return null;
     const src = anexosContent[meta.id];
@@ -3533,12 +5262,13 @@ function App() {
       return <div className="translado-preview-placeholder"><Icon name="doc" size={28} /><strong>Pré-visualização indisponível</strong><small>Abra novamente o arquivo se precisar revisar este comprovante.</small></div>;
     }
     if (isPdf) {
-      return <TransladoPdfThumb meta={meta} src={src} />;
+      return <TransladoPdfThumb meta={meta} src={src} onOpen={() => abrirArquivoTranslado(meta)} />;
     }
     return (
-      <a href="#" onClick={e => { e.preventDefault(); abrirEmNovaGuia(src); }} title="Abrir em tamanho maior em outra guia">
-        <img src={src} alt={meta.nome} />
-      </a>
+      <button type="button" className="translado-thumb-button" onClick={() => abrirArquivoTranslado(meta)} title="Visualizar arquivo em tamanho maior">
+        <img src={src} alt={`Pré-visualização de ${meta.nome}`} />
+        <span className="translado-thumb-caption">Visualizar arquivo</span>
+      </button>
     );
   }
 
@@ -3561,8 +5291,8 @@ function App() {
               <li className="file-chip" key={f.id}>
                 <span className="file-chip-nome">{f.nome}</span>
                 {f.redigido && <span className="redigido-tag">dados ocultados</span>}
-                {!f.redigido && <button className="file-remove" style={{ color: "var(--azul)" }} onClick={() => openRedactForDoc(docId, f.id)}>Ocultar dados pessoais</button>}
-                <button className="file-remove" onClick={() => removeFile(docId, f.id)}>Excluir arquivo</button>
+                {!f.redigido && <button className="file-remove file-remove-redact" onClick={() => openRedactForDoc(docId, f.id)}>Ocultar dados pessoais</button>}
+                <button className="file-remove file-remove-delete" onClick={() => removeFile(docId, f.id)}>Excluir arquivo</button>
               </li>
             ))}
           </ul>
@@ -3581,7 +5311,11 @@ function App() {
   const itensFaltandoEtapa2 = [];
   if (!form.transporte) itensFaltandoEtapa2.push({ id: "campo-transporte", label: "Meio de transporte utilizado" });
   if (mostraTranslado && !form.usouTranslado) itensFaltandoEtapa2.push({ id: "campo-usouTranslado", label: "Resposta sobre uso de táxi/aplicativo" });
-  if (mostraTranslado && form.usouTranslado === "sim" && !transladoOk) itensFaltandoEtapa2.push({ id: "campo-usouTranslado", label: "Dados do translado (trajeto, valor e comprovante)" });
+  if (mostraTranslado && form.usouTranslado === "sim" && !retiradaTransladoRespondida) itensFaltandoEtapa2.push({ id: "campo-retiradaTranslado", label: "Informação sobre o valor sacado ou transferido" });
+  if (mostraTranslado && form.usouTranslado === "sim" && form.retiradaTransladoIntegral === "nao" && parseMoeda(form.valorTransladoRetirado) <= 0) itensFaltandoEtapa2.push({ id: "campo-retiradaTranslado", label: "Valor efetivamente sacado ou transferido" });
+  if (mostraTranslado && form.usouTranslado === "sim" && retiradaAcimaLiberado) itensFaltandoEtapa2.push({ id: "campo-retiradaTranslado", label: "Valor sacado ou transferido não pode superar o valor liberado" });
+  if (mostraTranslado && form.usouTranslado === "sim" && despesasAcimaRetirado) itensFaltandoEtapa2.push({ id: "campo-retiradaTranslado", label: "O valor sacado ou transferido deve cobrir as despesas comprovadas" });
+  if (mostraTranslado && form.usouTranslado === "sim" && !transladoOk && retiradaTransladoOk) itensFaltandoEtapa2.push({ id: "campo-usouTranslado", label: "Dados do translado (trajeto, valor e comprovante)" });
   pendingDocs.forEach(d => itensFaltandoEtapa2.push({ id: "doc-" + d.id, label: d.nome }));
   const conferenciaCompleta = Object.values(conferencia).every(Boolean);
   const step3Valid = !!form.atesto && conferenciaCompleta;
@@ -3597,7 +5331,7 @@ function App() {
   const tarefasEtapa2 = [!!form.transporte];
   if (mostraTranslado) tarefasEtapa2.push(!!form.usouTranslado);
   if (mostraTranslado && form.usouTranslado === "sim") {
-    tarefasEtapa2.push(liberadoTranslado > 0, translados.length > 0);
+    tarefasEtapa2.push(liberadoTranslado > 0, retiradaTransladoRespondida, retiradaTransladoOk, translados.length > 0);
     translados.forEach(t => {
       tarefasEtapa2.push(
         !!t.arquivo,
@@ -3624,14 +5358,24 @@ function App() {
 
   const progressoEtapas = [progressoEtapa1, progressoEtapa2, progressoEtapa3];
 
-  async function gerarPDF() {
-    setPdfErro(null);
-    setPdfAviso(null);
+  async function gerarPDF(opcoes = {}) {
+    const modoPreview = !!opcoes.modoPreview;
+    if (modoPreview) {
+      setPreviewErro("");
+      setPreviewGerando(true);
+    } else {
+      setPdfErro(null);
+      setPdfAviso(null);
+      setGerando(true);
+    }
     if (!(window.jspdf && window.jspdf.jsPDF)) {
-      setPdfErro("A biblioteca de geração de PDF ainda não carregou. Verifique sua conexão e tente novamente em instantes.");
+      const mensagem = "A biblioteca de geração de PDF ainda não carregou. Verifique sua conexão e tente novamente em instantes.";
+      if (modoPreview) setPreviewErro(mensagem);
+      else setPdfErro(mensagem);
+      if (modoPreview) setPreviewGerando(false);
+      else setGerando(false);
       return;
     }
-    setGerando(true);
     try {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ unit: "pt", format: "a4" });
@@ -3797,6 +5541,30 @@ function App() {
         azulPillBorda: [216, 230, 242],
       };
 
+      function desenharBarraMesclada(x, yBarra, largura, altura, azulAte = 0.74, verdeDesde = 0.86) {
+        const azul = MX.navy;
+        const verde = MX.verdeVivo;
+        const inicio = x + largura * azulAte;
+        const fim = x + largura * verdeDesde;
+        const raio = altura / 2;
+
+        doc.setFillColor(...azul);
+        doc.roundedRect(x, yBarra, largura, altura, raio, raio, "F");
+
+        const passos = 28;
+        const passoW = Math.max(0.3, (fim - inicio) / passos);
+        for (let i = 0; i < passos; i++) {
+          const t = i / Math.max(1, passos - 1);
+          const cor = azul.map((valor, indice) => Math.round(valor + (verde[indice] - valor) * t));
+          doc.setFillColor(...cor);
+          doc.rect(inicio + i * passoW, yBarra, passoW + 0.35, altura, "F");
+        }
+
+        doc.setFillColor(...verde);
+        doc.rect(fim, yBarra, Math.max(0, x + largura - fim - raio), altura, "F");
+        doc.circle(x + largura - raio, yBarra + raio, raio, "F");
+      }
+
       function cabecalhoAnexo(criarNovaPagina = true) {
         if (criarNovaPagina) doc.addPage();
         paginaPdfAtual += 1;
@@ -3806,10 +5574,7 @@ function App() {
         try { doc.addImage(DETRAN_LOGO, "PNG", margin, logoY, detranW, detranH); } catch (e) { registrarAvisoPdf("A logo do DetranPR não pôde ser inserida no cabeçalho."); }
         try { doc.addImage(PARANA_LOGO, "PNG", PAGE_W - margin - paranaW, logoY + (detranH - paranaH) / 2, paranaW, paranaH); } catch (e) { registrarAvisoPdf("A logo do Governo do Paraná não pôde ser inserida no cabeçalho."); }
         const barY = logoY + detranH + 14;
-        doc.setFillColor(...MX.navy);
-        doc.roundedRect(margin, barY, contentW, 3.5, 1.75, 1.75, "F");
-        doc.setFillColor(...MX.verdeVivo);
-        doc.roundedRect(margin + contentW * 0.86, barY, contentW * 0.14, 3.5, 1.75, 1.75, "F");
+        desenharBarraMesclada(margin, barY, contentW, 3.5, 0.74, 0.86);
         y = barY + 3.5 + 24;
       }
 
@@ -3883,10 +5648,7 @@ function App() {
 
       function rodapePaginaAnexo() {
         const linhaY = PAGE_H - 40;
-        doc.setFillColor(...MX.navy);
-        doc.roundedRect(margin, linhaY - 17, contentW * 0.84, 2.2, 1.1, 1.1, "F");
-        doc.setFillColor(...MX.verdeVivo);
-        doc.roundedRect(margin + contentW * 0.84, linhaY - 17, contentW * 0.16, 2.2, 1.1, 1.1, "F");
+        desenharBarraMesclada(margin, linhaY - 17, contentW, 2.2, 0.74, 0.86);
 
         const segmentos = [
           "DETRAN/PR",
@@ -3985,64 +5747,122 @@ function App() {
           y += peca.alturaPt;
         }
 
-        // Justificação manual, palavra por palavra. O recurso nativo do
-        // jsPDF (align:"justify") não estica de forma confiável quando
-        // desenhamos uma linha de cada vez (como fazemos aqui, por causa da
-        // quebra de página) — por isso distribuímos o espaço extra entre as
-        // palavras nós mesmos, garantindo que a linha sempre termine
-        // exatamente na borda direita do card, como no modelo de referência.
-        function desenharLinhaJustificada(linha, x, largura, ehUltimaLinha) {
-          if (ehUltimaLinha || !linha.includes(" ")) {
-            doc.text(linha, x, y);
-            return;
+        // ---- Texto copiável do relatório: justificação nativa e segura ----
+        // Parágrafos narrativos usam o alinhamento nativo do jsPDF, com recuo
+        // de primeira linha. A última linha e linhas muito curtas ficam à esquerda.
+        // Listas nunca são justificadas e mantêm recuo suspenso.
+        function quebrarParagrafoComRecuo(texto, largura, recuo, justificar) {
+          const palavras = String(texto || "—").trim().split(/\s+/).filter(Boolean);
+          if (!palavras.length) return [{ texto: "—", xOffset: recuo, justificar: false }];
+
+          let linhas = [];
+          if (!recuo) {
+            linhas = doc.splitTextToSize(palavras.join(" "), largura).map(textoLinha => ({ texto: textoLinha, xOffset: 0 }));
+          } else {
+            const larguraPrimeira = Math.max(40, largura - recuo);
+            let primeira = "";
+            let indice = 0;
+            while (indice < palavras.length) {
+              const tentativa = primeira ? `${primeira} ${palavras[indice]}` : palavras[indice];
+              if (primeira && doc.getTextWidth(tentativa) > larguraPrimeira) break;
+              primeira = tentativa;
+              indice += 1;
+            }
+            if (!primeira) {
+              primeira = palavras[0];
+              indice = 1;
+            }
+            linhas.push({ texto: primeira, xOffset: recuo });
+            const restante = palavras.slice(indice).join(" ");
+            if (restante) doc.splitTextToSize(restante, largura).forEach(textoLinha => linhas.push({ texto: textoLinha, xOffset: 0 }));
           }
-          const palavras = linha.split(" ");
-          const larguraEspaco = doc.getTextWidth(" ");
-          const larguraPalavras = palavras.reduce((soma, p) => soma + doc.getTextWidth(p), 0);
-          const folga = largura - larguraPalavras - larguraEspaco * (palavras.length - 1);
-          const espacoExtra = Math.max(0, folga / (palavras.length - 1));
-          let xAtual = x;
-          palavras.forEach(palavra => {
-            doc.text(palavra, xAtual, y);
-            xAtual += doc.getTextWidth(palavra) + larguraEspaco + espacoExtra;
-          });
+
+          return linhas.map((linha, indiceLinha) => ({
+            ...linha,
+            justificar: !!justificar
+              && indiceLinha < linhas.length - 1
+              && String(linha.texto).trim().split(/\s+/).length >= 3,
+            maxWidth: Math.max(40, largura - linha.xOffset)
+          }));
         }
 
+        function montarLinhasSecao(texto, largura, usarRecuo, justificarParagrafos) {
+          const blocos = criarBlocosTextoRelatorio(texto);
+          const linhas = [];
+          const recuoParagrafo = usarRecuo ? 18 : 0;
+          const recuoLista = 16;
 
-        // ---- Card de uma seção de texto (Descrição, Objetivo, Conclusão,
-        // Informações complementares). Título acima, texto justificado
-        // abaixo, tudo dentro de uma borda cinza — igual ao card original.
-        // Se o texto não couber inteiro na página, a borda é fechada ali e
-        // reaberta na página seguinte com "(CONTINUAÇÃO)" dentro do mesmo
-        // estilo de card, sem nunca deixar o texto ultrapassar a moldura.
-        function desenharSecaoCard(numero, titulo, texto) {
+          blocos.forEach((bloco, indiceBloco) => {
+            const espacoAntes = indiceBloco === 0 ? 0 : 9;
+            if (bloco.tipo === "lista") {
+              const quebradas = doc.splitTextToSize(bloco.texto, Math.max(40, largura - recuoLista));
+              quebradas.forEach((linha, indiceLinha) => linhas.push({
+                texto: linha,
+                xOffset: recuoLista,
+                marcador: indiceLinha === 0 ? bloco.marcador : "",
+                espacoAntes: indiceLinha === 0 ? espacoAntes : 0,
+                justificar: false,
+                maxWidth: Math.max(40, largura - recuoLista)
+              }));
+            } else {
+              quebrarParagrafoComRecuo(bloco.texto, largura, recuoParagrafo, justificarParagrafos).forEach((linha, indiceLinha) => linhas.push({
+                texto: linha.texto,
+                xOffset: linha.xOffset,
+                marcador: "",
+                espacoAntes: indiceLinha === 0 ? espacoAntes : 0,
+                justificar: linha.justificar,
+                maxWidth: linha.maxWidth
+              }));
+            }
+          });
+          return linhas;
+        }
+
+        function desenharSecaoCard(numero, titulo, texto, opcoes = {}) {
           const padH = 16, padV = 14;
           const larguraInterna = contentW - padH * 2;
           const tamanhoTitulo = 12.5;
-          const tamanhoTexto = 10.8, alturaLinha = tamanhoTexto * 1.5; // espaçamento 1,5 entre linhas
-          const alturaHeaderPrimeiraPagina = 36; // título "N. NOME DA SEÇÃO" + respiro antes do texto
-          const alturaHeaderContinuacao = 30; // legenda "(CONTINUAÇÃO)" + respiro
+          const tamanhoTexto = 10.8;
+          const alturaLinha = tamanhoTexto * 1.5;
+          const alturaHeaderPrimeiraPagina = 36;
+          const alturaHeaderContinuacao = 30;
+          const usarRecuo = opcoes.recuoPrimeiraLinha !== false;
+          const justificarParagrafos = opcoes.justificar !== false;
 
           doc.setFont("helvetica", "normal");
           doc.setFontSize(tamanhoTexto);
-          const linhas = doc.splitTextToSize(String(texto ?? "").trim() || "—", larguraInterna);
+          const linhas = montarLinhasSecao(texto, larguraInterna, usarRecuo, justificarParagrafos);
 
           let indice = 0;
           let primeiraPagina = true;
           while (indice < linhas.length) {
             const alturaHeaderAtual = primeiraPagina ? alturaHeaderPrimeiraPagina : alturaHeaderContinuacao;
             const espacoParaTexto = espacoRestante() - padV * 2 - alturaHeaderAtual;
-            let linhasNestaPagina = Math.max(0, Math.floor(espacoParaTexto / alturaLinha));
-            if (linhasNestaPagina === 0) { novaPagina(); continue; }
-            if (linhasNestaPagina > linhas.length - indice) linhasNestaPagina = linhas.length - indice;
+            let usado = 0;
+            let fim = indice;
+
+            while (fim < linhas.length) {
+              const linha = linhas[fim];
+              const espacoAntes = fim === indice ? 0 : linha.espacoAntes;
+              const alturaNecessaria = espacoAntes + alturaLinha;
+              if (usado + alturaNecessaria > espacoParaTexto) break;
+              usado += alturaNecessaria;
+              fim += 1;
+            }
+
+            if (fim === indice) {
+              novaPagina();
+              continue;
+            }
 
             const topoCard = y;
-            const alturaCard = padV * 2 + alturaHeaderAtual + linhasNestaPagina * alturaLinha;
+            const alturaCard = padV * 2 + alturaHeaderAtual + usado;
             if (!somenteContar) {
               doc.setDrawColor(...corLinha);
               doc.setFillColor(255, 255, 255);
               doc.setLineWidth(1);
               doc.roundedRect(margin, topoCard, contentW, alturaCard, 10, 10, "FD");
+
               let yy = topoCard + padV;
               if (primeiraPagina) {
                 doc.setFont("helvetica", "bold");
@@ -4055,22 +5875,35 @@ function App() {
                 doc.setTextColor(...corTitulo);
                 doc.text(String(titulo).toUpperCase() + " (CONTINUAÇÃO)", margin + padH, yy + 8);
               }
+
               yy += alturaHeaderAtual;
               doc.setFont("helvetica", "normal");
               doc.setFontSize(tamanhoTexto);
               doc.setTextColor(...corTexto);
-              for (let k = 0; k < linhasNestaPagina; k++) {
-                y = yy;
-                const linha = linhas[indice + k];
-                const ultimaLinhaDoTexto = indice + k === linhas.length - 1;
-                desenharLinhaJustificada(linha, margin + padH, larguraInterna, ultimaLinhaDoTexto);
+
+              for (let k = indice; k < fim; k++) {
+                const linha = linhas[k];
+                yy += k === indice ? 0 : linha.espacoAntes;
+                if (linha.marcador) {
+                  doc.text(linha.marcador, margin + padH, yy);
+                }
+                const xTexto = margin + padH + linha.xOffset;
+                if (linha.justificar) {
+                  doc.text(linha.texto, xTexto, yy, { align: "justify", maxWidth: linha.maxWidth });
+                } else {
+                  doc.text(linha.texto, xTexto, yy);
+                }
                 yy += alturaLinha;
               }
             }
+
             y = topoCard + alturaCard;
-            indice += linhasNestaPagina;
+            indice = fim;
             primeiraPagina = false;
-            if (indice < linhas.length) { y += 14; novaPagina(); }
+            if (indice < linhas.length) {
+              y += 14;
+              novaPagina();
+            }
           }
           y += 16;
         }
@@ -4109,7 +5942,7 @@ function App() {
 
         // ---- As seções de texto copiáveis, em card com borda (numeração sequencial) ----
         let numeroSecao = 1;
-        desenharSecaoCard(numeroSecao++, "DESCRIÇÃO DO EVENTO", form.nomeEvento);
+        desenharSecaoCard(numeroSecao++, "DESCRIÇÃO DO EVENTO", form.nomeEvento, { recuoPrimeiraLinha: false, justificar: false });
         desenharSecaoCard(numeroSecao++, "OBJETIVO DA PARTICIPAÇÃO", form.motivo);
         desenharSecaoCard(numeroSecao++, "CONCLUSÃO", form.conclusao);
         if (String(form.infoComplementares || "").trim()) {
@@ -4327,9 +6160,10 @@ function App() {
         rodapePaginaAnexo();
       }
 
-      function desenharRelatorioSinteticoTranslado(numeroAnexo, itens, valorLiberado) {
+      function desenharRelatorioSinteticoTranslado(numeroAnexo, itens, valorLiberado, valorRetirado) {
         const valorComprovado = itens.reduce((acc, t) => acc + parseMoeda(t.valor), 0);
-        const valorRecolher = Math.max(0, valorLiberado - valorComprovado);
+        const valorPermaneceuConta = Math.max(0, valorLiberado - valorRetirado);
+        const valorDevolverViajante = Math.max(0, valorRetirado - valorComprovado);
 
         cabecalhoAnexo();
         tituloAnexo(numeroAnexo, "RELATÓRIO SINTÉTICO — TRANSLADO", "carro");
@@ -4340,11 +6174,12 @@ function App() {
         doc.setLineWidth(1.2);
         doc.roundedRect(margin, y, contentW, hResumo, 10, 10, "FD");
         const colunasResumo = [
-          ["Valor total recebido", valorLiberado, MX.texto],
-          ["Despesas comprovadas", valorComprovado, MX.texto],
-          ["Valor a ser recolhido", valorRecolher, valorRecolher > 0.009 ? MX.verdeValor : MX.texto],
+          ["Valor liberado", valorLiberado, MX.texto],
+          ["Sacado ou transferido", valorRetirado, MX.texto],
+          ["Permaneceu na conta", valorPermaneceuConta, MX.texto],
+          ["A devolver pelo viajante", valorDevolverViajante, valorDevolverViajante > 0.009 ? MX.verdeValor : MX.texto],
         ];
-        const colW3 = contentW / 3;
+        const colW3 = contentW / 4;
         colunasResumo.forEach(([label, valor, cor], i) => {
           const cx = margin + colW3 * i + colW3 / 2;
           if (i > 0) { doc.setDrawColor(...MX.verdeBorda); doc.line(margin + colW3 * i, y + 12, margin + colW3 * i, y + hResumo - 12); }
@@ -4416,7 +6251,7 @@ function App() {
         } else {
           const paginasItens = numeracaoAnexos.paginasTranslado;
           const itensComPagina = a.itens.map((t, i) => ({ ...t, pagina: paginasItens[i] }));
-          desenharRelatorioSinteticoTranslado(numero, itensComPagina, parseMoeda(form.valorTransladoLiberado));
+          desenharRelatorioSinteticoTranslado(numero, itensComPagina, parseMoeda(form.valorTransladoLiberado), valorRetiradoTranslado);
           for (let i = 0; i < a.itens.length; i++) {
             const t = a.itens[i];
             const imgs = t.imagens.length ? t.imagens : [null];
@@ -4431,13 +6266,60 @@ function App() {
         setPdfAviso("O sistema detectou algo inesperado ao montar o PDF (" + avisosPdf.join(" ") + "). O PDF foi gerado mesmo assim, mas confira com atenção antes de assinar — e se possível, avise quem cuida do sistema.");
       }
       const finalBytes = doc.output("arraybuffer");
-      downloadBytes(new Uint8Array(finalBytes), `prestacao_contas_${form.numeroSolicitacao || "sem_numero"}.pdf`);
-      setPdfGeradoUmaVez(true);
-      setPdfConcluido(true);
+      if (modoPreview) {
+        const blob = new Blob([finalBytes], { type: "application/pdf" });
+        previewPdfBlobRef.current = blob;
+
+        const novaUrl = URL.createObjectURL(blob);
+        if (previewPdfUrlRef.current) URL.revokeObjectURL(previewPdfUrlRef.current);
+        previewPdfUrlRef.current = novaUrl;
+        setPreviewPdfUrl(novaUrl);
+      } else {
+        downloadBytes(new Uint8Array(finalBytes), `prestacao_contas_${form.numeroSolicitacao || "sem_numero"}.pdf`);
+        setPdfGeradoUmaVez(true);
+        setPdfConcluido(true);
+      }
     } catch (e) {
-      setPdfErro("Não foi possível gerar o PDF (" + (e && e.message ? e.message : "erro desconhecido") + "). Tente novamente ou reduza o tamanho dos anexos.");
+      const mensagem = "Não foi possível gerar o PDF (" + (e && e.message ? e.message : "erro desconhecido") + "). Tente novamente ou reduza o tamanho dos anexos.";
+      if (modoPreview) setPreviewErro(mensagem);
+      else setPdfErro(mensagem);
     } finally {
-      setGerando(false);
+      if (modoPreview) setPreviewGerando(false);
+      else setGerando(false);
+    }
+  }
+
+  async function abrirPreviewPdf() {
+    setPreviewErro("");
+    setMostrarPreview(true);
+    await gerarPDF({ modoPreview: true });
+  }
+
+  function abrirPreviewEmNovaGuia() {
+    const blob = previewPdfBlobRef.current;
+    if (!blob) {
+      setPreviewErro("O PDF ainda não está disponível. Feche esta mensagem e tente abrir a pré-visualização novamente.");
+      return;
+    }
+
+    // A guia precisa ser aberta durante o clique para não ser bloqueada pelo navegador.
+    const novaGuia = window.open("about:blank", "_blank");
+    if (!novaGuia) {
+      setPreviewErro("O navegador bloqueou a nova guia. Autorize pop-ups para este site ou use a pré-visualização desta janela.");
+      return;
+    }
+
+    try {
+      novaGuia.document.title = "Relatório técnico de viagem";
+      novaGuia.document.body.innerHTML = '<div style="font-family:Arial,sans-serif;padding:24px;color:#334155">Abrindo o relatório...</div>';
+
+      // Cria a URL no contexto da própria nova guia. Assim ela não depende
+      // da URL temporária usada pelo iframe da janela principal.
+      const urlDaNovaGuia = novaGuia.URL.createObjectURL(blob);
+      novaGuia.location.replace(urlDaNovaGuia);
+    } catch (erro) {
+      novaGuia.close();
+      setPreviewErro("Não foi possível abrir o PDF em outra guia. Use a pré-visualização desta janela ou tente novamente.");
     }
   }
 
@@ -4748,7 +6630,7 @@ function App() {
                       <option value="roteiro_sem_alteracao">Roteiro sem alteração</option>
                       <option value="roteiro_reduzido">Roteiro reduzido</option>
                     </select>
-                    <div className="char-hint">Viagem não realizada é tratada direto no SCV, por isso não aparece nesta lista.</div>
+                    <FieldGuide show={!form.tipoPrestacao}>Viagem não realizada é tratada direto no SCV, por isso não aparece nesta lista.</FieldGuide>
                     {invalidos1.has("campo-tipoPrestacao") && <div className="campo-erro-msg">Selecione uma opção.</div>}
                   </div>
 
@@ -4776,13 +6658,20 @@ function App() {
                         )}
                         {CARGOS_FUNCOES.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
-                      <div className="char-hint">Escolha a forma como deve aparecer no relatório (ex.: Assessora — DAFI).</div>
+                      <FieldGuide show={!form.cargoFuncao}>Escolha a forma como deve aparecer no relatório (ex.: Assessora — DAFI).</FieldGuide>
                       {invalidos1.has("campo-cargoFuncao") && <div className="campo-erro-msg">Preencha o cargo/função.</div>}
                     </div>
                     <div className={"field lotacao-field" + (invalidos1.has("campo-siglaSetor") ? " field-invalido" : "")} id="campo-siglaSetor">
                       <div className="lotacao-label-row">
                         <label htmlFor="unidade-lotacao">Unidade de lotação <span className="req">*</span></label>
-                        <span className="field-help-icon" tabIndex="0" aria-describedby="ajuda-unidade-lotacao" aria-label="Ajuda sobre a unidade de lotação"><Icon name="info" size={15} /></span>
+                        <details className="field-help-details">
+                          <summary className="field-help-icon" aria-describedby="ajuda-unidade-lotacao" aria-label="Abrir ajuda sobre a unidade de lotação" title="Ajuda sobre a unidade de lotação">
+                            <Icon name="help" size={16} />
+                          </summary>
+                          <div id="ajuda-unidade-lotacao" className="field-tooltip" role="tooltip">
+                            Escolha o caminho completo até a unidade onde você trabalha. Ex.: <b>DAFI/DEAD/DISAD</b>. Se você trabalha diretamente no DEAD, escolha <b>DAFI/DEAD</b>.
+                          </div>
+                        </details>
                       </div>
                       <select id="unidade-lotacao" value={form.siglaSetor} onChange={e => update({ siglaSetor: e.target.value })}>
                         <option value="">Selecione a unidade onde você trabalha</option>
@@ -4797,7 +6686,6 @@ function App() {
                           </optgroup>
                         ))}
                       </select>
-                      <div id="ajuda-unidade-lotacao" className="field-tooltip" role="tooltip">Escolha o caminho completo até a unidade onde você trabalha. Ex.: <b>DAFI/DEAD/DISAD</b>. Se você trabalha diretamente no DEAD, escolha <b>DAFI/DEAD</b>.</div>
                       {invalidos1.has("campo-siglaSetor") && <div className="campo-erro-msg">Selecione a unidade de lotação.</div>}
                     </div>
                   </div>
@@ -4811,7 +6699,7 @@ function App() {
                     <div className={"field" + (invalidos1.has("campo-destino") ? " field-invalido" : "")} id="campo-destino">
                       <label>Destino <span className="req">*</span></label>
                       <CampoTexto type="text" value={form.destino} onChange={v => update({ destino: v })} placeholder="Ex: Campo Mourão - PR" />
-                      <div className="char-hint">Quando o roteiro tiver mais de uma cidade, todas aparecem aqui — pode editar livremente.</div>
+                      <FieldGuide show={!String(form.destino || "").trim()}>Quando o roteiro tiver mais de uma cidade, todas aparecem aqui — pode editar livremente.</FieldGuide>
                       {invalidos1.has("campo-destino") && <div className="campo-erro-msg">Informe o destino.</div>}
                     </div>
                   </div>
@@ -4866,8 +6754,8 @@ function App() {
                     <CampoTexto as="textarea" value={form.infoComplementares} onChange={v => update({ infoComplementares: v })} placeholder="Se houver algo importante sobre esta viagem que ainda não foi dito acima, escreva aqui." />
                   </div>
 
-                  <button type="button" className="btn btn-ghost" style={{ marginTop: 22 }} onClick={() => setMostrarPreview(true)}>
-                    <Icon name="doc" size={16} /> Visualizar relatório técnico
+                  <button type="button" className="btn btn-ghost" style={{ marginTop: 22 }} onClick={abrirPreviewPdf} disabled={previewGerando}>
+                    <Icon name="doc" size={16} /> {previewGerando ? "Preparando pré-visualização..." : "Visualizar relatório técnico"}
                   </button>
                     </>
                   )}
@@ -4877,7 +6765,7 @@ function App() {
               {step === 2 && (
                 <div className="card">
                   <h2 className="section-title"><span className="section-number">2</span> Transporte e comprovantes</h2>
-                  <p className="section-hint">Confira ou selecione o meio de transporte utilizado.</p>
+                  {!form.transporte && <p className="section-hint field-guidance">Confira ou selecione o meio de transporte utilizado.</p>}
 
                   <div className="transport-grid" id="campo-transporte">
                     {TRANSPORTES.map(t => (
@@ -4894,7 +6782,7 @@ function App() {
                       {form.tipoPrestacao === "roteiro_reduzido" && (
                         <div className="translado-block">
                           <h3>Devolução de diária — roteiro reduzido</h3>
-                          <p className="section-hint">Informe o valor comunicado pelo solicitante, calculado no Sistema Central de Viagens.</p>
+                          {!String(form.valorDevolucao || "").trim() && <p className="section-hint field-guidance">Informe o valor comunicado pelo solicitante, calculado no Sistema Central de Viagens.</p>}
                           <div className="field" style={{ maxWidth:360 }}>
                             <label>Valor informado pela Central de Viagens <span className="req">*</span></label>
                             <input className="currency-input" type="text" inputMode="numeric" value={form.valorDevolucao} onChange={e => update({ valorDevolucao:formatarMoedaDigitada(e.target.value) })} placeholder="R$ 0,00" />
@@ -4910,7 +6798,7 @@ function App() {
                       {mostraTranslado && (
                       <div className="translado-block" id="campo-usouTranslado">
                         <h3>Você utilizou táxi ou aplicativo de transporte durante a viagem?</h3>
-                        <p className="section-hint" style={{ marginBottom: 12 }}>Considere os deslocamentos entre aeroporto, rodoviária, hospedagem, evento, local de trabalho ou residência.</p>
+                        {!form.usouTranslado && <p className="section-hint field-guidance" style={{ marginBottom: 12 }}>Considere os deslocamentos entre aeroporto, rodoviária, hospedagem, evento, local de trabalho ou residência.</p>}
                         <div className="toggle-row">
                           <button type="button" className={"toggle-btn " + (form.usouTranslado === "sim" ? "on" : "")} onClick={() => update({
                             usouTranslado: "sim",
@@ -4919,6 +6807,8 @@ function App() {
                           <button type="button" className={"toggle-btn " + (form.usouTranslado === "nao" ? "on" : "")} onClick={() => update({
                             usouTranslado: "nao",
                             valorTransladoLiberado: "",
+                            retiradaTransladoIntegral: "",
+                            valorTransladoRetirado: "",
                             translados: [],
                             anexos: { ...form.anexos, devolucao_translado: [] }
                           })}>Não utilizei</button>
@@ -4929,7 +6819,25 @@ function App() {
                             <div className="field" style={{ maxWidth: 360, marginTop: 16 }}>
                               <label>Valor total recebido para despesas de translado <span className="req">*</span></label>
                               <input className="currency-input" type="text" inputMode="numeric" value={form.valorTransladoLiberado} onChange={e => update({ valorTransladoLiberado: formatarMoedaDigitada(e.target.value) })} placeholder="R$ 0,00" />
-                              <div className="char-hint">Informe o valor liberado pelo Estado especificamente para táxi ou aplicativo.</div>
+                              <FieldGuide show={!String(form.valorTransladoLiberado || "").trim()}>Informe o valor liberado pelo Estado especificamente para táxi ou aplicativo.</FieldGuide>
+                            </div>
+
+                            <div className="choice-panel" id="campo-retiradaTranslado" style={{ marginTop: 16 }}>
+                              <p className="choice-question">Você sacou ou transferiu todo o valor liberado para translado?</p>
+                              {!form.retiradaTransladoIntegral && <p className="choice-help field-guidance">O valor que permanecer na conta corporativa será recolhido automaticamente e não exigirá comprovante de devolução.</p>}
+                              <div className="toggle-row">
+                                <button type="button" className={"toggle-btn " + (form.retiradaTransladoIntegral === "sim" ? "on" : "")} onClick={() => update({ retiradaTransladoIntegral: "sim", valorTransladoRetirado: "" })}>Sim, o valor integral</button>
+                                <button type="button" className={"toggle-btn " + (form.retiradaTransladoIntegral === "nao" ? "on" : "")} onClick={() => update({ retiradaTransladoIntegral: "nao" })}>Não, apenas uma parte</button>
+                              </div>
+                              {form.retiradaTransladoIntegral === "nao" && (
+                                <div className="field" style={{ maxWidth: 420, marginTop: 14 }}>
+                                  <label>Valor efetivamente sacado ou transferido <span className="req">*</span></label>
+                                  <input className="currency-input" type="text" inputMode="numeric" value={form.valorTransladoRetirado || ""} onChange={e => update({ valorTransladoRetirado: formatarMoedaDigitada(e.target.value) })} placeholder="R$ 0,00" />
+                                  <FieldGuide show={!String(form.valorTransladoRetirado || "").trim()}>Informe somente o valor retirado da conta corporativa. O restante será considerado saldo mantido na conta.</FieldGuide>
+                                </div>
+                              )}
+                              {retiradaAcimaLiberado && <div className="banner error" style={{ marginTop: 12, marginBottom: 0 }}><Icon name="alert" size={16} /><span>O valor sacado ou transferido não pode ser maior que o valor liberado pelo Estado.</span></div>}
+                              {despesasAcimaRetirado && !retiradaAcimaLiberado && <div key={`aviso-despesas-${valorRetiradoTranslado}-${totalGastoTranslado}`} className="banner warn aviso-temporario" role="status" aria-live="polite" style={{ marginTop: 12, marginBottom: 0 }}><Icon name="alert" size={16} /><span>As despesas comprovadas ultrapassam o valor informado como sacado ou transferido. Confira os valores antes de continuar.</span></div>}
                             </div>
 
                             {translados.map((t, index) => {
@@ -4943,14 +6851,14 @@ function App() {
                                       <>
                                         <label className="file-btn" style={{ marginTop: 0 }}>Anexar comprovante <span className="req">*</span><input type="file" accept=".pdf,.jpg,.jpeg,.png" className="file-input-hidden" onChange={e => { if (e.target.files[0]) attachTransladoFile(t.id, e.target.files[0]); e.target.value = ""; }} /></label>
                                         <div className="translado-order-hint">Boa prática: anexe primeiro o comprovante, confira a imagem e depois preencha os dados correspondentes.</div>
-                                        {translados.length > 1 && <button className="btn-link-danger" style={{ marginTop: 8 }} onClick={() => removeTransladoItem(t.id)}>Excluir este registro</button>}
+                                        {translados.length > 1 && <button type="button" className="translado-action translado-action-delete" style={{ marginTop: 8 }} onClick={() => removeTransladoItem(t.id)}><Icon name="trash" size={15} /> Excluir este registro</button>}
                                       </>
                                     ) : (
                                       <>
                                         <div className="translado-preview-box">{renderTransladoPreview(t.arquivo)}</div>
                                         <div className="translado-file-actions">
-                                          {!t.arquivo.redigido && <button className="file-remove" style={{ color: "var(--azul)" }} onClick={() => openRedactForTranslado(t.id)}>Ocultar dados pessoais</button>}
-                                          <button className="btn-link-danger" onClick={() => removeTransladoItem(t.id)}>Excluir este registro</button>
+                                          {!t.arquivo.redigido && <button type="button" className="translado-action translado-action-redact" onClick={() => openRedactForTranslado(t.id)}><Icon name="shield" size={15} /> Ocultar dados pessoais</button>}
+                                          <button type="button" className="translado-action translado-action-delete" onClick={() => removeTransladoItem(t.id)}><Icon name="trash" size={15} /> Excluir este registro</button>
                                         </div>
                                       </>
                                     )}
@@ -4984,7 +6892,7 @@ function App() {
                                         </select>
                                       </div>
                                     </div>
-                                    <div className="char-hint" style={{ marginTop: 10 }}>Se você escolher <b>Residência</b> em De ou Para, a tela para ocultar o endereço abre automaticamente.</div>
+                                    <FieldGuide show={!t.de || !t.para} className="translado-local-guide">Se você escolher <b>Residência</b> em De ou Para, a tela para ocultar o endereço abrirá automaticamente.</FieldGuide>
                                   </div>
                                 </div>
                                 {fileWarnings[t.id] && <div className="banner warn" style={{ marginTop: 10, marginBottom: 0 }}><Icon name="alert" size={16} /><span>{fileWarnings[t.id]}</span></div>}
@@ -4994,18 +6902,26 @@ function App() {
 
                             {saldoTranslado !== null && form.valorTransladoLiberado && (
                               <div className="balance-card">
-                                <div className="balance-grid">
-                                  <div className="balance-metric"><span className="balance-label">Valor Liberado</span><span className="balance-value">{moedaBR(liberadoTranslado)}</span></div>
+                                <div className="balance-grid translado-resumo">
+                                  <div className="balance-metric"><span className="balance-label">Valor liberado</span><span className="balance-value">{moedaBR(liberadoTranslado)}</span></div>
+                                  <div className="balance-metric"><span className="balance-label">Sacado ou transferido</span><span className="balance-value">{moedaBR(valorRetiradoTranslado)}</span></div>
                                   <div className="balance-metric"><span className="balance-label">Despesas comprovadas</span><span className="balance-value">{moedaBR(totalGastoTranslado)}</span></div>
-                                  <div className="balance-metric"><span className="balance-label">Valor a ser Recolhido</span><span className="balance-value">{moedaBR(saldoTranslado)}</span></div>
+                                  <div className="balance-metric"><span className="balance-label">Valor a devolver pelo viajante</span><span className="balance-value">{moedaBR(saldoTranslado)}</span></div>
                                 </div>
-                                {saldoTranslado > 0.009 ? (
+                                {valorPermanecidoConta > 0.009 && (
+                                  <div className="balance-note ok"><Icon name="check" size={18} /><span><b>{moedaBR(valorPermanecidoConta)}</b> permaneceram na conta corporativa e serão recolhidos automaticamente. Não é necessário anexar comprovante de devolução desse valor.</span></div>
+                                )}
+                                {retiradaAcimaLiberado ? (
+                                  <div className="balance-note over"><Icon name="alert" size={18} /><span>O valor informado como sacado ou transferido é maior que o valor liberado. Corrija os valores antes de continuar.</span></div>
+                                ) : despesasAcimaRetirado ? (
+                                  <div className="balance-note over"><Icon name="alert" size={18} /><span>As despesas comprovadas ultrapassam o valor sacado ou transferido em <b>{moedaBR(totalGastoTranslado - valorRetiradoTranslado)}</b>. Confira os comprovantes e o valor informado.</span></div>
+                                ) : saldoTranslado > 0.009 ? (
                                   <>
-                                    <div className="balance-note return"><Icon name="alert" size={18} /><span>Você recebeu <b>{moedaBR(liberadoTranslado)}</b> e comprovou <b>{moedaBR(totalGastoTranslado)}</b>. Portanto, deverá devolver <b>{moedaBR(saldoTranslado)}</b> ao Estado e anexar o comprovante do depósito no campo indicado abaixo.</span></div>
+                                    <div className="balance-note return"><Icon name="alert" size={18} /><span>Você sacou ou transferiu <b>{moedaBR(valorRetiradoTranslado)}</b> e comprovou despesas de <b>{moedaBR(totalGastoTranslado)}</b>. Portanto, deverá devolver <b>{moedaBR(saldoTranslado)}</b> ao Estado e anexar o comprovante do depósito no campo indicado abaixo.</span></div>
                                     <div className="bank-box">
                                       <div className="bank-box-head">
                                         <div>
-                                          <div className="bank-box-title">Dados bancários para devolver o saldo de translado</div>
+                                          <div className="bank-box-title">Dados bancários para devolver o saldo retirado e não utilizado</div>
                                           <div className="bank-box-sub">Utilize os dados abaixo para realizar o depósito e depois anexe o comprovante.</div>
                                         </div>
                                         <img className="bank-box-logo" src={BANCO_BRASIL_LOGO} alt="Banco do Brasil" />
@@ -5025,10 +6941,8 @@ function App() {
                                       `Anexe o comprovante do depósito de ${moedaBR(saldoTranslado)} realizado na conta informada acima.`
                                     )}
                                   </>
-                                ) : saldoTranslado < -0.009 ? (
-                                  <div className="balance-note over"><Icon name="alert" size={18} /><span>As despesas informadas ultrapassam o valor recebido em <b>{moedaBR(Math.abs(saldoTranslado))}</b>. O sistema não solicitará comprovante de devolução, mas confira os valores e procure a Central de Viagens em caso de dúvida.</span></div>
                                 ) : (
-                                  <div className="balance-note ok"><Icon name="check" size={18} /><span>O valor comprovado corresponde ao valor recebido. Não há saldo de translado a devolver.</span></div>
+                                  <div className="balance-note ok"><Icon name="check" size={18} /><span>As despesas comprovadas correspondem ao valor sacado ou transferido. Não há valor a devolver pelo viajante.</span></div>
                                 )}
                               </div>
                             )}
@@ -5054,10 +6968,10 @@ function App() {
                                 {statusTexto && <div className={"doc-status " + statusClass}>{statusTexto}</div>}
                               </div>
 
-                              {d.id === "saque" && (
+                              {d.id === "saque" && arquivos.length === 0 && (
                                 <div className="choice-panel">
                                   <p className="choice-question">Você possui o comprovante de saque ou transferência?</p>
-                                  <p className="choice-help">Escolha uma opção. Caso não possua o comprovante, informe a justificativa diretamente no sistema.</p>
+                                  {!form.saqueComprovante && <p className="choice-help field-guidance">Escolha uma opção. Caso não possua o comprovante, informe a justificativa diretamente no sistema.</p>}
                                   <div className="toggle-row">
                                     <button type="button" className={"toggle-btn " + (form.saqueComprovante === "sim" ? "on" : "")} onClick={() => {
                                       if (form.saqueComprovante !== "sim") {
@@ -5086,8 +7000,8 @@ function App() {
                                   {arquivos.map(f => (
                                     <li className="file-chip" key={f.id}>
                                       <span className="file-chip-nome">{f.nome}</span>{f.redigido && <span className="redigido-tag">dados ocultados</span>}
-                                      {!f.redigido && <button className="file-remove" style={{ color: "var(--azul)" }} onClick={() => openRedactForDoc(d.id, f.id)}>Ocultar dados pessoais</button>}
-                                      <button className="file-remove" onClick={() => removeFile(d.id, f.id)}>Excluir arquivo</button>
+                                      {!f.redigido && <button className="file-remove file-remove-redact" onClick={() => openRedactForDoc(d.id, f.id)}>Ocultar dados pessoais</button>}
+                                      <button className="file-remove file-remove-delete" onClick={() => removeFile(d.id, f.id)}>Excluir arquivo</button>
                                     </li>
                                   ))}
                                 </ul>
@@ -5125,7 +7039,7 @@ function App() {
                       <div><dt>Retorno</dt><dd>{formatDateBR(form.dataRetorno) || "—"}</dd></div>
                       <div><dt>Meio de transporte</dt><dd>{TRANSPORTES.find(t => t.id === form.transporte)?.label || "—"}</dd></div>
                       <div><dt>Tipo de prestação de contas</dt><dd>{form.tipoPrestacao === "roteiro_reduzido" ? "Roteiro reduzido" : form.tipoPrestacao === "roteiro_sem_alteracao" ? "Roteiro sem alteração" : "—"}</dd></div>
-                      {form.usouTranslado === "sim" && <div style={{ gridColumn: "1 / -1" }}><dt>Resumo do translado</dt><dd>Liberado: {moedaBR(liberadoTranslado)} · Comprovado: {moedaBR(totalGastoTranslado)}{precisaDevolucaoTranslado ? ` · A recolher: ${moedaBR(saldoTranslado)}` : " · Sem saldo a devolver"}</dd></div>}
+                      {form.usouTranslado === "sim" && <div style={{ gridColumn: "1 / -1" }}><dt>Resumo do translado</dt><dd>Liberado: {moedaBR(liberadoTranslado)} · Sacado/transferido: {moedaBR(valorRetiradoTranslado)} · Comprovado: {moedaBR(totalGastoTranslado)} · Permaneceu na conta: {moedaBR(valorPermanecidoConta || 0)}{precisaDevolucaoTranslado ? ` · A devolver pelo viajante: ${moedaBR(saldoTranslado)}` : " · Sem valor a devolver pelo viajante"}</dd></div>}
                       {form.precisaDevolucao === "sim" && <div><dt>Devolução de diária — roteiro reduzido</dt><dd>{form.valorDevolucao || "—"}</dd></div>}
                     </div>
                   </div>
@@ -5247,24 +7161,18 @@ function App() {
 
             </div>
 
-            <aside className="sidebar">
-              <div className="side-card">
-                <h3><Icon name="list" size={16} /> Ajuda nesta etapa</h3>
-                {step === 1 && <ul><li>Se o PDF não carregar direito, você pode preencher os dados manualmente.</li><li>Qualquer campo pode ser corrigido, mesmo depois de importado.</li><li>Use “Visualizar relatório técnico” para ver como o PDF final vai ficar.</li></ul>}
-                {step === 2 && <ul><li>Só aparecem os documentos que se aplicam ao seu caso.</li><li>Sem o comprovante de saque? Escolha “Não possuo” e escreva o motivo.</li><li>Anexou o arquivo errado? Clique em “Excluir arquivo” e anexe de novo.</li></ul>}
-                {step === 3 && <ul><li>A conferência é feita item por item, sem pressa.</li><li>Depois de gerar o PDF, ainda dá para corrigir usando o arquivo de rascunho baixado.</li></ul>}
-              </div>
-
-              <div className="side-card">
-                <h3><Icon name="check" size={16} /> Situação do preenchimento</h3>
-                <div className="check-row"><span className={"dot " + (step1Valid ? "ok" : "pend")}></span> Dados da viagem</div>
-                <div className="check-row"><span className={"dot " + (form.transporte ? "ok" : "pend")}></span> Meio de transporte</div>
-                {mostraTranslado && <div className="check-row"><span className={"dot " + (form.usouTranslado ? "ok" : "pend")}></span> Pergunta sobre translado</div>}
-                {mostraTranslado && <div className="check-row"><span className={"dot " + (transladoOk ? "ok" : "pend")}></span> Comprovantes de translado</div>}
-                <div className="check-row"><span className={"dot " + (pendingDocs.length === 0 && form.transporte ? "ok" : "pend")}></span> Documentos obrigatórios</div>
-                <div className="check-row"><span className={"dot " + (devolucaoOk ? "ok" : "pend")}></span> Devoluções aplicáveis</div>
-                <div className="check-row"><span className={"dot " + (form.atesto && conferenciaCompleta ? "ok" : "pend")}></span> Conferência e atesto</div>
-              </div>
+            <aside className="sidebar compact-help">
+              <details className="help-details">
+                <summary className="help-trigger" title="Ajuda nesta etapa" aria-label="Abrir ajuda desta etapa">
+                  <Icon name="help" size={20} />
+                </summary>
+                <div className="help-popover side-card">
+                  <h3><Icon name="help" size={17} /> Ajuda nesta etapa</h3>
+                  {step === 1 && <ul><li>Se o PDF não carregar direito, você pode preencher os dados manualmente.</li><li>Qualquer campo pode ser corrigido, mesmo depois de importado.</li><li>Use “Visualizar relatório técnico” para ver como o PDF final vai ficar.</li></ul>}
+                  {step === 2 && <ul><li>Só aparecem os documentos que se aplicam ao seu caso.</li><li>Sem o comprovante de saque? Escolha “Não possuo” e escreva o motivo.</li><li>Anexou o arquivo errado? Clique em “Excluir arquivo” e anexe de novo.</li></ul>}
+                  {step === 3 && <ul><li>A conferência é feita item por item, sem pressa.</li><li>Depois de gerar o PDF, ainda dá para corrigir usando o arquivo de rascunho baixado.</li></ul>}
+                </div>
+              </details>
             </aside>
           </div>
             </div>
@@ -5302,6 +7210,8 @@ function App() {
         <span className="whatsapp-float-icon"><Icon name="whatsapp" size={28} /></span>
         <span className="whatsapp-float-text"><strong>Central de Viagens</strong><small>Fale conosco no WhatsApp</small></span>
       </a>
+
+      {arquivoVisualizado && <FilePreviewModal arquivo={arquivoVisualizado} onClose={() => setArquivoVisualizado(null)} />}
 
       {scvModal && (
         <div className="redact-overlay">
@@ -5369,8 +7279,6 @@ function App() {
         </div>
       )}
 
-      <div className="pdf-preview-source" ref={pdfPreviewRef}><ReportPreview form={form} /></div>
-
       {redactTarget && (
         <RedactModal
           meta={redactTarget.meta}
@@ -5381,17 +7289,44 @@ function App() {
       )}
 
       {mostrarPreview && (
-        <div className="redact-overlay" onClick={e => { if (e.target === e.currentTarget) setMostrarPreview(false); }}>
-          <div className="preview-modal">
+        <div className="redact-overlay report-preview-overlay" onClick={e => { if (e.target === e.currentTarget) setMostrarPreview(false); }}>
+          <div className="preview-modal report-preview-modal" role="dialog" aria-modal="true" aria-label="Pré-visualização do relatório técnico">
             <div className="redact-head">
-              <h3>Pré-visualização do relatório</h3>
-              <button className="redact-close" onClick={() => setMostrarPreview(false)}><Icon name="close" size={18} /></button>
+              <div>
+                <h3>Pré-visualização do relatório técnico</h3>
+                <div className="file-view-name">Confira a folha completa antes de continuar.</div>
+              </div>
+              <button className="redact-close" onClick={() => setMostrarPreview(false)} aria-label="Fechar pré-visualização"><Icon name="close" size={20} /></button>
             </div>
-            <div className="preview-modal-body">
-              <ReportPreview form={form} />
+            <div className="preview-modal-body report-preview-modal-body pdf-oficial-body">
+              {previewGerando ? (
+                <div className="pdf-preview-loading" role="status" aria-live="polite">
+                  <span className="pdf-preview-spinner" aria-hidden="true"></span>
+                  <strong>Montando o mesmo PDF que será baixado...</strong>
+                  <span>Os anexos podem levar alguns segundos para serem processados.</span>
+                </div>
+              ) : previewErro ? (
+                <div className="pdf-preview-error" role="alert">
+                  <strong>Não foi possível abrir a pré-visualização.</strong>
+                  <span>{previewErro}</span>
+                  <button className="btn btn-ghost" onClick={abrirPreviewPdf}>Tentar novamente</button>
+                </div>
+              ) : previewPdfUrl ? (
+                <iframe
+                  className="pdf-oficial-frame"
+                  src={`${previewPdfUrl}#view=FitH&toolbar=1&navpanes=0`}
+                  title="PDF final da prestação de contas"
+                />
+              ) : null}
             </div>
-            <div className="redact-actions" style={{ justifyContent: "flex-end" }}>
-              <button className="btn btn-ghost" onClick={() => setMostrarPreview(false)}>Fechar</button>
+            <div className="redact-actions report-preview-actions">
+              <span className="preview-accessibility-note">Esta é a versão real do PDF final. No celular, use a pinça para ampliar.</span>
+              {previewPdfUrl && !previewGerando && (
+                <button type="button" className="btn btn-ghost pdf-preview-open-link" onClick={abrirPreviewEmNovaGuia}>
+                  <Icon name="doc" size={16} /> Abrir em nova guia
+                </button>
+              )}
+              <button className="btn btn-primary" onClick={() => setMostrarPreview(false)}>Fechar</button>
             </div>
           </div>
         </div>
