@@ -4071,7 +4071,7 @@ function dadosRelatorioPreview(form, numeracaoAnexos) {
   if (saldoTransladoDevolver > 0.009 && form.anexos?.devolucao_translado?.length) docsPreview.push({ nome: comPag("Devolução do saldo de translado", "devolucao_translado") });
   if (form.anexos?.comprobatorio?.length) docsPreview.push({ nome: comPag("Outros documentos comprobatórios", "comprobatorio") });
   const totalTransladoGasto = (form.translados || []).reduce((a, t) => a + parseMoeda(t.valor), 0);
-  const saldoRoteiroDevolver = form.tipoPrestacao === "roteiro_reduzido" ? parseMoeda(form.valorDevolucao) : 0;
+  const saldoRoteiroDevolver = (form.tipoPrestacao === "roteiro_reduzido" && form.precisaDevolucao === "sim") ? parseMoeda(form.valorDevolucao) : 0;
   const saldoADevolver = saldoRoteiroDevolver + saldoTransladoDevolver;
   const atestoPreview = "Atesto e certifico que as informações constantes no presente documento demonstram efetivamente a realização e a efetividade da viagem, e que os comprovantes de despesa anexos a esta prestação de contas foram efetivamente realizados no estrito interesse da administração pública, conforme o Decreto Estadual n.º 6.358/2024.";
   return { periodo, tipoViagem, cargoLinha, tipoPrestacao, docsPreview, atestoPreview, saldoADevolver };
@@ -4747,7 +4747,7 @@ function App() {
       valorTransladoLiberado: "",
       translados: [],
       saqueComprovante: "",
-      precisaDevolucao: f.tipoPrestacao === "roteiro_reduzido" ? "sim" : "nao",
+      precisaDevolucao: f.tipoPrestacao === "roteiro_reduzido" ? "" : "nao",
       valorDevolucao: "",
       justificativas: {},
       anexos: {},
@@ -4813,7 +4813,11 @@ function App() {
     && translados.every(t => t.de && t.para && t.data && parseMoeda(t.valor) > 0 && t.arquivo)
   );
   const devolucaoTransladoOk = !precisaDevolucaoTranslado || !!(form.anexos.devolucao_translado && form.anexos.devolucao_translado.length);
-  const devolucaoRoteiroOk = form.precisaDevolucao !== "sim" || (parseMoeda(form.valorDevolucao) > 0 && !!(form.anexos.devolucao_roteiro && form.anexos.devolucao_roteiro.length));
+  const devolucaoRoteiroOk = form.tipoPrestacao !== "roteiro_reduzido"
+    ? true
+    : form.precisaDevolucao === "nao"
+      ? true
+      : form.precisaDevolucao === "sim" && parseMoeda(form.valorDevolucao) > 0 && !!(form.anexos.devolucao_roteiro && form.anexos.devolucao_roteiro.length);
   const devolucaoOk = devolucaoTransladoOk && devolucaoRoteiroOk;
 
   const MAX_ANEXO_BYTES = 8 * 1024 * 1024;
@@ -5117,7 +5121,7 @@ function App() {
       ...Object.fromEntries(Object.entries(dadosScv).filter(([,v]) => !!v)),
       scvImportado:true,
       dadosScvConfirmados:confirmados,
-      precisaDevolucao: form.tipoPrestacao === "roteiro_reduzido" ? "sim" : "nao",
+      precisaDevolucao: form.tipoPrestacao === "roteiro_reduzido" ? "" : "nao",
     }));
     setScvModal(false);
     setStep(1);
@@ -5345,7 +5349,10 @@ function App() {
   docs.filter(d => d.obrig).forEach(d => {
     tarefasEtapa2.push(d.id === "saque" ? saqueOk : !!(form.anexos[d.id] && form.anexos[d.id].length));
   });
-  if (form.precisaDevolucao === "sim") tarefasEtapa2.push(parseMoeda(form.valorDevolucao) > 0);
+  if (form.tipoPrestacao === "roteiro_reduzido") {
+    tarefasEtapa2.push(form.precisaDevolucao === "sim" || form.precisaDevolucao === "nao");
+    if (form.precisaDevolucao === "sim") tarefasEtapa2.push(parseMoeda(form.valorDevolucao) > 0);
+  }
   const progressoEtapa2 = percentualConcluido(tarefasEtapa2);
 
   const progressoEtapa3 = percentualConcluido([
@@ -6625,7 +6632,7 @@ function App() {
 
                   <div className={"field" + (invalidos1.has("campo-tipoPrestacao") ? " field-invalido" : "")} id="campo-tipoPrestacao" style={{ marginBottom:18 }}>
                     <label>Tipo de prestação de contas <span className="req">*</span></label>
-                    <select value={form.tipoPrestacao} onChange={e => update({ tipoPrestacao:e.target.value, precisaDevolucao:e.target.value === "roteiro_reduzido" ? "sim" : "nao", valorDevolucao:e.target.value === "roteiro_reduzido" ? form.valorDevolucao : "" })}>
+                    <select value={form.tipoPrestacao} onChange={e => update({ tipoPrestacao:e.target.value, precisaDevolucao:e.target.value === "roteiro_reduzido" ? "" : "nao", valorDevolucao:e.target.value === "roteiro_reduzido" ? form.valorDevolucao : "" })}>
                       <option value="">Selecione</option>
                       <option value="roteiro_sem_alteracao">Roteiro sem alteração</option>
                       <option value="roteiro_reduzido">Roteiro reduzido</option>
@@ -6780,18 +6787,31 @@ function App() {
                     <>
 
                       {form.tipoPrestacao === "roteiro_reduzido" && (
-                        <div className="translado-block">
+                        <div className="translado-block" id="campo-precisaDevolucao">
                           <h3>Devolução de diária — roteiro reduzido</h3>
-                          {!String(form.valorDevolucao || "").trim() && <p className="section-hint field-guidance">Informe o valor comunicado pelo solicitante, calculado no Sistema Central de Viagens.</p>}
-                          <div className="field" style={{ maxWidth:360 }}>
-                            <label>Valor informado pela Central de Viagens <span className="req">*</span></label>
-                            <input className="currency-input" type="text" inputMode="numeric" value={form.valorDevolucao} onChange={e => update({ valorDevolucao:formatarMoedaDigitada(e.target.value) })} placeholder="R$ 0,00" />
+                          {!form.precisaDevolucao && <p className="section-hint field-guidance" style={{ marginBottom: 12 }}>Nem todo roteiro reduzido gera valor a devolver. Confirme com o solicitante o cálculo realizado no Sistema Central de Viagens.</p>}
+                          <div className="toggle-row">
+                            <button type="button" className={"toggle-btn " + (form.precisaDevolucao === "sim" ? "on" : "")} onClick={() => update({ precisaDevolucao:"sim" })}>Sim, há valor a devolver</button>
+                            <button type="button" className={"toggle-btn " + (form.precisaDevolucao === "nao" ? "on" : "")} onClick={() => {
+                              excluirConteudosArquivos(coletarIdsAnexos({ devolucao_roteiro: form.anexos.devolucao_roteiro }, []));
+                              update({ precisaDevolucao:"nao", valorDevolucao:"", anexos:{ ...form.anexos, devolucao_roteiro: [] } });
+                            }}>Não há valor a devolver</button>
                           </div>
-                          <div className="bank-box">
-                            <div className="bank-box-head"><div><div className="bank-box-title">Dados bancários para devolver parte da diária</div><div className="bank-box-sub">Realize o depósito e anexe o comprovante logo abaixo.</div></div><img className="bank-box-logo" src={BANCO_BRASIL_LOGO} alt="Banco do Brasil" /></div>
-                            <div className="bank-data"><span><b>Banco</b>{CONTA_DEVOLUCAO.codigo} ({CONTA_DEVOLUCAO.banco.toUpperCase()})</span><span><b>Agência</b>{CONTA_DEVOLUCAO.agencia}</span><span><b>Conta corrente</b>{CONTA_DEVOLUCAO.conta}</span><span><b>CNPJ</b>{CONTA_DEVOLUCAO.cnpj}</span><span style={{ gridColumn:"1 / -1" }}><b>Favorecido</b>{CONTA_DEVOLUCAO.favorecido}</span></div>
-                          </div>
-                          {renderAnexoDireto("devolucao_roteiro", "Devolução de diária — roteiro reduzido", "Anexe o comprovante do depósito realizado na conta do Estado.")}
+
+                          {form.precisaDevolucao === "sim" && (
+                            <div>
+                              <div className="field" style={{ maxWidth:360, marginTop:16 }}>
+                                <label>Valor informado pela Central de Viagens <span className="req">*</span></label>
+                                <input className="currency-input" type="text" inputMode="numeric" value={form.valorDevolucao} onChange={e => update({ valorDevolucao:formatarMoedaDigitada(e.target.value) })} placeholder="R$ 0,00" />
+                                <FieldGuide show={!String(form.valorDevolucao || "").trim()}>Informe o valor comunicado pelo solicitante, calculado no Sistema Central de Viagens.</FieldGuide>
+                              </div>
+                              <div className="bank-box">
+                                <div className="bank-box-head"><div><div className="bank-box-title">Dados bancários para devolver parte da diária</div><div className="bank-box-sub">Realize o depósito e anexe o comprovante logo abaixo.</div></div><img className="bank-box-logo" src={BANCO_BRASIL_LOGO} alt="Banco do Brasil" /></div>
+                                <div className="bank-data"><span><b>Banco</b>{CONTA_DEVOLUCAO.codigo} ({CONTA_DEVOLUCAO.banco.toUpperCase()})</span><span><b>Agência</b>{CONTA_DEVOLUCAO.agencia}</span><span><b>Conta corrente</b>{CONTA_DEVOLUCAO.conta}</span><span><b>CNPJ</b>{CONTA_DEVOLUCAO.cnpj}</span><span style={{ gridColumn:"1 / -1" }}><b>Favorecido</b>{CONTA_DEVOLUCAO.favorecido}</span></div>
+                              </div>
+                              {renderAnexoDireto("devolucao_roteiro", "Devolução de diária — roteiro reduzido", "Anexe o comprovante do depósito realizado na conta do Estado.")}
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -7234,7 +7254,7 @@ function App() {
                   <p className="section-hint" style={{ marginTop:0 }}>Esta escolha define o fluxo da prestação de contas.</p>
                   <div className="scv-type-grid">
                     <button type="button" className={"scv-type-card " + (form.tipoPrestacao === "roteiro_sem_alteracao" ? "selected" : "")} onClick={() => { update({ tipoPrestacao:"roteiro_sem_alteracao", precisaDevolucao:"nao", valorDevolucao:"" }); setScvNaoRealizada(false); }}><strong>Roteiro sem alteração</strong><span>A viagem aconteceu conforme o período e o roteiro autorizados.</span></button>
-                    <button type="button" className={"scv-type-card " + (form.tipoPrestacao === "roteiro_reduzido" ? "selected" : "")} onClick={() => { update({ tipoPrestacao:"roteiro_reduzido", precisaDevolucao:"sim" }); setScvNaoRealizada(false); }}><strong>Roteiro reduzido</strong><span>O viajante retornou antes ou realizou período menor que o autorizado.</span></button>
+                    <button type="button" className={"scv-type-card " + (form.tipoPrestacao === "roteiro_reduzido" ? "selected" : "")} onClick={() => { update({ tipoPrestacao:"roteiro_reduzido", precisaDevolucao:"" }); setScvNaoRealizada(false); }}><strong>Roteiro reduzido</strong><span>O viajante retornou antes ou realizou período menor que o autorizado.</span></button>
                     <button type="button" className="scv-type-card disabled" onClick={() => setScvNaoRealizada(true)}><strong>Viagem não realizada</strong><span>Não utiliza este relatório. A justificativa deve ser registrada no sistema oficial da Central de Viagens.</span></button>
                   </div>
                   {scvNaoRealizada && <div className="banner warn" style={{ marginTop:14 }}><Icon name="alert" size={17}/><span>Feche esta janela e continue diretamente no SCV.</span></div>}
