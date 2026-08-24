@@ -2198,6 +2198,29 @@
   color: #fff;
   border-color: var(--azul);
 }
+/* Abre ao passar o mouse (e ao focar pelo teclado), fechando sozinho ao sair.
+   O clique continua funcionando — é o que vale no celular/tablet, onde não
+   existe "passar o mouse". Mesmo padrão já usado na ajuda dos campos. */
+.help-details:hover .help-trigger{
+  background: var(--azul);
+  color: #fff;
+  border-color: var(--azul);
+}
+.help-popover{
+  display: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .14s ease, transform .14s ease, visibility .14s ease;
+}
+.help-details:hover .help-popover,
+.help-details:focus-within .help-popover,
+.help-details[open] .help-popover{
+  display: block;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
 .help-popover{
   position: absolute;
   top: 50px;
@@ -3485,15 +3508,18 @@ function paraFrase(texto) {
 // Cargos/funções — a própria pessoa escolhe a forma (masculina/feminina) como quer
 // aparecer no relatório, sem o sistema tentar adivinhar o gênero pelo nome.
 const CARGOS_FUNCOES = [
-  "Assessor", "Assessora",
-  "Assistente Administrativo",
-  "Chefe de Setor", "Chefe de Divisão", "Chefe de Departamento",
-  "Chefe de Gabinete", "Chefe de Ciretran",
-  "Diretor", "Diretora",
-  "Diretor-Presidente", "Diretora-Presidente",
-  "Estagiário", "Estagiária",
+  "Agente de Trânsito",
+  "Assessor(a)",
+  "Chefe de Ciretran",
+  "Chefe de Departamento",
+  "Chefe de Divisão",
+  "Chefe de Gabinete",
+  "Chefe de Setor",
+  "Diretor(a)",
+  "Diretor-Presidente",
+  "Diretora-Presidente",
   "Motorista",
-  "Supervisor", "Supervisora",
+  "Supervisor(a)",
 ];
 
 const emptyForm = {
@@ -4119,7 +4145,7 @@ function RelatorioBlocos({ form, numeracaoAnexos }) {
   const d = dadosRelatorioPreview(form, numeracaoAnexos);
   function secaoTexto(numero, titulo, icone, textoOriginal, chave) {
     const blocos = criarBlocosTextoRelatorio(textoOriginal);
-    const semRecuo = chave === "nomeEvento";
+    const semRecuo = true; // nenhuma seção usa recuo de primeira linha
     return (
       <div className="rp-sec" data-campo={chave}>
         <div className="rp-sec-icon"><Icon name={icone} size={17} /></div>
@@ -5068,7 +5094,7 @@ function App() {
     if (input) input.value = "";
     if (!file) return;
     if (!/\.pdf$/i.test(file.name) && file.type !== "application/pdf") {
-      setScvErro("Selecione o PDF gerado pelo SCV.");
+      setScvErro("Selecione o PDF gerado pelo Sistema da Central de Viagens.");
       return;
     }
     setScvExtraindo(true);
@@ -5095,7 +5121,7 @@ function App() {
       setScvEtapaModal(1);
       setScvModal(true);
     } catch (e) {
-      setScvErro("Não foi possível ler o PDF. Tente novamente com o arquivo original do SCV.");
+      setScvErro("Não foi possível ler o PDF. Tente novamente com o arquivo original do Sistema da Central de Viagens.");
     } finally {
       setScvExtraindo(false);
     }
@@ -5108,7 +5134,7 @@ function App() {
     const arquivos = Array.from(event.dataTransfer?.files || []);
     const arquivo = arquivos.find(f => f.type === "application/pdf" || /\.pdf$/i.test(f.name));
     if (!arquivo) {
-      setScvErro("Arraste o PDF da solicitação de viagem gerado pelo SCV.");
+      setScvErro("Arraste o PDF da solicitação de viagem gerado pelo Sistema da Central de Viagens.");
       return;
     }
     importarSolicitacaoSCV(arquivo);
@@ -5320,6 +5346,8 @@ function App() {
   if (mostraTranslado && form.usouTranslado === "sim" && retiradaAcimaLiberado) itensFaltandoEtapa2.push({ id: "campo-retiradaTranslado", label: "Valor sacado ou transferido não pode superar o valor liberado" });
   if (mostraTranslado && form.usouTranslado === "sim" && despesasAcimaRetirado) itensFaltandoEtapa2.push({ id: "campo-retiradaTranslado", label: "O valor sacado ou transferido deve cobrir as despesas comprovadas" });
   if (mostraTranslado && form.usouTranslado === "sim" && !transladoOk && retiradaTransladoOk) itensFaltandoEtapa2.push({ id: "campo-usouTranslado", label: "Dados do translado (trajeto, valor e comprovante)" });
+  if (form.tipoPrestacao === "roteiro_reduzido" && !form.precisaDevolucao) itensFaltandoEtapa2.push({ id: "campo-precisaDevolucao", label: "Resposta sobre valor a devolver (roteiro reduzido)" });
+  if (form.tipoPrestacao === "roteiro_reduzido" && form.precisaDevolucao === "sim" && parseMoeda(form.valorDevolucao) <= 0) itensFaltandoEtapa2.push({ id: "campo-precisaDevolucao", label: "Valor informado pela Central de Viagens (deve ser maior que zero)" });
   pendingDocs.forEach(d => itensFaltandoEtapa2.push({ id: "doc-" + d.id, label: d.nome }));
   const conferenciaCompleta = Object.values(conferencia).every(Boolean);
   const step3Valid = !!form.atesto && conferenciaCompleta;
@@ -5949,11 +5977,11 @@ function App() {
 
         // ---- As seções de texto copiáveis, em card com borda (numeração sequencial) ----
         let numeroSecao = 1;
-        desenharSecaoCard(numeroSecao++, "DESCRIÇÃO DO EVENTO", form.nomeEvento, { recuoPrimeiraLinha: false, justificar: false });
-        desenharSecaoCard(numeroSecao++, "OBJETIVO DA PARTICIPAÇÃO", form.motivo);
-        desenharSecaoCard(numeroSecao++, "CONCLUSÃO", form.conclusao);
+        desenharSecaoCard(numeroSecao++, "DESCRIÇÃO DO EVENTO", form.nomeEvento, { recuoPrimeiraLinha: false });
+        desenharSecaoCard(numeroSecao++, "OBJETIVO DA PARTICIPAÇÃO", form.motivo, { recuoPrimeiraLinha: false });
+        desenharSecaoCard(numeroSecao++, "CONCLUSÃO", form.conclusao, { recuoPrimeiraLinha: false });
         if (String(form.infoComplementares || "").trim()) {
-          desenharSecaoCard(numeroSecao++, "INFORMAÇÕES COMPLEMENTARES", form.infoComplementares);
+          desenharSecaoCard(numeroSecao++, "INFORMAÇÕES COMPLEMENTARES", form.infoComplementares, { recuoPrimeiraLinha: false });
         }
 
         // ---- DOCUMENTOS ANEXADOS — mesmo card (borda cinza, título "N. NOME"), sem faixa azul ----
@@ -6551,7 +6579,7 @@ function App() {
               {step === 1 && (
                 <div className="card">
                   <h2 className="section-title"><span className="section-number">1</span> Solicitação e dados da viagem</h2>
-                  <p className="section-hint">{modoInicio === null ? "Escolha uma opção para continuar." : modoInicio === "nova" ? "Importe a solicitação do SCV e confira os dados extraídos." : "Confira os dados da prestação aberta para edição."}</p>
+                  <p className="section-hint">{modoInicio === null ? "Escolha uma opção para continuar." : modoInicio === "nova" ? "Importe a solicitação do Sistema da Central de Viagens e confira os dados extraídos." : "Confira os dados da prestação aberta para edição."}</p>
 
                   {modoInicio === null && (
                     <div className="start-choice-panel">
@@ -6560,7 +6588,7 @@ function App() {
                           <span className="start-choice-icon"><Icon name="doc" size={25} /></span>
                           <span className="start-choice-copy">
                             <strong>Começar nova prestação</strong>
-                            <small>Importe o PDF da solicitação de viagem do SCV.</small>
+                            <small>Importe o PDF da solicitação de viagem do Sistema da Central de Viagens.</small>
                           </span>
                           <span className="start-choice-action">Começar</span>
                           <input type="file" accept=".pdf,application/pdf" className="file-input-hidden" onChange={iniciarNovaPrestacaoComArquivo} />
@@ -6588,7 +6616,7 @@ function App() {
                         <div className="scv-import-head">
                           <div className="scv-import-icon"><Icon name="doc" size={22} /></div>
                           <div>
-                            <div className="scv-import-title">Importar solicitação de viagem do SCV</div>
+                            <div className="scv-import-title">Importar solicitação de viagem do Sistema da Central de Viagens</div>
                             <div className="scv-import-text">O sistema preencherá os dados da viagem para sua conferência.</div>
                           </div>
                         </div>
@@ -6596,7 +6624,7 @@ function App() {
                           {!form.scvImportado && (
                           <label
                             className={"scv-dropzone " + (scvDragAtivo ? "drag-active" : "")}
-                            aria-label="Selecionar PDF do SCV"
+                            aria-label="Selecionar PDF do Sistema da Central de Viagens"
                             onDragEnter={event => { event.preventDefault(); event.stopPropagation(); setScvDragAtivo(true); }}
                             onDragOver={event => { event.preventDefault(); event.stopPropagation(); setScvDragAtivo(true); }}
                             onDragLeave={event => { event.preventDefault(); event.stopPropagation(); if (!event.currentTarget.contains(event.relatedTarget)) setScvDragAtivo(false); }}
@@ -6637,7 +6665,7 @@ function App() {
                       <option value="roteiro_sem_alteracao">Roteiro sem alteração</option>
                       <option value="roteiro_reduzido">Roteiro reduzido</option>
                     </select>
-                    <FieldGuide show={!form.tipoPrestacao}>Viagem não realizada é tratada direto no SCV, por isso não aparece nesta lista.</FieldGuide>
+                    <FieldGuide show={!form.tipoPrestacao}>Viagem não realizada é tratada direto no Sistema da Central de Viagens, por isso não aparece nesta lista.</FieldGuide>
                     {invalidos1.has("campo-tipoPrestacao") && <div className="campo-erro-msg">Selecione uma opção.</div>}
                   </div>
 
@@ -6789,7 +6817,7 @@ function App() {
                       {form.tipoPrestacao === "roteiro_reduzido" && (
                         <div className="translado-block" id="campo-precisaDevolucao">
                           <h3>Devolução de diária — roteiro reduzido</h3>
-                          {!form.precisaDevolucao && <p className="section-hint field-guidance" style={{ marginBottom: 12 }}>Nem todo roteiro reduzido gera valor a devolver. Confirme com o solicitante o cálculo realizado no Sistema Central de Viagens.</p>}
+                          {!form.precisaDevolucao && <p className="section-hint field-guidance" style={{ marginBottom: 12 }}>Nem todo roteiro reduzido gera valor a devolver. Confirme com o solicitante o cálculo realizado no Sistema da Central de Viagens.</p>}
                           <div className="toggle-row">
                             <button type="button" className={"toggle-btn " + (form.precisaDevolucao === "sim" ? "on" : "")} onClick={() => update({ precisaDevolucao:"sim" })}>Sim, há valor a devolver</button>
                             <button type="button" className={"toggle-btn " + (form.precisaDevolucao === "nao" ? "on" : "")} onClick={() => {
@@ -6803,7 +6831,7 @@ function App() {
                               <div className="field" style={{ maxWidth:360, marginTop:16 }}>
                                 <label>Valor informado pela Central de Viagens <span className="req">*</span></label>
                                 <input className="currency-input" type="text" inputMode="numeric" value={form.valorDevolucao} onChange={e => update({ valorDevolucao:formatarMoedaDigitada(e.target.value) })} placeholder="R$ 0,00" />
-                                <FieldGuide show={!String(form.valorDevolucao || "").trim()}>Informe o valor comunicado pelo solicitante, calculado no Sistema Central de Viagens.</FieldGuide>
+                                <FieldGuide show={!String(form.valorDevolucao || "").trim()}>Informe o valor comunicado pelo solicitante, calculado no Sistema da Central de Viagens.</FieldGuide>
                               </div>
                               <div className="bank-box">
                                 <div className="bank-box-head"><div><div className="bank-box-title">Dados bancários para devolver parte da diária</div><div className="bank-box-sub">Realize o depósito e anexe o comprovante logo abaixo.</div></div><img className="bank-box-logo" src={BANCO_BRASIL_LOGO} alt="Banco do Brasil" /></div>
@@ -7119,7 +7147,7 @@ function App() {
                       <b>Depois de baixar o PDF, faltam 2 passos:</b>
                       <ol className="final-steps-list">
                         <li>Assine eletronicamente — no <b>e-Protocolo</b> (se você é servidor) ou no <b>gov.br</b> (se é colaborador eventual).</li>
-                        <li>Encaminhe o PDF assinado ao solicitante da viagem, para lançamento no SCV.</li>
+                        <li>Encaminhe o PDF assinado ao solicitante da viagem, para lançamento no Sistema da Central de Viagens.</li>
                       </ol>
                     </div>
                   </div>
@@ -7257,7 +7285,7 @@ function App() {
                     <button type="button" className={"scv-type-card " + (form.tipoPrestacao === "roteiro_reduzido" ? "selected" : "")} onClick={() => { update({ tipoPrestacao:"roteiro_reduzido", precisaDevolucao:"" }); setScvNaoRealizada(false); }}><strong>Roteiro reduzido</strong><span>O viajante retornou antes ou realizou período menor que o autorizado.</span></button>
                     <button type="button" className="scv-type-card disabled" onClick={() => setScvNaoRealizada(true)}><strong>Viagem não realizada</strong><span>Não utiliza este relatório. A justificativa deve ser registrada no sistema oficial da Central de Viagens.</span></button>
                   </div>
-                  {scvNaoRealizada && <div className="banner warn" style={{ marginTop:14 }}><Icon name="alert" size={17}/><span>Feche esta janela e continue diretamente no SCV.</span></div>}
+                  {scvNaoRealizada && <div className="banner warn" style={{ marginTop:14 }}><Icon name="alert" size={17}/><span>Feche esta janela e continue diretamente no Sistema da Central de Viagens.</span></div>}
                 </>
               )}
             </div>
