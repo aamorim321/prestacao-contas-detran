@@ -94,6 +94,9 @@
   .banner{ border-radius: var(--r-md); padding: 16px 18px; font-size: 15.5px; display:flex; gap: 12px; align-items:flex-start; margin-bottom: 22px; }
   .final-steps-list{ margin: 8px 0 0; padding-left: 20px; }
   .final-steps-list li{ margin-bottom: 4px; }
+  .external-actions{ display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
+  .external-actions .btn{ min-height:42px; padding:9px 16px; font-size:14px; }
+  .inline-system-link{ font-weight:700; color:var(--azul-escuro); text-decoration:underline; text-underline-offset:2px; }
   .banner svg{ flex-shrink: 0; margin-top: 2px; width: 20px; height: 20px; }
   .banner.info{ background: var(--azul-tint); color: var(--azul-escuro); }
   .banner.warn{ background: var(--amarelo-bg); color: var(--amarelo); }
@@ -1622,6 +1625,13 @@
     transform:translateY(-2px);
   }
   .start-choice-card.new:hover{ border-color:#72a65f; }
+  .start-choice-card.drag-active{
+    border-color:var(--azul);
+    background:var(--azul-tint);
+    box-shadow:0 0 0 4px rgba(0,81,134,.10), 0 12px 28px rgba(17,65,101,.10);
+    transform:translateY(-2px);
+  }
+  .start-choice-card.new.drag-active{ border-color:#4b8d38; background:#f1f8ee; }
   .start-choice-icon{
     width:48px; height:48px; border-radius:14px;
     display:flex; align-items:center; justify-content:center;
@@ -2193,33 +2203,20 @@
   outline: 3px solid rgba(11,111,174,.25);
   outline-offset: 2px;
 }
-.help-details[open] .help-trigger{
-  background: var(--azul);
-  color: #fff;
-  border-color: var(--azul);
-}
-/* Abre ao passar o mouse (e ao focar pelo teclado), fechando sozinho ao sair.
-   O clique continua funcionando — é o que vale no celular/tablet, onde não
-   existe "passar o mouse". Mesmo padrão já usado na ajuda dos campos. */
-.help-details:hover .help-trigger{
+/* A abertura é controlada pelo React (classe .aberta), acionada ao passar o
+   mouse, ao focar pelo teclado e ao clicar/tocar. O <details> nativo foi
+   abandonado aqui porque o navegador esconde o conteúdo fechado de um jeito
+   que o CSS de hover não consegue reverter de forma confiável. */
+.help-details.aberta .help-trigger{
   background: var(--azul);
   color: #fff;
   border-color: var(--azul);
 }
 .help-popover{
   display: none;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: opacity .14s ease, transform .14s ease, visibility .14s ease;
 }
-.help-details:hover .help-popover,
-.help-details:focus-within .help-popover,
-.help-details[open] .help-popover{
+.help-details.aberta .help-popover{
   display: block;
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
 }
 .help-popover{
   position: absolute;
@@ -3004,16 +3001,16 @@
 
 /* ==================================================
    AJUDA CONTEXTUAL DA UNIDADE — PADRÃO ÚNICO
-   Hover no computador; toque/clique no celular; foco pelo teclado.
+   Mesma regra dos demais ícones: aparece no hover/foco e some ao sair.
+   O card fica ancorado no próprio ícone, sem ocupar a área do campo.
    ================================================== */
 .field-help-details{
-  position:static;
+  position:relative;
   display:inline-flex;
   align-items:center;
   margin:0;
 }
 .field-help-icon{
-  list-style:none;
   width:30px;
   height:30px;
   padding:0;
@@ -3025,34 +3022,28 @@
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  cursor:pointer;
+  cursor:help;
   transition:background .15s ease, color .15s ease, border-color .15s ease, transform .15s ease;
 }
-.field-help-icon::-webkit-details-marker{ display:none; }
-.field-help-icon::marker{ display:none; content:""; }
-.field-help-icon:hover{
+.field-help-icon:hover,
+.field-help-details:focus-within .field-help-icon{
   border-color:var(--azul);
-  background:var(--azul-tint);
+  background:var(--azul);
+  color:#fff;
   transform:translateY(-1px);
 }
 .field-help-icon:focus-visible{
   outline:3px solid rgba(11,111,174,.24);
   outline-offset:2px;
 }
-.field-help-details[open] .field-help-icon{
-  border-color:var(--azul);
-  background:var(--azul);
-  color:#fff;
-}
 .field-help-details .field-tooltip{
   position:absolute;
-  top:36px;
-  left:0;
-  right:auto;
+  top:calc(100% + 9px);
+  left:50%;
   z-index:220;
-  display:none;
-  width:min(390px, calc(100vw - 48px));
-  max-width:100%;
+  display:block;
+  width:390px;
+  max-width:min(390px, calc(100vw - 40px));
   margin:0;
   padding:14px 16px;
   border:1px solid #cbd8df;
@@ -3065,37 +3056,41 @@
   opacity:0;
   visibility:hidden;
   pointer-events:none;
-  transform:translateY(-5px);
+  transform:translate(-50%,-5px);
   transition:opacity .14s ease, transform .14s ease, visibility .14s ease;
 }
 .field-help-details .field-tooltip::before{
-  display:none;
+  content:"";
+  position:absolute;
+  left:50%;
+  top:-6px;
+  width:12px;
+  height:12px;
+  background:#fff;
+  border-left:1px solid #cbd8df;
+  border-top:1px solid #cbd8df;
+  transform:translateX(-50%) rotate(45deg);
 }
 .field-help-details:hover .field-tooltip,
-.field-help-details:focus-within .field-tooltip,
-.field-help-details[open] .field-tooltip{
-  display:block;
+.field-help-details:focus-within .field-tooltip{
   opacity:1;
   visibility:visible;
-  pointer-events:auto;
-  transform:translateY(0);
+  transform:translate(-50%,0);
 }
-.field-help-details .field-tooltip b{
-  color:var(--grafite);
-}
+.field-help-details .field-tooltip b{ color:var(--grafite); }
 @media (max-width:720px){
-  .field-help-icon{
-    width:28px;
-    height:28px;
-  }
+  .field-help-icon{ width:28px; height:28px; }
   .field-help-details .field-tooltip{
-    top:34px;
-    width:100%;
+    left:auto;
+    right:-8px;
+    width:min(320px, calc(100vw - 32px));
     max-width:none;
-    padding:13px 14px;
+    transform:translateY(-5px);
   }
+  .field-help-details:hover .field-tooltip,
+  .field-help-details:focus-within .field-tooltip{ transform:translateY(0); }
+  .field-help-details .field-tooltip::before{ left:auto; right:15px; transform:rotate(45deg); }
 }
-
 
 
 /* =============================================================
@@ -3149,6 +3144,80 @@
   .preview-accessibility-note{ font-size: 12px; }
 }
 
+
+
+/* =============================================================
+   CORREÇÃO FINAL — AJUDA DA UNIDADE DE LOTAÇÃO
+   A mensagem aparece somente ao passar o mouse sobre o ícone ?
+   e desaparece imediatamente quando o ponteiro sai do ícone/card.
+   `!important` é necessário para neutralizar um refinamento responsivo
+   antigo que tornava esta mensagem permanente.
+   ============================================================= */
+.lotacao-field .field-tooltip{
+  position:absolute !important;
+  top:calc(100% + 9px) !important;
+  left:50% !important;
+  right:auto !important;
+  z-index:220 !important;
+  display:block !important;
+  width:390px !important;
+  max-width:min(390px, calc(100vw - 40px)) !important;
+  margin:0 !important;
+  padding:12px 14px !important;
+  background:#fff !important;
+  border:1px solid #cbd8df !important;
+  border-radius:10px !important;
+  color:#384555 !important;
+  font-size:13.5px !important;
+  line-height:1.5 !important;
+  box-shadow:0 16px 36px rgba(16,24,32,.18) !important;
+  opacity:0 !important;
+  visibility:hidden !important;
+  pointer-events:none !important;
+  transform:translate(-50%,-5px) !important;
+  transition:opacity .14s ease, transform .14s ease, visibility .14s ease !important;
+}
+.lotacao-field .field-tooltip::before{
+  content:"" !important;
+  display:block !important;
+  position:absolute !important;
+  left:50% !important;
+  top:-6px !important;
+  width:12px !important;
+  height:12px !important;
+  background:#fff !important;
+  border-left:1px solid #cbd8df !important;
+  border-top:1px solid #cbd8df !important;
+  transform:translateX(-50%) rotate(45deg) !important;
+}
+/* Passou o mouse no conjunto ícone + balão: mostra. Saiu: some. */
+.field-help-details:hover .field-tooltip,
+.field-help-icon:focus-visible + .field-tooltip{
+  opacity:1 !important;
+  visibility:visible !important;
+  pointer-events:none !important;
+  transform:translate(-50%,0) !important;
+}
+.lotacao-field .field-tooltip b{ color:var(--grafite) !important; }
+
+@media (max-width:720px){
+  .lotacao-field .field-tooltip{
+    left:auto !important;
+    right:-8px !important;
+    width:min(320px, calc(100vw - 32px)) !important;
+    max-width:none !important;
+    transform:translateY(-5px) !important;
+  }
+  .field-help-details:hover .field-tooltip,
+  .field-help-icon:focus-visible + .field-tooltip{
+    transform:translateY(0) !important;
+  }
+  .lotacao-field .field-tooltip::before{
+    left:auto !important;
+    right:15px !important;
+    transform:rotate(45deg) !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -3198,10 +3267,28 @@ const PARANA_LOGO_NEGATIVA = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAARAA
 const LOCAL_OPTIONS = [
   "Aeroporto/Rodoviária",
   "Hospedagem",
+  "Unidade do DETRAN/PR",
+  "Local da reunião técnica",
+  "Local da capacitação",
+  "Local da visita técnica",
   "Local do evento",
-  "Local do trabalho",
   "Residência",
+  "Outro local",
 ];
+
+function localTransladoPreenchido(item, campo) {
+  const valor = item?.[campo] || "";
+  if (!valor) return false;
+  if (valor !== "Outro local") return true;
+  return !!String(item?.[`${campo}Outro`] || "").trim();
+}
+
+function rotuloLocalTranslado(item, campo) {
+  const valor = item?.[campo] || "";
+  if (valor !== "Outro local") return valor;
+  const detalhe = String(item?.[`${campo}Outro`] || "").trim();
+  return detalhe ? `Outro local — ${detalhe}` : "Outro local";
+}
 
 const TRANSPORTES = [
   { id: "aereo", label: "Aéreo", icon: "plane" },
@@ -3323,6 +3410,9 @@ function Icon({ name, size = 18, style, className }) {
 }
 
 const WHATSAPP_CENTRAL = ""; // Inserir no formato 5541999999999 quando a TI fornecer o número.
+const LINK_CENTRAL_VIAGENS = "https://www.centraldeviagens.pr.gov.br/ncv";
+const LINK_EPROTOCOLO = "https://www.eprotocolo.pr.gov.br/spiweb";
+const LINK_GOVBR_ASSINATURA = "https://www.gov.br/pt-br/servicos/assinatura-eletronica";
 const BANCO_BRASIL_LOGO = "data:image/png;base64,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";
 const CONTA_DEVOLUCAO = {
   codigo: "001",
@@ -3350,8 +3440,17 @@ function moedaBR(valor) {
   return Number(valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-function docsFor(transporte, incluirDevolucaoTranslado, incluirDevolucaoRoteiro) {
+function docsFor(transporte, incluirDevolucaoTranslado, incluirDevolucaoRoteiro, viagemNaoRealizada) {
   const docs = [];
+  // Viagem não realizada com movimentação da conta corporativa: não há
+  // documentos de deslocamento. A prestação comprova a movimentação e a
+  // devolução ao Estado do valor que saiu da conta corporativa.
+  if (viagemNaoRealizada) {
+    docs.push({ id: "saque", nome: "Comprovante de saque ou transferência da diária", obrig: true });
+    docs.push({ id: "devolucao_nao_realizada", nome: "Comprovante de devolução do valor sacado ou transferido", obrig: true });
+    docs.push({ id: "comprobatorio", nome: "Outros documentos comprobatórios", obrig: false });
+    return docs;
+  }
   if (transporte === "aereo") docs.push({ id: "embarque", nome: "Cartão de embarque ou declaração de embarque", obrig: true });
   if (transporte === "onibus") docs.push({ id: "bilhete", nome: "Bilhete, BPE ou declaração/certificado de embarque", obrig: true });
   if (transporte === "veiculo_oficial") {
@@ -3370,7 +3469,34 @@ function docsFor(transporte, incluirDevolucaoTranslado, incluirDevolucaoRoteiro)
   return docs;
 }
 
-const DOCS_COM_JUSTIFICATIVA = ["saque"];
+// Documentos que nem todo viajante tem (ex.: diretores não emitem solicitação
+// de veículo nem diário de bordo). Para eles o sistema pergunta "possui?" e,
+// se a resposta for não, exige justificativa escrita no lugar do arquivo.
+const DOCS_COM_JUSTIFICATIVA = ["saque", "solicitacao_veiculo", "diario_bordo"];
+
+const PERGUNTA_POSSUI_DOC = {
+  saque: "Você possui o comprovante de saque ou transferência?",
+  solicitacao_veiculo: "Você possui a solicitação de veículo?",
+  diario_bordo: "Você possui o diário de bordo?",
+};
+
+// A resposta do saque continua guardada em `saqueComprovante` para não quebrar
+// os rascunhos já salvos; as demais ficam em `possuiDocumento`.
+function respostaPossuiDoc(form, docId) {
+  if (docId === "saque") return form.saqueComprovante || "";
+  return (form.possuiDocumento && form.possuiDocumento[docId]) || "";
+}
+
+function patchRespostaPossuiDoc(form, docId, valor) {
+  if (docId === "saque") return { saqueComprovante: valor };
+  return { possuiDocumento: { ...(form.possuiDocumento || {}), [docId]: valor } };
+}
+
+function docJustificavelOk(form, docId) {
+  const resposta = respostaPossuiDoc(form, docId);
+  if (resposta === "sim") return !!(form.anexos[docId] && form.anexos[docId].length);
+  return resposta === "nao" && !!String((form.justificativas || {})[docId] || "").trim();
+}
 
 function uid() {
   return crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);
@@ -3527,8 +3653,9 @@ const emptyForm = {
   dataSaida: "", dataRetorno: "", nomeEvento: "", motivo: "", conclusao: "",
   infoComplementares: "", transporte: "", tipoPrestacao: "", usouTranslado: "", atesto: false,
   scvImportado: false, scvArquivo: null, dadosScvConfirmados: false,
-  saqueComprovante: "", precisaDevolucao: "", valorDevolucao: "", valorTransladoLiberado: "",
-  retiradaTransladoIntegral: "", valorTransladoRetirado: "",
+  saqueComprovante: "", possuiDocumento: {}, precisaDevolucao: "", valorDevolucao: "", valorTransladoLiberado: "",
+  sacouDiaria: "", valorMovimentadoDiaria: "", justificativaNaoRealizada: "",
+  retiradaTransladoIntegral: "", movimentacaoTransladoSemUso: "", valorTransladoRetirado: "",
   justificativas: {}, anexos: {}, translados: [],
 };
 
@@ -3628,7 +3755,7 @@ function TransladoPdfThumb({ meta, src, onOpen }) {
       try {
         if (!window.pdfjsLib) { setErro(true); return; }
         const bytes = dataUrlToBytes(src);
-        const pdf = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+        const pdf = await window.pdfjsLib.getDocument({ data: bytes, isEvalSupported: false }).promise;
         const page = await pdf.getPage(1);
         const viewport = page.getViewport({ scale: 1.7 });
         const cnv = document.createElement("canvas");
@@ -3683,7 +3810,18 @@ function RedactModal({ meta, dataUrl, onSave, onClose }) {
       ctx.drawImage(img, rect.x, rect.y, rect.w, rect.h, 0, 0, cnv.width, cnv.height);
       const novaUrl = cnv.toDataURL("image/png");
       setPageUrls(prev => { const n = [...prev]; n[pageIndex] = novaUrl; return n; });
-      setRectsByPage(prev => ({ ...prev, [pageIndex]: [] })); // tarjas antigas perdem a referência após o corte
+      setRectsByPage(prev => {
+        const atuais = prev[pageIndex] || [];
+        const ajustadas = atuais.map(r => {
+          const x1 = Math.max(r.x, rect.x);
+          const y1 = Math.max(r.y, rect.y);
+          const x2 = Math.min(r.x + r.w, rect.x + rect.w);
+          const y2 = Math.min(r.y + r.h, rect.y + rect.h);
+          if (x2 <= x1 || y2 <= y1) return null;
+          return { x: x1 - rect.x, y: y1 - rect.y, w: x2 - x1, h: y2 - y1 };
+        }).filter(Boolean);
+        return { ...prev, [pageIndex]: ajustadas };
+      });
     } catch (e) { /* mantém como está se algo falhar */ }
   }
 
@@ -3701,7 +3839,16 @@ function RedactModal({ meta, dataUrl, onSave, onClose }) {
       ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
       const novaUrl = cnv.toDataURL("image/png");
       setPageUrls(prev => { const n = [...prev]; n[pageIndex] = novaUrl; return n; });
-      setRectsByPage(prev => ({ ...prev, [pageIndex]: [] }));
+      setRectsByPage(prev => {
+        const atuais = prev[pageIndex] || [];
+        const ajustadas = atuais.map(r => ({
+          x: img.naturalHeight - (r.y + r.h),
+          y: r.x,
+          w: r.h,
+          h: r.w,
+        }));
+        return { ...prev, [pageIndex]: ajustadas };
+      });
     } catch (e) { /* mantém como está se algo falhar */ }
     setGirando(false);
   }
@@ -3713,7 +3860,7 @@ function RedactModal({ meta, dataUrl, onSave, onClose }) {
         if (isPdf) {
           if (!window.pdfjsLib) { setLoadError("A biblioteca de leitura de PDF não carregou. Verifique sua conexão."); return; }
           const bytes = dataUrlToBytes(dataUrl);
-          const pdf = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+          const pdf = await window.pdfjsLib.getDocument({ data: bytes, isEvalSupported: false }).promise;
           const urls = [];
           for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
@@ -3783,14 +3930,6 @@ function RedactModal({ meta, dataUrl, onSave, onClose }) {
   function handleDown(e) {
     e.preventDefault();
     const p = posFromEvent(e);
-    if (modo === "tarja") {
-      const existentes = rectsByPage[pageIndex] || [];
-      const indiceClicado = existentes.findIndex(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
-      if (indiceClicado !== -1) {
-        setRectsByPage(prev => ({ ...prev, [pageIndex]: prev[pageIndex].filter((_, i) => i !== indiceClicado) }));
-        return;
-      }
-    }
     dragRef.current = p;
     setPreviewRect({ x: p.x, y: p.y, w: 0, h: 0 });
   }
@@ -3806,11 +3945,7 @@ function RedactModal({ meta, dataUrl, onSave, onClose }) {
     setPreviewRect(pr => {
       if (pr && modo === "corte") {
         if (pr.w > 24 && pr.h > 24) {
-          const temTarjas = (rectsByPage[pageIndex] || []).length > 0;
-          const aviso = temTarjas
-            ? "Cortar a imagem, mantendo somente a área destacada?\n\nAtenção: as tarjas já feitas nesta página serão removidas — refaça depois do corte, se precisar."
-            : "Cortar a imagem, mantendo somente a área destacada?";
-          if (window.confirm(aviso)) aplicarCorte(pr);
+          if (window.confirm("Cortar a imagem, mantendo somente a área destacada?")) aplicarCorte(pr);
         }
         return null;
       }
@@ -3889,8 +4024,8 @@ function RedactModal({ meta, dataUrl, onSave, onClose }) {
               <ol className="redact-steps">
                 <li>Se o documento estiver de lado, clique em <b>“Girar 90°”</b>.</li>
                 <li>Clique e arraste sobre o dado até cobri-lo com uma <b>tarja preta</b>.</li>
-                <li>Para apagar uma tarja, clique sobre ela ou use <b>“Desfazer última marcação”</b>.</li>
-                <li>Para <b>cortar a imagem</b> (ex.: remover um rodapé com dados desnecessários), clique em <b>“✂ Cortar”</b> e desenhe a área que deve <b>ficar</b> — o resto é descartado.</li>
+                <li>Para apagar a última tarja criada, use <b>“Desfazer última marcação”</b>. Para remover todas as tarjas da página, use <b>“Limpar página”</b>.</li>
+                <li>Para <b>cortar a imagem</b> (ex.: remover um rodapé com dados desnecessários), clique em <b>“✂ Cortar”</b> e desenhe a área que deve <b>ficar</b> — o resto é descartado. As tarjas que estiverem na área mantida permanecem aplicadas.</li>
                 <li>Confira o documento e clique em <b>“Concluir e aplicar”</b>.</li>
               </ol>
               <div className="redact-demo" aria-hidden="true">
@@ -4065,18 +4200,25 @@ function dadosRelatorioPreview(form, numeracaoAnexos) {
   const periodo = form.dataSaida && form.dataRetorno
     ? `${formatDateBR(form.dataSaida)} a ${formatDateBR(form.dataRetorno)}`
     : (formatDateBR(form.dataSaida) || formatDateBR(form.dataRetorno) || "—");
-  const tipoViagem = TRANSPORTES.find(t => t.id === form.transporte)?.label || "—";
+  const tipoViagem = form.tipoPrestacao === "viagem_nao_realizada"
+    ? "Viagem não realizada"
+    : (TRANSPORTES.find(t => t.id === form.transporte)?.label || "—");
   const cargoLinha = [form.cargoFuncao, form.siglaSetor].filter(Boolean).join(" — ");
-  const tipoPrestacao = form.tipoPrestacao === "roteiro_reduzido" ? "ROTEIRO REDUZIDO" : form.tipoPrestacao === "roteiro_sem_alteracao" ? "ROTEIRO SEM ALTERAÇÃO" : "—";
+  const tipoPrestacao = form.tipoPrestacao === "roteiro_reduzido" ? "ROTEIRO REDUZIDO" : form.tipoPrestacao === "roteiro_sem_alteracao" ? "ROTEIRO SEM ALTERAÇÃO" : form.tipoPrestacao === "viagem_nao_realizada" ? "VIAGEM NÃO REALIZADA" : "—";
   const transladosComArquivo = (form.translados || []).filter(t => t.arquivo);
   const totalTranslados = transladosComArquivo.reduce((a, t) => a + parseMoeda(t.valor), 0);
   const liberadoTranslado = parseMoeda(form.valorTransladoLiberado);
-  const valorRetiradoTranslado = form.retiradaTransladoIntegral === "sim"
-    ? liberadoTranslado
-    : parseMoeda(form.valorTransladoRetirado);
-  const saldoTransladoDevolver = form.usouTranslado === "sim" && form.valorTransladoLiberado
-    ? Math.max(0, valorRetiradoTranslado - totalTranslados)
+  const valorRetiradoTranslado = form.usouTranslado === "sim"
+    ? (form.retiradaTransladoIntegral === "sim" ? liberadoTranslado : parseMoeda(form.valorTransladoRetirado))
+    : form.usouTranslado === "nao"
+      ? (form.movimentacaoTransladoSemUso === "integral" ? liberadoTranslado : form.movimentacaoTransladoSemUso === "parcial" ? parseMoeda(form.valorTransladoRetirado) : 0)
+      : 0;
+  const saldoTransladoDevolver = form.usouTranslado && form.valorTransladoLiberado
+    ? Math.max(0, valorRetiradoTranslado - (form.usouTranslado === "sim" ? totalTranslados : 0))
     : 0;
+  const resumoTranslado = form.usouTranslado && form.valorTransladoLiberado
+    ? `${form.usouTranslado === "sim" ? "Utilizado" : "Não utilizado"} · Liberado: ${moedaBR(liberadoTranslado)} · Sacado/transferido: ${moedaBR(valorRetiradoTranslado)}${form.usouTranslado === "sim" ? ` · Comprovado: ${moedaBR(totalTranslados)}` : ""} · A devolver: ${moedaBR(saldoTransladoDevolver)}`
+    : "";
   const comPag = (nome, docId, idx = 0) => {
     const p = numeracaoAnexos?.paginaPorDocId?.[docId]?.[idx];
     return p ? `${nome} — pág. ${p}` : nome;
@@ -4089,7 +4231,10 @@ function dadosRelatorioPreview(form, numeracaoAnexos) {
   if (form.anexos?.termo_ciencia?.length) docsPreview.push({ nome: comPag("Termo de Ciência e Responsabilidade", "termo_ciencia") });
   if (form.anexos?.saque?.length) docsPreview.push({ nome: comPag("Comprovante de saque ou transferência", "saque") });
   else if (form.saqueComprovante === "nao" && form.justificativas?.saque) docsPreview.push({ nome: "Justificativa registrada por não ter inserido o comprovante de saque/transferência", detalhe: form.justificativas.saque });
+  if (respostaPossuiDoc(form, "solicitacao_veiculo") === "nao" && form.justificativas?.solicitacao_veiculo) docsPreview.push({ nome: "Justificativa registrada por não ter inserido a solicitação de veículo", detalhe: form.justificativas.solicitacao_veiculo });
+  if (respostaPossuiDoc(form, "diario_bordo") === "nao" && form.justificativas?.diario_bordo) docsPreview.push({ nome: "Justificativa registrada por não ter inserido o diário de bordo", detalhe: form.justificativas.diario_bordo });
   if (form.anexos?.devolucao_roteiro?.length) docsPreview.push({ nome: comPag("Devolução de diária — roteiro reduzido", "devolucao_roteiro") });
+  if (form.anexos?.devolucao_nao_realizada?.length) docsPreview.push({ nome: comPag("Comprovante de devolução do valor sacado ou transferido", "devolucao_nao_realizada") });
   if (transladosComArquivo.length) {
     const pSintese = numeracaoAnexos?.paginaSinteseTranslado;
     docsPreview.push({ nome: pSintese ? `Comprovantes de translado — pág. ${pSintese}` : "Comprovantes de translado", detalhe: `${transladosComArquivo.length} comprovante(s) — Total: ${moedaBR(totalTranslados)}` });
@@ -4098,9 +4243,12 @@ function dadosRelatorioPreview(form, numeracaoAnexos) {
   if (form.anexos?.comprobatorio?.length) docsPreview.push({ nome: comPag("Outros documentos comprobatórios", "comprobatorio") });
   const totalTransladoGasto = (form.translados || []).reduce((a, t) => a + parseMoeda(t.valor), 0);
   const saldoRoteiroDevolver = (form.tipoPrestacao === "roteiro_reduzido" && form.precisaDevolucao === "sim") ? parseMoeda(form.valorDevolucao) : 0;
-  const saldoADevolver = saldoRoteiroDevolver + saldoTransladoDevolver;
-  const atestoPreview = "Atesto e certifico que as informações constantes no presente documento demonstram efetivamente a realização e a efetividade da viagem, e que os comprovantes de despesa anexos a esta prestação de contas foram efetivamente realizados no estrito interesse da administração pública, conforme o Decreto Estadual n.º 6.358/2024.";
-  return { periodo, tipoViagem, cargoLinha, tipoPrestacao, docsPreview, atestoPreview, saldoADevolver };
+  const valorNaoRealizadaDevolver = form.tipoPrestacao === "viagem_nao_realizada" ? parseMoeda(form.valorMovimentadoDiaria) : 0;
+  const saldoADevolver = saldoRoteiroDevolver + saldoTransladoDevolver + valorNaoRealizadaDevolver;
+  const atestoPreview = form.tipoPrestacao === "viagem_nao_realizada"
+    ? "Atesto e certifico que a viagem autorizada não foi realizada, que a justificativa registrada neste documento corresponde aos fatos e que o valor sacado ou transferido da conta corporativa foi devolvido ao Estado, conforme os documentos anexados a esta prestação de contas, nos termos do Decreto Estadual n.º 6.358/2024."
+    : "Atesto e certifico que as informações constantes no presente documento demonstram efetivamente a realização e a efetividade da viagem, e que os comprovantes de despesa anexos a esta prestação de contas foram efetivamente realizados no estrito interesse da administração pública, conforme o Decreto Estadual n.º 6.358/2024.";
+  return { periodo, tipoViagem, cargoLinha, tipoPrestacao, docsPreview, atestoPreview, saldoADevolver, resumoTranslado };
 }
 
 // Converte o texto digitado pelo viajante em blocos semânticos.
@@ -4170,22 +4318,35 @@ function RelatorioBlocos({ form, numeracaoAnexos }) {
         <div className="rp-resumo-grid">
           <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="pessoa" size={15} /></span><span>Viajante:</span><strong>{form.nomeViajante || "—"}</strong></div>
           <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="maleta" size={15} /></span><span>Tipo de viagem:</span><strong>{d.tipoViagem}</strong></div>
-          <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="pin" size={15} /></span><span>Destino:</span><strong>{form.destino || "—"}</strong></div>
+          <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="pin" size={15} /></span><span>Origem:</span><strong>{form.origem || "—"}</strong></div>
           <div className="rp-resumo-item rp-resumo-situacao">
             <div className="rp-situacao-head"><span className="rp-ri-icon"><Icon name="alvo" size={15} /></span><span>Situação do roteiro:</span></div>
             <span className={"rp-selo " + (form.tipoPrestacao === "roteiro_sem_alteracao" ? "ok" : "warn")}><Icon name="check" size={12} /> {d.tipoPrestacao}</span>
           </div>
+          <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="pin" size={15} /></span><span>Destino:</span><strong>{form.destino || "—"}</strong></div>
           <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="calendario" size={15} /></span><span>Período:</span><strong>{d.periodo}</strong></div>
           {d.saldoADevolver > 0.009 && (
             <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="doc" size={15} /></span><span>Saldo a devolver:</span><strong>{moedaBR(d.saldoADevolver)}</strong></div>
           )}
+          {d.resumoTranslado && (
+            <div className="rp-resumo-item" style={{ gridColumn: "1 / -1" }}><span className="rp-ri-icon"><Icon name="car" size={15} /></span><span>Translado:</span><strong>{d.resumoTranslado}</strong></div>
+          )}
         </div>
       </div>
 
-      {secaoTexto("1", "DESCRIÇÃO DO EVENTO", "doc", form.nomeEvento, "nomeEvento")}
-      {secaoTexto("2", "OBJETIVO DA PARTICIPAÇÃO", "alvo", form.motivo, "motivo")}
-      {secaoTexto("3", "CONCLUSÃO", "check", form.conclusao, "conclusao")}
-      {String(form.infoComplementares || "").trim() && secaoTexto("4", "INFORMAÇÕES COMPLEMENTARES", "info", form.infoComplementares, "infoComplementares")}
+      {form.tipoPrestacao === "viagem_nao_realizada" ? (
+        <>
+          {secaoTexto("1", "JUSTIFICATIVA DA NÃO REALIZAÇÃO DA VIAGEM", "alert", form.justificativaNaoRealizada, "justificativaNaoRealizada")}
+          {String(form.infoComplementares || "").trim() && secaoTexto("2", "INFORMAÇÕES COMPLEMENTARES", "info", form.infoComplementares, "infoComplementares")}
+        </>
+      ) : (
+        <>
+          {secaoTexto("1", "DESCRIÇÃO DO EVENTO", "doc", form.nomeEvento, "nomeEvento")}
+          {secaoTexto("2", "OBJETIVO DA PARTICIPAÇÃO", "alvo", form.motivo, "motivo")}
+          {secaoTexto("3", "CONCLUSÃO", "check", form.conclusao, "conclusao")}
+          {String(form.infoComplementares || "").trim() && secaoTexto("4", "INFORMAÇÕES COMPLEMENTARES", "info", form.infoComplementares, "infoComplementares")}
+        </>
+      )}
 
       <div className="rp-card">
         <div className="rp-card-tab"><Icon name="paperclip" size={14} /> DOCUMENTOS ANEXADOS</div>
@@ -4308,7 +4469,6 @@ function TelaMinhasPrestacoes() {
       <div className="proto-flag">
         <div className="band-inner proto-flag-inner">
           <div className="proto-left"><span className="proto-dot"></span><strong>VERSÃO PILOTO</strong><span className="proto-sep">•</span><span>Sistema de Prestação de Contas integrado à Central de Viagens em desenvolvimento</span></div>
-          <div className="proto-right"><Icon name="shield" size={15} /> Ambiente seguro</div>
         </div>
       </div>
       <div className="band institucional-bar" aria-hidden="true"></div>
@@ -4578,6 +4738,7 @@ function App() {
   const [modoInicio, setModoInicio] = useState(null);
   const [arquivoEdicaoCarregado, setArquivoEdicaoCarregado] = useState(false);
   const [scvDragAtivo, setScvDragAtivo] = useState(false);
+  const [inicioDragTipo, setInicioDragTipo] = useState("");
   const [scvModal, setScvModal] = useState(false);
   const [scvEtapaModal, setScvEtapaModal] = useState(1);
   const [scvExtraindo, setScvExtraindo] = useState(false);
@@ -4586,7 +4747,7 @@ function App() {
   const [scvNaoRealizada, setScvNaoRealizada] = useState(false);
   const [pdfGeradoUmaVez, setPdfGeradoUmaVez] = useState(false);
 
-  const saqueFileInputRef = useRef(null);
+  const docFileInputRefs = useRef({});
 
   useEffect(() => {
     function impedirAberturaDeArquivo(event) {
@@ -4634,6 +4795,7 @@ function App() {
   const [avisoArmazenamento, setAvisoArmazenamento] = useState(null);
   const [redactTarget, setRedactTarget] = useState(null);
   const [mostrarPreview, setMostrarPreview] = useState(false);
+  const [ajudaEtapaAberta, setAjudaEtapaAberta] = useState(false);
   const [previewPdfUrl, setPreviewPdfUrl] = useState("");
   const [previewGerando, setPreviewGerando] = useState(false);
   const [previewErro, setPreviewErro] = useState("");
@@ -4771,8 +4933,12 @@ function App() {
       transporte: transporteId,
       usouTranslado: "",
       valorTransladoLiberado: "",
+      retiradaTransladoIntegral: "",
+      movimentacaoTransladoSemUso: "",
+      valorTransladoRetirado: "",
       translados: [],
       saqueComprovante: "",
+      possuiDocumento: {},
       precisaDevolucao: f.tipoPrestacao === "roteiro_reduzido" ? "" : "nao",
       valorDevolucao: "",
       justificativas: {},
@@ -4803,40 +4969,60 @@ function App() {
     });
   }, [editQueue, redactTarget]);
 
-  const mostraTranslado = form.transporte === "aereo" || form.transporte === "onibus";
+  const viagemNaoRealizada = form.tipoPrestacao === "viagem_nao_realizada";
+  // Só existe prestação de contas quando a diária chegou a ser sacada; sem
+  // saque, o caso é resolvido direto no Sistema da Central de Viagens.
+  const viagemNaoRealizadaComSaque = viagemNaoRealizada && form.sacouDiaria === "sim";
+  const viagemNaoRealizadaSemSaque = viagemNaoRealizada && form.sacouDiaria === "nao";
+  const mostraTranslado = !viagemNaoRealizada && (form.transporte === "aereo" || form.transporte === "onibus");
   const translados = form.translados || [];
   const totalGastoTranslado = translados.reduce((acc, t) => acc + parseMoeda(t.valor), 0);
   const liberadoTranslado = parseMoeda(form.valorTransladoLiberado);
-  const retiradaTransladoRespondida = form.retiradaTransladoIntegral === "sim" || form.retiradaTransladoIntegral === "nao";
-  const valorRetiradoTranslado = form.retiradaTransladoIntegral === "sim"
-    ? liberadoTranslado
-    : form.retiradaTransladoIntegral === "nao"
-      ? parseMoeda(form.valorTransladoRetirado)
+  const movimentacaoSemUsoRespondida = ["nenhum", "parcial", "integral"].includes(form.movimentacaoTransladoSemUso);
+  const retiradaTransladoRespondida = form.usouTranslado === "sim"
+    ? (form.retiradaTransladoIntegral === "sim" || form.retiradaTransladoIntegral === "nao")
+    : form.usouTranslado === "nao"
+      ? movimentacaoSemUsoRespondida
+      : false;
+  const valorRetiradoTranslado = form.usouTranslado === "sim"
+    ? (form.retiradaTransladoIntegral === "sim"
+        ? liberadoTranslado
+        : form.retiradaTransladoIntegral === "nao"
+          ? parseMoeda(form.valorTransladoRetirado)
+          : 0)
+    : form.usouTranslado === "nao"
+      ? (form.movimentacaoTransladoSemUso === "integral"
+          ? liberadoTranslado
+          : form.movimentacaoTransladoSemUso === "parcial"
+            ? parseMoeda(form.valorTransladoRetirado)
+            : 0)
       : 0;
   const retiradaAcimaLiberado = retiradaTransladoRespondida && valorRetiradoTranslado > liberadoTranslado + 0.009;
-  const despesasAcimaRetirado = retiradaTransladoRespondida && totalGastoTranslado > valorRetiradoTranslado + 0.009;
-  const valorPermanecidoConta = retiradaTransladoRespondida ? Math.max(0, liberadoTranslado - valorRetiradoTranslado) : null;
-  const saldoTranslado = mostraTranslado && form.usouTranslado === "sim" && form.valorTransladoLiberado && retiradaTransladoRespondida
-    ? Math.max(0, valorRetiradoTranslado - totalGastoTranslado)
+  const despesasAcimaRetirado = form.usouTranslado === "sim" && retiradaTransladoRespondida && totalGastoTranslado > valorRetiradoTranslado + 0.009;
+  const saldoTranslado = mostraTranslado && form.valorTransladoLiberado && retiradaTransladoRespondida
+    ? Math.max(0, valorRetiradoTranslado - (form.usouTranslado === "sim" ? totalGastoTranslado : 0))
     : null;
   const precisaDevolucaoTranslado = saldoTranslado !== null && saldoTranslado > 0.009;
-  const saqueOk = form.saqueComprovante === "sim"
-    ? !!(form.anexos.saque && form.anexos.saque.length)
-    : form.saqueComprovante === "nao" && !!String(form.justificativas.saque || "").trim();
-  const docs = docsFor(form.transporte, precisaDevolucaoTranslado, form.precisaDevolucao === "sim");
+  const saqueOk = docJustificavelOk(form, "saque");
+  const docs = docsFor(form.transporte, precisaDevolucaoTranslado, form.precisaDevolucao === "sim", viagemNaoRealizadaComSaque);
   const pendingDocs = docs.filter(d => {
-    if (d.id === "saque") return !saqueOk;
+    if (DOCS_COM_JUSTIFICATIVA.includes(d.id)) return !docJustificavelOk(form, d.id);
     return d.obrig && (!form.anexos[d.id] || form.anexos[d.id].length === 0);
   });
-  const retiradaTransladoOk = retiradaTransladoRespondida
-    && valorRetiradoTranslado > 0
-    && !retiradaAcimaLiberado
-    && !despesasAcimaRetirado;
-  const transladoOk = !mostraTranslado || form.usouTranslado !== "sim" || (
+  const retiradaTransladoOk = form.usouTranslado === "sim"
+    ? (retiradaTransladoRespondida && valorRetiradoTranslado > 0 && !retiradaAcimaLiberado && !despesasAcimaRetirado)
+    : form.usouTranslado === "nao"
+      ? (retiradaTransladoRespondida
+          && !retiradaAcimaLiberado
+          && (form.movimentacaoTransladoSemUso === "nenhum" || valorRetiradoTranslado > 0))
+      : false;
+  const transladoOk = !mostraTranslado || !form.usouTranslado || (
     liberadoTranslado > 0
     && retiradaTransladoOk
-    && translados.length > 0
-    && translados.every(t => t.de && t.para && t.data && parseMoeda(t.valor) > 0 && t.arquivo)
+    && (form.usouTranslado === "nao" || (
+      translados.length > 0
+      && translados.every(t => localTransladoPreenchido(t, "de") && localTransladoPreenchido(t, "para") && t.data && parseMoeda(t.valor) > 0 && t.arquivo)
+    ))
   );
   const devolucaoTransladoOk = !precisaDevolucaoTranslado || !!(form.anexos.devolucao_translado && form.anexos.devolucao_translado.length);
   const devolucaoRoteiroOk = form.tipoPrestacao !== "roteiro_reduzido"
@@ -4931,7 +5117,7 @@ function App() {
       return {
         ...f,
         anexos: { ...f.anexos, [docId]: arquivosRestantes },
-        ...(docId === "saque" && arquivosRestantes.length === 0 ? { saqueComprovante: "" } : {})
+        ...(DOCS_COM_JUSTIFICATIVA.includes(docId) && arquivosRestantes.length === 0 ? patchRespostaPossuiDoc(form, docId, "") : {})
       };
     });
     setAnexosContent(prev => { const n = { ...prev }; delete n[fileId]; return n; });
@@ -5106,7 +5292,7 @@ function App() {
       setAnexosContent(prev => ({ ...prev, [fileId]: dataUrl }));
       persistFileComAviso(fileId, dataUrl);
       const bytes = new Uint8Array(await file.arrayBuffer());
-      const pdf = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+      const pdf = await window.pdfjsLib.getDocument({ data: bytes, isEvalSupported: false }).promise;
       const partes = [];
       for (let p = 1; p <= pdf.numPages; p++) {
         const page = await pdf.getPage(p);
@@ -5142,6 +5328,9 @@ function App() {
 
   function aplicarDadosScv(confirmados) {
     if (!dadosScv || !form.tipoPrestacao) return;
+    // Se a viagem não ocorreu e não houve saque/recebimento da diária, este
+    // sistema não deve abrir uma prestação: o caso é finalizado no SCV.
+    if (form.tipoPrestacao === "viagem_nao_realizada" && form.sacouDiaria !== "sim") return;
     setForm(f => ({
       ...f,
       ...Object.fromEntries(Object.entries(dadosScv).filter(([,v]) => !!v)),
@@ -5171,13 +5360,15 @@ function App() {
   }
 
   function addTransladoItem() {
-    setForm(f => ({ ...f, translados: [...(f.translados || []), { id: uid(), data: "", valor: "", de: "", para: "", arquivo: null }] }));
+    setForm(f => ({ ...f, translados: [...(f.translados || []), { id: uid(), data: "", valor: "", de: "", para: "", deOutro: "", paraOutro: "", arquivo: null }] }));
   }
   function updateTranslado(itemId, patch) {
     setForm(f => ({ ...f, translados: (f.translados || []).map(t => t.id === itemId ? { ...t, ...patch } : t) }));
   }
   function selecionarLocalTranslado(itemId, campo, valor) {
-    updateTranslado(itemId, { [campo]: valor });
+    const patch = { [campo]: valor };
+    if (valor !== "Outro local") patch[`${campo}Outro`] = "";
+    updateTranslado(itemId, patch);
     if (valor === "Residência") {
       const item = (form.translados || []).find(t => t.id === itemId);
       if (item && item.arquivo && !item.arquivo.redigido) {
@@ -5224,9 +5415,6 @@ function App() {
   }
 
   const datasValidas = !form.dataSaida || !form.dataRetorno || form.dataRetorno >= form.dataSaida;
-  const step1Valid = form.tipoPrestacao && form.numeroSolicitacao && form.nomeViajante && form.cargoFuncao && form.siglaSetor && form.origem && form.destino &&
-    form.dataSaida && form.dataRetorno && form.nomeEvento && form.motivo && form.conclusao && datasValidas;
-
   const camposObrigatoriosEtapa1 = [
     { id: "campo-tipoPrestacao", label: "Tipo de prestação de contas", ok: !!form.tipoPrestacao },
     { id: "campo-numeroSolicitacao", label: "Número da solicitação de viagem", ok: !!form.numeroSolicitacao },
@@ -5237,9 +5425,13 @@ function App() {
     { id: "campo-destino", label: "Destino", ok: !!form.destino },
     { id: "campo-dataSaida", label: "Data de saída", ok: !!form.dataSaida },
     { id: "campo-dataRetorno", label: "Data de retorno", ok: !!form.dataRetorno && datasValidas },
-    { id: "campo-nomeEvento", label: "Descrição do evento", ok: !!form.nomeEvento },
-    { id: "campo-motivo", label: "Objetivo da participação (mínimo de 150 caracteres)", ok: String(form.motivo || "").trim().length >= 150 },
-    { id: "campo-conclusao", label: "Conclusão (mínimo de 150 caracteres)", ok: String(form.conclusao || "").trim().length >= 150 },
+    ...(viagemNaoRealizada ? [
+      { id: "campo-justificativaNaoRealizada", label: "Justificativa da não realização da viagem (mínimo de 150 caracteres)", ok: String(form.justificativaNaoRealizada || "").trim().length >= 150 },
+    ] : [
+      { id: "campo-nomeEvento", label: "Descrição do evento", ok: !!form.nomeEvento },
+      { id: "campo-motivo", label: "Objetivo da participação (mínimo de 150 caracteres)", ok: String(form.motivo || "").trim().length >= 150 },
+      { id: "campo-conclusao", label: "Conclusão (mínimo de 150 caracteres)", ok: String(form.conclusao || "").trim().length >= 150 },
+    ]),
   ];
   const camposFaltandoEtapa1 = camposObrigatoriosEtapa1.filter(c => !c.ok);
   const invalidos1 = tentouAvancarEtapa1 ? new Set(camposFaltandoEtapa1.map(c => c.id)) : new Set();
@@ -5336,14 +5528,16 @@ function App() {
     );
   }
 
-  const step2Valid = form.transporte && (!mostraTranslado || !!form.usouTranslado) && pendingDocs.length === 0 && transladoOk && devolucaoOk;
-
   const itensFaltandoEtapa2 = [];
-  if (!form.transporte) itensFaltandoEtapa2.push({ id: "campo-transporte", label: "Meio de transporte utilizado" });
+  if (viagemNaoRealizadaComSaque && parseMoeda(form.valorMovimentadoDiaria) <= 0) itensFaltandoEtapa2.push({ id: "campo-valorMovimentadoDiaria", label: "Valor sacado ou transferido da conta corporativa" });
+  if (!viagemNaoRealizada && !form.transporte) itensFaltandoEtapa2.push({ id: "campo-transporte", label: "Meio de transporte utilizado" });
   if (mostraTranslado && !form.usouTranslado) itensFaltandoEtapa2.push({ id: "campo-usouTranslado", label: "Resposta sobre uso de táxi/aplicativo" });
+  if (mostraTranslado && form.usouTranslado && liberadoTranslado <= 0) itensFaltandoEtapa2.push({ id: "campo-valorTransladoLiberado", label: "Valor total liberado para despesas de translado" });
   if (mostraTranslado && form.usouTranslado === "sim" && !retiradaTransladoRespondida) itensFaltandoEtapa2.push({ id: "campo-retiradaTranslado", label: "Informação sobre o valor sacado ou transferido" });
   if (mostraTranslado && form.usouTranslado === "sim" && form.retiradaTransladoIntegral === "nao" && parseMoeda(form.valorTransladoRetirado) <= 0) itensFaltandoEtapa2.push({ id: "campo-retiradaTranslado", label: "Valor efetivamente sacado ou transferido" });
-  if (mostraTranslado && form.usouTranslado === "sim" && retiradaAcimaLiberado) itensFaltandoEtapa2.push({ id: "campo-retiradaTranslado", label: "Valor sacado ou transferido não pode superar o valor liberado" });
+  if (mostraTranslado && form.usouTranslado === "nao" && !movimentacaoSemUsoRespondida) itensFaltandoEtapa2.push({ id: "campo-retiradaTranslado", label: "Informe se algum valor destinado ao translado foi sacado ou transferido" });
+  if (mostraTranslado && form.usouTranslado === "nao" && form.movimentacaoTransladoSemUso === "parcial" && parseMoeda(form.valorTransladoRetirado) <= 0) itensFaltandoEtapa2.push({ id: "campo-retiradaTranslado", label: "Valor sacado ou transferido para translado" });
+  if (mostraTranslado && form.usouTranslado && retiradaAcimaLiberado) itensFaltandoEtapa2.push({ id: "campo-retiradaTranslado", label: "Valor sacado ou transferido não pode superar o valor liberado" });
   if (mostraTranslado && form.usouTranslado === "sim" && despesasAcimaRetirado) itensFaltandoEtapa2.push({ id: "campo-retiradaTranslado", label: "O valor sacado ou transferido deve cobrir as despesas comprovadas" });
   if (mostraTranslado && form.usouTranslado === "sim" && !transladoOk && retiradaTransladoOk) itensFaltandoEtapa2.push({ id: "campo-usouTranslado", label: "Dados do translado (trajeto, valor e comprovante)" });
   if (form.tipoPrestacao === "roteiro_reduzido" && !form.precisaDevolucao) itensFaltandoEtapa2.push({ id: "campo-precisaDevolucao", label: "Resposta sobre valor a devolver (roteiro reduzido)" });
@@ -5360,22 +5554,23 @@ function App() {
 
   const progressoEtapa1 = percentualConcluido(camposObrigatoriosEtapa1.map(c => c.ok));
 
-  const tarefasEtapa2 = [!!form.transporte];
+  const tarefasEtapa2 = viagemNaoRealizada ? [form.sacouDiaria === "sim", parseMoeda(form.valorMovimentadoDiaria) > 0] : [!!form.transporte];
   if (mostraTranslado) tarefasEtapa2.push(!!form.usouTranslado);
+  if (mostraTranslado && form.usouTranslado) tarefasEtapa2.push(liberadoTranslado > 0, retiradaTransladoRespondida, retiradaTransladoOk);
   if (mostraTranslado && form.usouTranslado === "sim") {
-    tarefasEtapa2.push(liberadoTranslado > 0, retiradaTransladoRespondida, retiradaTransladoOk, translados.length > 0);
+    tarefasEtapa2.push(translados.length > 0);
     translados.forEach(t => {
       tarefasEtapa2.push(
         !!t.arquivo,
         !!t.data,
         parseMoeda(t.valor) > 0,
-        !!t.de,
-        !!t.para
+        localTransladoPreenchido(t, "de"),
+        localTransladoPreenchido(t, "para")
       );
     });
   }
   docs.filter(d => d.obrig).forEach(d => {
-    tarefasEtapa2.push(d.id === "saque" ? saqueOk : !!(form.anexos[d.id] && form.anexos[d.id].length));
+    tarefasEtapa2.push(DOCS_COM_JUSTIFICATIVA.includes(d.id) ? docJustificavelOk(form, d.id) : !!(form.anexos[d.id] && form.anexos[d.id].length));
   });
   if (form.tipoPrestacao === "roteiro_reduzido") {
     tarefasEtapa2.push(form.precisaDevolucao === "sim" || form.precisaDevolucao === "nao");
@@ -5452,7 +5647,7 @@ function App() {
         }
         if (!window.pdfjsLib) throw new Error("Leitor de PDF indisponível");
         const bytes = dataUrlToBytes(contentDataUrl);
-        const pdfDoc = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+        const pdfDoc = await window.pdfjsLib.getDocument({ data: bytes, isEvalSupported: false }).promise;
         const paginas = [];
         for (let i = 1; i <= pdfDoc.numPages; i++) {
           const pagina = await pdfDoc.getPage(i);
@@ -5494,7 +5689,7 @@ function App() {
           if (anexosContent[t.arquivo.id]) {
             try { imgs = await obterPaginasComoImagens(t.arquivo, anexosContent[t.arquivo.id]); } catch (e) { imgs = []; }
           }
-          itens.push({ de: t.de, para: t.para, data: t.data, valor: t.valor, imagens: imgs, redigido: !!t.arquivo.redigido });
+          itens.push({ de: rotuloLocalTranslado(t, "de"), para: rotuloLocalTranslado(t, "para"), data: t.data, valor: t.valor, imagens: imgs, redigido: !!t.arquivo.redigido });
         }
         // Mais antigo primeiro — mesma ordem no relatório sintético e nas páginas físicas
         itens.sort((a, b) => (a.data || "9999") < (b.data || "9999") ? -1 : (a.data || "9999") > (b.data || "9999") ? 1 : 0);
@@ -5977,11 +6172,20 @@ function App() {
 
         // ---- As seções de texto copiáveis, em card com borda (numeração sequencial) ----
         let numeroSecao = 1;
-        desenharSecaoCard(numeroSecao++, "DESCRIÇÃO DO EVENTO", form.nomeEvento, { recuoPrimeiraLinha: false });
-        desenharSecaoCard(numeroSecao++, "OBJETIVO DA PARTICIPAÇÃO", form.motivo, { recuoPrimeiraLinha: false });
-        desenharSecaoCard(numeroSecao++, "CONCLUSÃO", form.conclusao, { recuoPrimeiraLinha: false });
-        if (String(form.infoComplementares || "").trim()) {
-          desenharSecaoCard(numeroSecao++, "INFORMAÇÕES COMPLEMENTARES", form.infoComplementares, { recuoPrimeiraLinha: false });
+        if (form.tipoPrestacao === "viagem_nao_realizada") {
+          // Viagem não realizada: a justificativa substitui as quatro seções
+          // narrativas, que não fazem sentido quando não houve deslocamento.
+          desenharSecaoCard(numeroSecao++, "JUSTIFICATIVA DA NÃO REALIZAÇÃO DA VIAGEM", form.justificativaNaoRealizada, { recuoPrimeiraLinha: false });
+          if (String(form.infoComplementares || "").trim()) {
+            desenharSecaoCard(numeroSecao++, "INFORMAÇÕES COMPLEMENTARES", form.infoComplementares, { recuoPrimeiraLinha: false });
+          }
+        } else {
+          desenharSecaoCard(numeroSecao++, "DESCRIÇÃO DO EVENTO", form.nomeEvento, { recuoPrimeiraLinha: false });
+          desenharSecaoCard(numeroSecao++, "OBJETIVO DA PARTICIPAÇÃO", form.motivo, { recuoPrimeiraLinha: false });
+          desenharSecaoCard(numeroSecao++, "CONCLUSÃO", form.conclusao, { recuoPrimeiraLinha: false });
+          if (String(form.infoComplementares || "").trim()) {
+            desenharSecaoCard(numeroSecao++, "INFORMAÇÕES COMPLEMENTARES", form.infoComplementares, { recuoPrimeiraLinha: false });
+          }
         }
 
         // ---- DOCUMENTOS ANEXADOS — mesmo card (borda cinza, título "N. NOME"), sem faixa azul ----
@@ -6368,12 +6572,12 @@ function App() {
   docs.filter(d => d.id !== "comprobatorio").forEach(d => {
     const arquivos = form.anexos[d.id] || [];
     arquivos.forEach(f => arquivosRevisao.push({ categoria: d.nome, nome: f.nome }));
-    if (d.id === "saque" && !arquivos.length && form.saqueComprovante === "nao" && form.justificativas.saque) {
+    if (DOCS_COM_JUSTIFICATIVA.includes(d.id) && !arquivos.length && respostaPossuiDoc(form, d.id) === "nao" && form.justificativas[d.id]) {
       arquivosRevisao.push({ categoria: d.nome, nome: "Justificativa registrada no sistema" });
     }
   });
   translados.forEach((t, i) => {
-    if (mostraTranslado && t.arquivo) arquivosRevisao.push({ categoria: `Comprovante de translado ${i + 1}: ${t.de || "origem"} → ${t.para || "destino"}`, nome: t.arquivo.nome });
+    if (mostraTranslado && t.arquivo) arquivosRevisao.push({ categoria: `Comprovante de translado ${i + 1}: ${rotuloLocalTranslado(t, "de") || "origem"} → ${rotuloLocalTranslado(t, "para") || "destino"}`, nome: t.arquivo.nome });
   });
   docs.filter(d => d.id === "comprobatorio").forEach(d => (form.anexos[d.id] || []).forEach(f => arquivosRevisao.push({ categoria: d.nome, nome: f.nome })));
 
@@ -6381,6 +6585,27 @@ function App() {
     const url = new URL(window.location.href);
     url.searchParams.delete("rascunho");
     window.location.href = url.toString();
+  }
+
+  async function encerrarSemPrestacaoEVoltarParaInicio() {
+    // Neste caminho não existe prestação de contas a manter. Limpamos o rascunho
+    // criado apenas para a tentativa de importação e voltamos ao painel principal.
+    if (saveTimer.current) {
+      clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+    }
+    const ids = coletarIdsAnexos(form.anexos, form.translados);
+    if (form.scvArquivo?.id) ids.push(form.scvArquivo.id);
+    try {
+      if (key) {
+        await Promise.all([
+          DraftDB.delete(key),
+          ...[...new Set(ids.filter(Boolean))].map(id => DraftDB.delete(`${key}:arquivo:${id}`))
+        ]);
+      }
+    } catch (e) { /* a navegação continua mesmo se a limpeza local falhar */ }
+    removerRascunhoDaLista(token);
+    irParaMinhasPrestacoes();
   }
 
   function salvarRascunhoLocal({ silencioso = false } = {}) {
@@ -6459,6 +6684,23 @@ function App() {
     importarSolicitacaoSCV(file);
   }
 
+  function soltarArquivoInicio(event, tipo) {
+    event.preventDefault();
+    event.stopPropagation();
+    setInicioDragTipo("");
+    const arquivos = Array.from(event.dataTransfer?.files || []);
+    if (!arquivos.length) return;
+    if (tipo === "pdf") {
+      const arquivo = arquivos.find(f => f.type === "application/pdf" || /\.pdf$/i.test(f.name));
+      if (!arquivo) { setDraftMessage("Arraste o PDF da solicitação de viagem."); return; }
+      iniciarNovaPrestacaoComArquivo({ target: { files: [arquivo], value: "" } });
+      return;
+    }
+    const arquivo = arquivos.find(f => f.type === "application/json" || /\.json$/i.test(f.name));
+    if (!arquivo) { setDraftMessage("Arraste o arquivo de rascunho .json gerado por este sistema."); return; }
+    carregarRascunhoLocal({ target: { files: [arquivo], value: "" } });
+  }
+
   const podeExibirFormularioInicial =
     (modoInicio === "nova" && !!form.dadosScvConfirmados) ||
     (modoInicio === "editar" && arquivoEdicaoCarregado);
@@ -6481,7 +6723,6 @@ function App() {
       <div className="proto-flag">
         <div className="band-inner proto-flag-inner">
           <div className="proto-left"><span className="proto-dot"></span><strong>VERSÃO PILOTO</strong><span className="proto-sep">•</span><span>Sistema de Prestação de Contas integrado à Central de Viagens em desenvolvimento</span></div>
-          <div className="proto-right"><Icon name="shield" size={15} /> Ambiente seguro</div>
         </div>
       </div>
 
@@ -6584,20 +6825,32 @@ function App() {
                   {modoInicio === null && (
                     <div className="start-choice-panel">
                       <div className="start-choice-grid">
-                        <label className="start-choice-card new">
+                        <label
+                          className={"start-choice-card new " + (inicioDragTipo === "pdf" ? "drag-active" : "")}
+                          onDragEnter={e => { e.preventDefault(); e.stopPropagation(); setInicioDragTipo("pdf"); }}
+                          onDragOver={e => { e.preventDefault(); e.stopPropagation(); setInicioDragTipo("pdf"); }}
+                          onDragLeave={e => { e.preventDefault(); e.stopPropagation(); if (!e.currentTarget.contains(e.relatedTarget)) setInicioDragTipo(""); }}
+                          onDrop={e => soltarArquivoInicio(e, "pdf")}
+                        >
                           <span className="start-choice-icon"><Icon name="doc" size={25} /></span>
                           <span className="start-choice-copy">
                             <strong>Começar nova prestação</strong>
-                            <small>Importe o PDF da solicitação de viagem do Sistema da Central de Viagens.</small>
+                            <small>Importe o PDF da solicitação de viagem do Sistema da Central de Viagens. Você pode clicar ou arrastar o arquivo aqui.</small>
                           </span>
                           <span className="start-choice-action">Começar</span>
                           <input type="file" accept=".pdf,application/pdf" className="file-input-hidden" onChange={iniciarNovaPrestacaoComArquivo} />
                         </label>
-                        <label className="start-choice-card edit">
+                        <label
+                          className={"start-choice-card edit " + (inicioDragTipo === "json" ? "drag-active" : "")}
+                          onDragEnter={e => { e.preventDefault(); e.stopPropagation(); setInicioDragTipo("json"); }}
+                          onDragOver={e => { e.preventDefault(); e.stopPropagation(); setInicioDragTipo("json"); }}
+                          onDragLeave={e => { e.preventDefault(); e.stopPropagation(); if (!e.currentTarget.contains(e.relatedTarget)) setInicioDragTipo(""); }}
+                          onDrop={e => soltarArquivoInicio(e, "json")}
+                        >
                           <span className="start-choice-icon"><Icon name="paperclip" size={24} /></span>
                           <span className="start-choice-copy">
                             <strong>Continuar ou corrigir</strong>
-                            <small>Abra o arquivo de rascunho que o sistema baixou junto com o PDF na última vez.</small>
+                            <small>Abra o arquivo de rascunho que o sistema baixou junto com o PDF na última vez. Você pode clicar ou arrastar o .json aqui.</small>
                           </span>
                           <span className="start-choice-action">Abrir arquivo</span>
                           <input type="file" accept=".json,application/json" className="file-input-hidden" onChange={carregarRascunhoLocal} />
@@ -6660,13 +6913,30 @@ function App() {
 
                   <div className={"field" + (invalidos1.has("campo-tipoPrestacao") ? " field-invalido" : "")} id="campo-tipoPrestacao" style={{ marginBottom:18 }}>
                     <label>Tipo de prestação de contas <span className="req">*</span></label>
-                    <select value={form.tipoPrestacao} onChange={e => update({ tipoPrestacao:e.target.value, precisaDevolucao:e.target.value === "roteiro_reduzido" ? "" : "nao", valorDevolucao:e.target.value === "roteiro_reduzido" ? form.valorDevolucao : "" })}>
+                    <select value={form.tipoPrestacao} onChange={e => {
+                      const novoTipo = e.target.value;
+                      const entrandoNaoRealizada = novoTipo === "viagem_nao_realizada" && form.tipoPrestacao !== "viagem_nao_realizada";
+                      update({
+                        tipoPrestacao: novoTipo,
+                        precisaDevolucao: novoTipo === "roteiro_reduzido" ? "" : "nao",
+                        valorDevolucao: novoTipo === "roteiro_reduzido" ? form.valorDevolucao : "",
+                        sacouDiaria: novoTipo === "viagem_nao_realizada" ? "" : "",
+                        valorMovimentadoDiaria: ""
+                      });
+                      if (entrandoNaoRealizada) {
+                        setScvNaoRealizada(false);
+                        setScvEtapaModal(2);
+                        setScvModal(true);
+                      }
+                    }}>
                       <option value="">Selecione</option>
                       <option value="roteiro_sem_alteracao">Roteiro sem alteração</option>
                       <option value="roteiro_reduzido">Roteiro reduzido</option>
+                      <option value="viagem_nao_realizada">Viagem não realizada</option>
                     </select>
-                    <FieldGuide show={!form.tipoPrestacao}>Viagem não realizada é tratada direto no Sistema da Central de Viagens, por isso não aparece nesta lista.</FieldGuide>
+                    <FieldGuide show={!form.tipoPrestacao}>Se a viagem não aconteceu, escolha “Viagem não realizada”. O sistema verificará se houve saque ou transferência da conta corporativa.</FieldGuide>
                     {invalidos1.has("campo-tipoPrestacao") && <div className="campo-erro-msg">Selecione uma opção.</div>}
+
                   </div>
 
                   <div className="field-row">
@@ -6699,14 +6969,14 @@ function App() {
                     <div className={"field lotacao-field" + (invalidos1.has("campo-siglaSetor") ? " field-invalido" : "")} id="campo-siglaSetor">
                       <div className="lotacao-label-row">
                         <label htmlFor="unidade-lotacao">Unidade de lotação <span className="req">*</span></label>
-                        <details className="field-help-details">
-                          <summary className="field-help-icon" aria-describedby="ajuda-unidade-lotacao" aria-label="Abrir ajuda sobre a unidade de lotação" title="Ajuda sobre a unidade de lotação">
+                        <span className="field-help-details">
+                          <button type="button" className="field-help-icon" aria-describedby="ajuda-unidade-lotacao" aria-label="Ajuda sobre a unidade de lotação">
                             <Icon name="help" size={16} />
-                          </summary>
-                          <div id="ajuda-unidade-lotacao" className="field-tooltip" role="tooltip">
+                          </button>
+                          <span id="ajuda-unidade-lotacao" className="field-tooltip" role="tooltip">
                             Escolha o caminho completo até a unidade onde você trabalha. Ex.: <b>DAFI/DEAD/DISAD</b>. Se você trabalha diretamente no DEAD, escolha <b>DAFI/DEAD</b>.
-                          </div>
-                        </details>
+                          </span>
+                        </span>
                       </div>
                       <select id="unidade-lotacao" value={form.siglaSetor} onChange={e => update({ siglaSetor: e.target.value })}>
                         <option value="">Selecione a unidade onde você trabalha</option>
@@ -6764,6 +7034,15 @@ function App() {
                     </div>
                   )}
 
+                  {viagemNaoRealizada ? (
+                    <div className={"field" + (invalidos1.has("campo-justificativaNaoRealizada") ? " field-invalido" : "")} id="campo-justificativaNaoRealizada">
+                      <label>Justificativa da não realização da viagem <span className="req">*</span></label>
+                      <CampoTexto as="textarea" value={form.justificativaNaoRealizada} onChange={v => update({ justificativaNaoRealizada: v })} placeholder="Explique o motivo pelo qual a viagem autorizada não foi realizada." style={{ minHeight: 110 }} />
+                      <div className="char-hint">{Math.min(String(form.justificativaNaoRealizada || "").trim().length, 150)}/150 caracteres mínimos{String(form.justificativaNaoRealizada || "").trim().length >= 150 ? " ✓" : ""}</div>
+                      {invalidos1.has("campo-justificativaNaoRealizada") && <div className="campo-erro-msg">Descreva o motivo da não realização com pelo menos 150 caracteres.</div>}
+                    </div>
+                  ) : (
+                  <>
                   <div className={"field" + (invalidos1.has("campo-nomeEvento") ? " field-invalido" : "")} id="campo-nomeEvento">
                     <label>Descrição do evento <span className="req">*</span></label>
                     <CampoTexto type="text" value={form.nomeEvento} onChange={v => update({ nomeEvento: v })} placeholder="Ex: Seminário de Policiamento Rodoviário" />
@@ -6788,6 +7067,8 @@ function App() {
                     <label>Informações complementares</label>
                     <CampoTexto as="textarea" value={form.infoComplementares} onChange={v => update({ infoComplementares: v })} placeholder="Se houver algo importante sobre esta viagem que ainda não foi dito acima, escreva aqui." />
                   </div>
+                  </>
+                  )}
 
                   <button type="button" className="btn btn-ghost" style={{ marginTop: 22 }} onClick={abrirPreviewPdf} disabled={previewGerando}>
                     <Icon name="doc" size={16} /> {previewGerando ? "Preparando pré-visualização..." : "Visualizar relatório técnico"}
@@ -6799,9 +7080,34 @@ function App() {
 
               {step === 2 && (
                 <div className="card">
-                  <h2 className="section-title"><span className="section-number">2</span> Transporte e comprovantes</h2>
-                  {!form.transporte && <p className="section-hint field-guidance">Confira ou selecione o meio de transporte utilizado.</p>}
+                  <h2 className="section-title"><span className="section-number">2</span> {viagemNaoRealizada ? "Devolução e comprovantes" : "Transporte e comprovantes"}</h2>
 
+                  {viagemNaoRealizadaComSaque && (
+                    <div className="translado-block">
+                      <div className="banner info" style={{ marginBottom:16 }}>
+                        <Icon name="info" size={17} />
+                        <span>Você informou que houve saque ou transferência da diária da conta corporativa. Como a viagem não foi realizada, o valor movimentado deve ser devolvido ao Estado.</span>
+                      </div>
+                      <div className="field" id="campo-valorMovimentadoDiaria" style={{ maxWidth:420, marginBottom:16 }}>
+                        <label>Valor sacado ou transferido da conta corporativa <span className="req">*</span></label>
+                        <input className="currency-input" type="text" inputMode="numeric" value={form.valorMovimentadoDiaria || ""} onChange={e => update({ valorMovimentadoDiaria:formatarMoedaDigitada(e.target.value) })} placeholder="R$ 0,00" />
+                        <FieldGuide show={!String(form.valorMovimentadoDiaria || "").trim()}>Informe o total que saiu da conta corporativa. Se houve mais de uma movimentação, some os valores.</FieldGuide>
+                      </div>
+                      <div className="bank-box">
+                        <div className="bank-box-head"><div><div className="bank-box-title">Dados bancários para devolver o valor movimentado</div><div className="bank-box-sub">Devolva ao Estado o valor sacado ou transferido e anexe o comprovante abaixo.</div></div><img className="bank-box-logo" src={BANCO_BRASIL_LOGO} alt="Banco do Brasil" /></div>
+                        <div className="bank-data"><span><b>Banco</b>{CONTA_DEVOLUCAO.codigo} ({CONTA_DEVOLUCAO.banco.toUpperCase()})</span><span><b>Agência</b>{CONTA_DEVOLUCAO.agencia}</span><span><b>Conta corrente</b>{CONTA_DEVOLUCAO.conta}</span><span><b>CNPJ</b>{CONTA_DEVOLUCAO.cnpj}</span><span style={{ gridColumn:"1 / -1" }}><b>Favorecido</b>{CONTA_DEVOLUCAO.favorecido}</span></div>
+                      </div>
+                      {renderAnexoDireto(
+                        "devolucao_nao_realizada",
+                        "Comprovante de devolução do valor sacado ou transferido",
+                        "Anexe o comprovante do depósito realizado na conta do Estado informada acima."
+                      )}
+                    </div>
+                  )}
+
+                  {!viagemNaoRealizada && !form.transporte && <p className="section-hint field-guidance">Confira ou selecione o meio de transporte utilizado.</p>}
+
+                  {!viagemNaoRealizada && (
                   <div className="transport-grid" id="campo-transporte">
                     {TRANSPORTES.map(t => (
                       <label key={t.id} className={"transport-opt " + (form.transporte === t.id ? "selected" : "")}>
@@ -6810,8 +7116,9 @@ function App() {
                       </label>
                     ))}
                   </div>
+                  )}
 
-                  {form.transporte && (
+                  {(form.transporte || viagemNaoRealizadaComSaque) && (
                     <>
 
                       {form.tipoPrestacao === "roteiro_reduzido" && (
@@ -6846,131 +7153,193 @@ function App() {
                       {mostraTranslado && (
                       <div className="translado-block" id="campo-usouTranslado">
                         <h3>Você utilizou táxi ou aplicativo de transporte durante a viagem?</h3>
-                        {!form.usouTranslado && <p className="section-hint field-guidance" style={{ marginBottom: 12 }}>Considere os deslocamentos entre aeroporto, rodoviária, hospedagem, evento, local de trabalho ou residência.</p>}
                         <div className="toggle-row">
-                          <button type="button" className={"toggle-btn " + (form.usouTranslado === "sim" ? "on" : "")} onClick={() => update({
-                            usouTranslado: "sim",
-                            translados: (form.translados || []).length ? form.translados : [{ id: uid(), data: "", valor: "", de: "", para: "", arquivo: null }]
-                          })}>Sim, utilizei</button>
-                          <button type="button" className={"toggle-btn " + (form.usouTranslado === "nao" ? "on" : "")} onClick={() => update({
-                            usouTranslado: "nao",
-                            valorTransladoLiberado: "",
-                            retiradaTransladoIntegral: "",
-                            valorTransladoRetirado: "",
-                            translados: [],
-                            anexos: { ...form.anexos, devolucao_translado: [] }
-                          })}>Não utilizei</button>
+                          <button type="button" className={"toggle-btn " + (form.usouTranslado === "sim" ? "on" : "")} onClick={() => {
+                            if (form.usouTranslado !== "sim") {
+                              excluirConteudosArquivos(coletarIdsAnexos({ devolucao_translado: form.anexos.devolucao_translado }, []));
+                            }
+                            update({
+                              usouTranslado: "sim",
+                              movimentacaoTransladoSemUso: "",
+                              retiradaTransladoIntegral: "",
+                              valorTransladoRetirado: "",
+                              translados: (form.translados || []).length ? form.translados : [{ id: uid(), data: "", valor: "", de: "", para: "", deOutro: "", paraOutro: "", arquivo: null }],
+                              anexos: { ...form.anexos, devolucao_translado: [] }
+                            });
+                          }}>Sim, utilizei</button>
+                          <button type="button" className={"toggle-btn " + (form.usouTranslado === "nao" ? "on" : "")} onClick={() => {
+                            if (form.usouTranslado !== "nao") {
+                              excluirConteudosArquivos([
+                                ...coletarIdsAnexos({ devolucao_translado: form.anexos.devolucao_translado }, []),
+                                ...coletarIdsAnexos({}, form.translados || [])
+                              ]);
+                            }
+                            update({
+                              usouTranslado: "nao",
+                              retiradaTransladoIntegral: "",
+                              movimentacaoTransladoSemUso: "",
+                              valorTransladoRetirado: "",
+                              translados: [],
+                              anexos: { ...form.anexos, devolucao_translado: [] }
+                            });
+                          }}>Não utilizei</button>
                         </div>
 
-                        {form.usouTranslado === "sim" && (
+                        {form.usouTranslado && (
                           <div>
-                            <div className="field" style={{ maxWidth: 360, marginTop: 16 }}>
-                              <label>Valor total recebido para despesas de translado <span className="req">*</span></label>
+                            <div className="field" id="campo-valorTransladoLiberado" style={{ maxWidth: 360, marginTop: 16 }}>
+                              <label>Valor total liberado para despesas de translado <span className="req">*</span></label>
                               <input className="currency-input" type="text" inputMode="numeric" value={form.valorTransladoLiberado} onChange={e => update({ valorTransladoLiberado: formatarMoedaDigitada(e.target.value) })} placeholder="R$ 0,00" />
                               <FieldGuide show={!String(form.valorTransladoLiberado || "").trim()}>Informe o valor liberado pelo Estado especificamente para táxi ou aplicativo.</FieldGuide>
                             </div>
 
-                            <div className="choice-panel" id="campo-retiradaTranslado" style={{ marginTop: 16 }}>
-                              <p className="choice-question">Você sacou ou transferiu todo o valor liberado para translado?</p>
-                              {!form.retiradaTransladoIntegral && <p className="choice-help field-guidance">O valor que permanecer na conta corporativa será recolhido automaticamente e não exigirá comprovante de devolução.</p>}
-                              <div className="toggle-row">
-                                <button type="button" className={"toggle-btn " + (form.retiradaTransladoIntegral === "sim" ? "on" : "")} onClick={() => update({ retiradaTransladoIntegral: "sim", valorTransladoRetirado: "" })}>Sim, o valor integral</button>
-                                <button type="button" className={"toggle-btn " + (form.retiradaTransladoIntegral === "nao" ? "on" : "")} onClick={() => update({ retiradaTransladoIntegral: "nao" })}>Não, apenas uma parte</button>
-                              </div>
-                              {form.retiradaTransladoIntegral === "nao" && (
-                                <div className="field" style={{ maxWidth: 420, marginTop: 14 }}>
-                                  <label>Valor efetivamente sacado ou transferido <span className="req">*</span></label>
-                                  <input className="currency-input" type="text" inputMode="numeric" value={form.valorTransladoRetirado || ""} onChange={e => update({ valorTransladoRetirado: formatarMoedaDigitada(e.target.value) })} placeholder="R$ 0,00" />
-                                  <FieldGuide show={!String(form.valorTransladoRetirado || "").trim()}>Informe somente o valor retirado da conta corporativa. O restante será considerado saldo mantido na conta.</FieldGuide>
+                            {form.usouTranslado === "sim" && (
+                              <>
+                                <div className="choice-panel" id="campo-retiradaTranslado" style={{ marginTop: 16 }}>
+                                  <p className="choice-question">Você sacou ou transferiu todo o valor liberado para translado?</p>
+                                  <div className="toggle-row">
+                                    <button type="button" className={"toggle-btn " + (form.retiradaTransladoIntegral === "sim" ? "on" : "")} onClick={() => update({ retiradaTransladoIntegral: "sim", valorTransladoRetirado: "" })}>Sim, o valor integral</button>
+                                    <button type="button" className={"toggle-btn " + (form.retiradaTransladoIntegral === "nao" ? "on" : "")} onClick={() => update({ retiradaTransladoIntegral: "nao" })}>Não, apenas uma parte</button>
+                                  </div>
+                                  {form.retiradaTransladoIntegral === "nao" && (
+                                    <div className="field" style={{ maxWidth: 420, marginTop: 14 }}>
+                                      <label>Valor efetivamente sacado ou transferido <span className="req">*</span></label>
+                                      <input className="currency-input" type="text" inputMode="numeric" value={form.valorTransladoRetirado || ""} onChange={e => update({ valorTransladoRetirado: formatarMoedaDigitada(e.target.value) })} placeholder="R$ 0,00" />
+                                    </div>
+                                  )}
+                                  {retiradaAcimaLiberado && <div className="banner error" style={{ marginTop: 12, marginBottom: 0 }}><Icon name="alert" size={16} /><span>O valor sacado ou transferido não pode ser maior que o valor liberado pelo Estado.</span></div>}
+                                  {despesasAcimaRetirado && !retiradaAcimaLiberado && <div key={`aviso-despesas-${valorRetiradoTranslado}-${totalGastoTranslado}`} className="banner warn aviso-temporario" role="status" aria-live="polite" style={{ marginTop: 12, marginBottom: 0 }}><Icon name="alert" size={16} /><span>As despesas comprovadas ultrapassam o valor informado como sacado ou transferido. Confira os valores antes de continuar.</span></div>}
                                 </div>
-                              )}
-                              {retiradaAcimaLiberado && <div className="banner error" style={{ marginTop: 12, marginBottom: 0 }}><Icon name="alert" size={16} /><span>O valor sacado ou transferido não pode ser maior que o valor liberado pelo Estado.</span></div>}
-                              {despesasAcimaRetirado && !retiradaAcimaLiberado && <div key={`aviso-despesas-${valorRetiradoTranslado}-${totalGastoTranslado}`} className="banner warn aviso-temporario" role="status" aria-live="polite" style={{ marginTop: 12, marginBottom: 0 }}><Icon name="alert" size={16} /><span>As despesas comprovadas ultrapassam o valor informado como sacado ou transferido. Confira os valores antes de continuar.</span></div>}
-                            </div>
 
-                            {translados.map((t, index) => {
-                              const camposBloqueados = !t.arquivo;
-                              return (
-                              <div className="translado-item" key={t.id}>
-                                <div className="translado-item-layout">
-                                  <div className="translado-preview-col">
-                                    <div className="subsection-label" style={{ marginTop: 0 }}>1. Anexe o comprovante de translado {index + 1}</div>
-                                    {!t.arquivo ? (
-                                      <>
-                                        <label className="file-btn" style={{ marginTop: 0 }}>Anexar comprovante <span className="req">*</span><input type="file" accept=".pdf,.jpg,.jpeg,.png" className="file-input-hidden" onChange={e => { if (e.target.files[0]) attachTransladoFile(t.id, e.target.files[0]); e.target.value = ""; }} /></label>
-                                        <div className="translado-order-hint">Boa prática: anexe primeiro o comprovante, confira a imagem e depois preencha os dados correspondentes.</div>
-                                        {translados.length > 1 && <button type="button" className="translado-action translado-action-delete" style={{ marginTop: 8 }} onClick={() => removeTransladoItem(t.id)}><Icon name="trash" size={15} /> Excluir este registro</button>}
-                                      </>
-                                    ) : (
-                                      <>
-                                        <div className="translado-preview-box">{renderTransladoPreview(t.arquivo)}</div>
-                                        <div className="translado-file-actions">
-                                          {!t.arquivo.redigido && <button type="button" className="translado-action translado-action-redact" onClick={() => openRedactForTranslado(t.id)}><Icon name="shield" size={15} /> Ocultar dados pessoais</button>}
-                                          <button type="button" className="translado-action translado-action-delete" onClick={() => removeTransladoItem(t.id)}><Icon name="trash" size={15} /> Excluir este registro</button>
+                                {translados.map((t, index) => {
+                                  const camposBloqueados = !t.arquivo;
+                                  return (
+                                  <div className="translado-item" key={t.id}>
+                                    <div className="translado-item-layout">
+                                      <div className="translado-preview-col">
+                                        <div className="subsection-label" style={{ marginTop: 0 }}>1. Anexe o comprovante de translado {index + 1}</div>
+                                        {!t.arquivo ? (
+                                          <>
+                                            <label className="file-btn" style={{ marginTop: 0 }}>Anexar comprovante <span className="req">*</span><input type="file" accept=".pdf,.jpg,.jpeg,.png" className="file-input-hidden" onChange={e => { if (e.target.files[0]) attachTransladoFile(t.id, e.target.files[0]); e.target.value = ""; }} /></label>
+                                            <div className="translado-order-hint">Boa prática: anexe primeiro o comprovante, confira a imagem e depois preencha os dados correspondentes.</div>
+                                            {translados.length > 1 && <button type="button" className="translado-action translado-action-delete" style={{ marginTop: 8 }} onClick={() => removeTransladoItem(t.id)}><Icon name="trash" size={15} /> Excluir este registro</button>}
+                                          </>
+                                        ) : (
+                                          <>
+                                            <div className="translado-preview-box">{renderTransladoPreview(t.arquivo)}</div>
+                                            <div className="translado-file-actions">
+                                              {!t.arquivo.redigido && <button type="button" className="translado-action translado-action-redact" onClick={() => openRedactForTranslado(t.id)}><Icon name="shield" size={15} /> Ocultar dados pessoais</button>}
+                                              <button type="button" className="translado-action translado-action-delete" onClick={() => removeTransladoItem(t.id)}><Icon name="trash" size={15} /> Excluir este registro</button>
+                                            </div>
+                                          </>
+                                        )}
+                                      </div>
+                                      <div className="translado-fields-col">
+                                        <div className="subsection-label" style={{ marginTop: 0 }}>2. Preencha as informações deste comprovante</div>
+                                        {camposBloqueados && <div className="banner warn" style={{ marginTop: 0 }}><Icon name="alert" size={16} /><span>Anexe primeiro o comprovante correspondente. Depois, informe a data, o valor, a origem e o destino.</span></div>}
+                                        <div className="translado-row">
+                                          <div className="field">
+                                            <label>Data do comprovante <span className="req">*</span></label>
+                                            <input type="date" disabled={camposBloqueados} value={t.data || ""} onChange={e => updateTranslado(t.id, { data: e.target.value })} />
+                                          </div>
+                                          <div className="field">
+                                            <label>Valor do comprovante <span className="req">*</span></label>
+                                            <input className="currency-input" type="text" disabled={camposBloqueados} inputMode="numeric" value={t.valor || ""} onChange={e => updateTranslado(t.id, { valor: formatarMoedaDigitada(e.target.value) })} placeholder="R$ 0,00" />
+                                          </div>
                                         </div>
-                                      </>
-                                    )}
-                                  </div>
-                                  <div className="translado-fields-col">
-                                    <div className="subsection-label" style={{ marginTop: 0 }}>2. Preencha as informações deste comprovante</div>
-                                    {camposBloqueados && <div className="banner warn" style={{ marginTop: 0 }}><Icon name="alert" size={16} /><span>Anexe primeiro o comprovante correspondente. Depois, informe a data, o valor, a origem e o destino.</span></div>}
-                                    <div className="translado-row">
-                                      <div className="field">
-                                        <label>Data do comprovante <span className="req">*</span></label>
-                                        <input type="date" disabled={camposBloqueados} value={t.data || ""} onChange={e => updateTranslado(t.id, { data: e.target.value })} />
-                                      </div>
-                                      <div className="field">
-                                        <label>Valor do comprovante <span className="req">*</span></label>
-                                        <input className="currency-input" type="text" disabled={camposBloqueados} inputMode="numeric" value={t.valor || ""} onChange={e => updateTranslado(t.id, { valor: formatarMoedaDigitada(e.target.value) })} placeholder="R$ 0,00" />
+                                        <div className="translado-row" style={{ marginTop: 14 }}>
+                                          <div className="field">
+                                            <label>Origem do deslocamento (de) <span className="req">*</span></label>
+                                            <select disabled={camposBloqueados} value={t.de} onChange={e => selecionarLocalTranslado(t.id, "de", e.target.value)}>
+                                              <option value="">Selecione a origem</option>
+                                              {LOCAL_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                                            </select>
+                                          </div>
+                                          <div className="field">
+                                            <label>Destino do deslocamento (para) <span className="req">*</span></label>
+                                            <select disabled={camposBloqueados} value={t.para} onChange={e => selecionarLocalTranslado(t.id, "para", e.target.value)}>
+                                              <option value="">Selecione o destino</option>
+                                              {LOCAL_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                                            </select>
+                                          </div>
+                                        </div>
+                                        {(t.de === "Outro local" || t.para === "Outro local") && (
+                                          <div className="translado-row" style={{ marginTop: 10 }}>
+                                            {t.de === "Outro local" ? (
+                                              <div className="field">
+                                                <label>Informe a origem <span className="req">*</span></label>
+                                                <input type="text" disabled={camposBloqueados} value={t.deOutro || ""} onChange={e => updateTranslado(t.id, { deOutro: e.target.value })} placeholder="Ex.: Secretaria de Estado, sede da empresa, outro endereço" />
+                                              </div>
+                                            ) : <div style={{ flex: 1 }} />}
+                                            {t.para === "Outro local" ? (
+                                              <div className="field">
+                                                <label>Informe o destino <span className="req">*</span></label>
+                                                <input type="text" disabled={camposBloqueados} value={t.paraOutro || ""} onChange={e => updateTranslado(t.id, { paraOutro: e.target.value })} placeholder="Ex.: Secretaria de Estado, sede da empresa, outro endereço" />
+                                              </div>
+                                            ) : <div style={{ flex: 1 }} />}
+                                          </div>
+                                        )}
+                                        <FieldGuide show={!localTransladoPreenchido(t, "de") || !localTransladoPreenchido(t, "para")} className="translado-local-guide">Selecione a origem e o destino do deslocamento. Se escolher <b>Residência</b>, a tela para ocultar o endereço abrirá automaticamente. Se escolher <b>Outro local</b>, identifique o local no campo exibido.</FieldGuide>
                                       </div>
                                     </div>
-                                    <div className="translado-row" style={{ marginTop: 14 }}>
-                                      <div className="field">
-                                        <label>Origem do deslocamento (de) <span className="req">*</span></label>
-                                        <select disabled={camposBloqueados} value={t.de} onChange={e => selecionarLocalTranslado(t.id, "de", e.target.value)}>
-                                          <option value="">Selecione a origem</option>
-                                          {LOCAL_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
-                                        </select>
-                                      </div>
-                                      <div className="field">
-                                        <label>Destino do deslocamento (para) <span className="req">*</span></label>
-                                        <select disabled={camposBloqueados} value={t.para} onChange={e => selecionarLocalTranslado(t.id, "para", e.target.value)}>
-                                          <option value="">Selecione o destino</option>
-                                          {LOCAL_OPTIONS.filter(o => o !== t.de).map(o => <option key={o} value={o}>{o}</option>)}
-                                        </select>
-                                      </div>
-                                    </div>
-                                    <FieldGuide show={!t.de || !t.para} className="translado-local-guide">Se você escolher <b>Residência</b> em De ou Para, a tela para ocultar o endereço abrirá automaticamente.</FieldGuide>
+                                    {fileWarnings[t.id] && <div className="banner warn" style={{ marginTop: 10, marginBottom: 0 }}><Icon name="alert" size={16} /><span>{fileWarnings[t.id]}</span></div>}
                                   </div>
-                                </div>
-                                {fileWarnings[t.id] && <div className="banner warn" style={{ marginTop: 10, marginBottom: 0 }}><Icon name="alert" size={16} /><span>{fileWarnings[t.id]}</span></div>}
-                              </div>
-                            )})}
-                            <button type="button" className="file-btn plus" style={{ marginTop: 12 }} onClick={addTransladoItem}>+ Adicionar comprovante de translado</button>
+                                )})}
+                                <button type="button" className="file-btn plus" style={{ marginTop: 12 }} onClick={addTransladoItem}>+ Adicionar comprovante de translado</button>
+                              </>
+                            )}
 
-                            {saldoTranslado !== null && form.valorTransladoLiberado && (
+                            {form.usouTranslado === "nao" && (
+                              <div className="choice-panel" id="campo-retiradaTranslado" style={{ marginTop: 16 }}>
+                                <p className="choice-question">Você sacou ou transferiu algum valor destinado ao translado da conta corporativa?</p>
+                                <div className="toggle-row" style={{ flexWrap: "wrap" }}>
+                                  <button type="button" className={"toggle-btn " + (form.movimentacaoTransladoSemUso === "nenhum" ? "on" : "")} onClick={() => {
+                                    excluirConteudosArquivos(coletarIdsAnexos({ devolucao_translado: form.anexos.devolucao_translado }, []));
+                                    update({ movimentacaoTransladoSemUso: "nenhum", valorTransladoRetirado: "", anexos: { ...form.anexos, devolucao_translado: [] } });
+                                  }}>Não, o valor ficou na conta</button>
+                                  <button type="button" className={"toggle-btn " + (form.movimentacaoTransladoSemUso === "parcial" ? "on" : "")} onClick={() => {
+                                    if (form.movimentacaoTransladoSemUso !== "parcial") {
+                                      excluirConteudosArquivos(coletarIdsAnexos({ devolucao_translado: form.anexos.devolucao_translado }, []));
+                                    }
+                                    update({ movimentacaoTransladoSemUso: "parcial", anexos: { ...form.anexos, devolucao_translado: form.movimentacaoTransladoSemUso === "parcial" ? form.anexos.devolucao_translado : [] } });
+                                  }}>Sim, apenas uma parte</button>
+                                  <button type="button" className={"toggle-btn " + (form.movimentacaoTransladoSemUso === "integral" ? "on" : "")} onClick={() => {
+                                    if (form.movimentacaoTransladoSemUso !== "integral") {
+                                      excluirConteudosArquivos(coletarIdsAnexos({ devolucao_translado: form.anexos.devolucao_translado }, []));
+                                    }
+                                    update({ movimentacaoTransladoSemUso: "integral", valorTransladoRetirado: "", anexos: { ...form.anexos, devolucao_translado: form.movimentacaoTransladoSemUso === "integral" ? form.anexos.devolucao_translado : [] } });
+                                  }}>Sim, o valor integral</button>
+                                </div>
+                                {form.movimentacaoTransladoSemUso === "parcial" && (
+                                  <div className="field" style={{ maxWidth: 420, marginTop: 14 }}>
+                                    <label>Valor efetivamente sacado ou transferido <span className="req">*</span></label>
+                                    <input className="currency-input" type="text" inputMode="numeric" value={form.valorTransladoRetirado || ""} onChange={e => update({ valorTransladoRetirado: formatarMoedaDigitada(e.target.value) })} placeholder="R$ 0,00" />
+                                  </div>
+                                )}
+                                {retiradaAcimaLiberado && <div className="banner error" style={{ marginTop: 12, marginBottom: 0 }}><Icon name="alert" size={16} /><span>O valor sacado ou transferido não pode ser maior que o valor liberado pelo Estado.</span></div>}
+                              </div>
+                            )}
+
+                            {saldoTranslado !== null && form.valorTransladoLiberado && retiradaTransladoRespondida && (
                               <div className="balance-card">
                                 <div className="balance-grid translado-resumo">
                                   <div className="balance-metric"><span className="balance-label">Valor liberado</span><span className="balance-value">{moedaBR(liberadoTranslado)}</span></div>
                                   <div className="balance-metric"><span className="balance-label">Sacado ou transferido</span><span className="balance-value">{moedaBR(valorRetiradoTranslado)}</span></div>
-                                  <div className="balance-metric"><span className="balance-label">Despesas comprovadas</span><span className="balance-value">{moedaBR(totalGastoTranslado)}</span></div>
+                                  {form.usouTranslado === "sim" && <div className="balance-metric"><span className="balance-label">Despesas comprovadas</span><span className="balance-value">{moedaBR(totalGastoTranslado)}</span></div>}
                                   <div className="balance-metric"><span className="balance-label">Valor a devolver pelo viajante</span><span className="balance-value">{moedaBR(saldoTranslado)}</span></div>
                                 </div>
-                                {valorPermanecidoConta > 0.009 && (
-                                  <div className="balance-note ok"><Icon name="check" size={18} /><span><b>{moedaBR(valorPermanecidoConta)}</b> permaneceram na conta corporativa e serão recolhidos automaticamente. Não é necessário anexar comprovante de devolução desse valor.</span></div>
-                                )}
                                 {retiradaAcimaLiberado ? (
                                   <div className="balance-note over"><Icon name="alert" size={18} /><span>O valor informado como sacado ou transferido é maior que o valor liberado. Corrija os valores antes de continuar.</span></div>
                                 ) : despesasAcimaRetirado ? (
                                   <div className="balance-note over"><Icon name="alert" size={18} /><span>As despesas comprovadas ultrapassam o valor sacado ou transferido em <b>{moedaBR(totalGastoTranslado - valorRetiradoTranslado)}</b>. Confira os comprovantes e o valor informado.</span></div>
                                 ) : saldoTranslado > 0.009 ? (
                                   <>
-                                    <div className="balance-note return"><Icon name="alert" size={18} /><span>Você sacou ou transferiu <b>{moedaBR(valorRetiradoTranslado)}</b> e comprovou despesas de <b>{moedaBR(totalGastoTranslado)}</b>. Portanto, deverá devolver <b>{moedaBR(saldoTranslado)}</b> ao Estado e anexar o comprovante do depósito no campo indicado abaixo.</span></div>
+                                    <div className="balance-note return"><Icon name="alert" size={18} /><span>{form.usouTranslado === "nao" ? <>Como não houve despesa de translado, o valor sacado ou transferido de <b>{moedaBR(valorRetiradoTranslado)}</b> deverá ser devolvido ao Estado.</> : <>Você sacou ou transferiu <b>{moedaBR(valorRetiradoTranslado)}</b> e comprovou despesas de <b>{moedaBR(totalGastoTranslado)}</b>. Portanto, deverá devolver <b>{moedaBR(saldoTranslado)}</b> ao Estado.</>}</span></div>
                                     <div className="bank-box">
                                       <div className="bank-box-head">
                                         <div>
-                                          <div className="bank-box-title">Dados bancários para devolver o saldo retirado e não utilizado</div>
-                                          <div className="bank-box-sub">Utilize os dados abaixo para realizar o depósito e depois anexe o comprovante.</div>
+                                          <div className="bank-box-title">Dados bancários para devolução do valor não utilizado</div>
+                                          <div className="bank-box-sub">Realize o depósito e anexe o comprovante logo abaixo.</div>
                                         </div>
                                         <img className="bank-box-logo" src={BANCO_BRASIL_LOGO} alt="Banco do Brasil" />
                                       </div>
@@ -6981,7 +7350,6 @@ function App() {
                                         <span><b>CNPJ</b>{CONTA_DEVOLUCAO.cnpj}</span>
                                         <span style={{ gridColumn: "1 / -1" }}><b>Favorecido</b>{CONTA_DEVOLUCAO.favorecido}</span>
                                       </div>
-                                      <div className="bank-highlight">Guarde o comprovante do depósito. Você irá anexá-lo logo abaixo e, depois disso, poderá inserir os demais comprovantes da viagem.</div>
                                     </div>
                                     {renderAnexoDireto(
                                       "devolucao_translado",
@@ -6990,7 +7358,7 @@ function App() {
                                     )}
                                   </>
                                 ) : (
-                                  <div className="balance-note ok"><Icon name="check" size={18} /><span>As despesas comprovadas correspondem ao valor sacado ou transferido. Não há valor a devolver pelo viajante.</span></div>
+                                  <div className="balance-note ok"><Icon name="check" size={18} /><span>{form.usouTranslado === "nao" ? "Nenhum valor foi sacado ou transferido para translado. Não há valor a devolver pelo viajante." : "As despesas comprovadas correspondem ao valor sacado ou transferido. Não há valor a devolver pelo viajante."}</span></div>
                                 )}
                               </div>
                             )}
@@ -7000,11 +7368,12 @@ function App() {
                       )}
                       <div className="doc-list">
                         <h2 className="section-title" style={{ fontSize: 18 }}><Icon name="paperclip" size={19} /> Demais documentos e comprovantes</h2>
-                        {docs.filter(d => !["devolucao_translado", "devolucao_roteiro"].includes(d.id)).map(d => {
+                        {docs.filter(d => !["devolucao_translado", "devolucao_roteiro", "devolucao_nao_realizada"].includes(d.id)).map(d => {
                           const arquivos = form.anexos[d.id] || [];
                           const atendido = d.id === "saque" ? saqueOk : (arquivos.length > 0 || !d.obrig);
-                          const statusTexto = d.id === "saque" && form.saqueComprovante === "nao" && saqueOk ? "✓ justificado" : arquivos.length ? "✓ anexado" : "";
-                          const statusClass = d.id === "saque" && form.saqueComprovante === "nao" && saqueOk ? "justified" : arquivos.length ? "ok" : "neutral";
+                          const justificadoAqui = DOCS_COM_JUSTIFICATIVA.includes(d.id) && respostaPossuiDoc(form, d.id) === "nao" && docJustificavelOk(form, d.id);
+                          const statusTexto = justificadoAqui ? "✓ justificado" : arquivos.length ? "✓ anexado" : "";
+                          const statusClass = justificadoAqui ? "justified" : arquivos.length ? "ok" : "neutral";
                           return (
                             <div className={"doc-item-block " + (atendido ? "doc-done" : "")} id={"doc-" + d.id} key={d.id}>
                               <div className="doc-item-head">
@@ -7016,28 +7385,28 @@ function App() {
                                 {statusTexto && <div className={"doc-status " + statusClass}>{statusTexto}</div>}
                               </div>
 
-                              {d.id === "saque" && arquivos.length === 0 && (
+                              {DOCS_COM_JUSTIFICATIVA.includes(d.id) && arquivos.length === 0 && (
                                 <div className="choice-panel">
-                                  <p className="choice-question">Você possui o comprovante de saque ou transferência?</p>
-                                  {!form.saqueComprovante && <p className="choice-help field-guidance">Escolha uma opção. Caso não possua o comprovante, informe a justificativa diretamente no sistema.</p>}
+                                  <p className="choice-question">{PERGUNTA_POSSUI_DOC[d.id]}</p>
+                                  {!respostaPossuiDoc(form, d.id) && <p className="choice-help field-guidance">Escolha uma opção. Caso não possua o documento, informe a justificativa diretamente no sistema.</p>}
                                   <div className="toggle-row">
-                                    <button type="button" className={"toggle-btn " + (form.saqueComprovante === "sim" ? "on" : "")} onClick={() => {
-                                      if (form.saqueComprovante !== "sim") {
-                                        if (String(form.justificativas.saque || "").trim() && !window.confirm("Isso vai apagar a justificativa escrita para o comprovante de saque. Deseja continuar?")) return;
-                                        update({ saqueComprovante: "sim", justificativas: { ...form.justificativas, saque: "" } });
+                                    <button type="button" className={"toggle-btn " + (respostaPossuiDoc(form, d.id) === "sim" ? "on" : "")} onClick={() => {
+                                      if (respostaPossuiDoc(form, d.id) !== "sim") {
+                                        if (String(form.justificativas[d.id] || "").trim() && !window.confirm("Isso vai apagar a justificativa escrita para este documento. Deseja continuar?")) return;
+                                        update({ ...patchRespostaPossuiDoc(form, d.id, "sim"), justificativas: { ...form.justificativas, [d.id]: "" } });
                                       }
-                                      setTimeout(() => saqueFileInputRef.current && saqueFileInputRef.current.click(), 80);
+                                      setTimeout(() => { const campo = docFileInputRefs.current[d.id]; if (campo) campo.click(); }, 80);
                                     }}>Sim, vou anexar</button>
-                                    <button type="button" className={"toggle-btn " + (form.saqueComprovante === "nao" ? "on" : "")} onClick={() => {
-                                      const arquivosSaque = form.anexos.saque || [];
-                                      if (arquivosSaque.length && !window.confirm("Isso vai excluir o arquivo já anexado do comprovante de saque. Deseja continuar?")) return;
-                                      update({ saqueComprovante: "nao", anexos: { ...form.anexos, saque: [] } });
+                                    <button type="button" className={"toggle-btn " + (respostaPossuiDoc(form, d.id) === "nao" ? "on" : "")} onClick={() => {
+                                      const jaAnexados = form.anexos[d.id] || [];
+                                      if (jaAnexados.length && !window.confirm("Isso vai excluir o arquivo já anexado deste documento. Deseja continuar?")) return;
+                                      update({ ...patchRespostaPossuiDoc(form, d.id, "nao"), anexos: { ...form.anexos, [d.id]: [] } });
                                     }}>Não possuo</button>
                                   </div>
-                                  {form.saqueComprovante === "nao" && (
+                                  {respostaPossuiDoc(form, d.id) === "nao" && (
                                     <div className="field" style={{ marginTop: 14 }}>
-                                      <label>Justificativa pela ausência do comprovante <span className="req">*</span></label>
-                                      <textarea value={form.justificativas.saque || ""} onChange={e => update({ justificativas: { ...form.justificativas, saque: e.target.value } })} placeholder="Explique de forma objetiva por que o comprovante não está disponível." />
+                                      <label>Justificativa pela ausência do documento <span className="req">*</span></label>
+                                      <textarea value={form.justificativas[d.id] || ""} onChange={e => update({ justificativas: { ...form.justificativas, [d.id]: e.target.value } })} placeholder="Explique de forma objetiva por que o documento não está disponível." />
                                     </div>
                                   )}
                                 </div>
@@ -7055,10 +7424,10 @@ function App() {
                                 </ul>
                               )}
 
-                              {(d.id !== "saque" || form.saqueComprovante === "sim") && (
+                              {(!DOCS_COM_JUSTIFICATIVA.includes(d.id) || respostaPossuiDoc(form, d.id) === "sim") && (
                                 <label className={"file-btn " + (arquivos.length ? "plus" : "")}>
                                   <Icon name="paperclip" size={16} /> {arquivos.length ? "Adicionar outro arquivo" : "Anexar arquivo"}
-                                  <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png" className="file-input-hidden" ref={d.id === "saque" ? saqueFileInputRef : undefined} onChange={e => { attachFiles(d.id, e.target.files); e.target.value = ""; }} />
+                                  <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png" className="file-input-hidden" ref={el => { if (DOCS_COM_JUSTIFICATIVA.includes(d.id)) docFileInputRefs.current[d.id] = el; }} onChange={e => { attachFiles(d.id, e.target.files); e.target.value = ""; }} />
                                 </label>
                               )}
                               {fileWarnings[d.id] && <div className="banner warn" style={{ marginTop: 10, marginBottom: 0 }}><Icon name="alert" size={16} /><span>{fileWarnings[d.id]}</span></div>}
@@ -7085,9 +7454,10 @@ function App() {
                       <div><dt>Destino</dt><dd>{form.destino || "—"}</dd></div>
                       <div><dt>Saída</dt><dd>{formatDateBR(form.dataSaida) || "—"}</dd></div>
                       <div><dt>Retorno</dt><dd>{formatDateBR(form.dataRetorno) || "—"}</dd></div>
-                      <div><dt>Meio de transporte</dt><dd>{TRANSPORTES.find(t => t.id === form.transporte)?.label || "—"}</dd></div>
-                      <div><dt>Tipo de prestação de contas</dt><dd>{form.tipoPrestacao === "roteiro_reduzido" ? "Roteiro reduzido" : form.tipoPrestacao === "roteiro_sem_alteracao" ? "Roteiro sem alteração" : "—"}</dd></div>
-                      {form.usouTranslado === "sim" && <div style={{ gridColumn: "1 / -1" }}><dt>Resumo do translado</dt><dd>Liberado: {moedaBR(liberadoTranslado)} · Sacado/transferido: {moedaBR(valorRetiradoTranslado)} · Comprovado: {moedaBR(totalGastoTranslado)} · Permaneceu na conta: {moedaBR(valorPermanecidoConta || 0)}{precisaDevolucaoTranslado ? ` · A devolver pelo viajante: ${moedaBR(saldoTranslado)}` : " · Sem valor a devolver pelo viajante"}</dd></div>}
+                      {!viagemNaoRealizada && <div><dt>Meio de transporte</dt><dd>{TRANSPORTES.find(t => t.id === form.transporte)?.label || "—"}</dd></div>}
+                      <div><dt>Tipo de prestação de contas</dt><dd>{form.tipoPrestacao === "roteiro_reduzido" ? "Roteiro reduzido" : form.tipoPrestacao === "roteiro_sem_alteracao" ? "Roteiro sem alteração" : form.tipoPrestacao === "viagem_nao_realizada" ? "Viagem não realizada" : "—"}</dd></div>
+                      {viagemNaoRealizada && <div><dt>Movimentação da diária</dt><dd>{form.sacouDiaria === "sim" ? `Houve saque/transferência — valor informado: ${form.valorMovimentadoDiaria || "—"}` : form.sacouDiaria === "nao" ? "Sem saque ou transferência" : "—"}</dd></div>}
+                      {form.usouTranslado && <div style={{ gridColumn: "1 / -1" }}><dt>Resumo do translado</dt><dd>{form.usouTranslado === "sim" ? "Utilizado" : "Não utilizado"} · Liberado: {moedaBR(liberadoTranslado)} · Sacado/transferido: {moedaBR(valorRetiradoTranslado)}{form.usouTranslado === "sim" ? ` · Comprovado: ${moedaBR(totalGastoTranslado)}` : ""}{precisaDevolucaoTranslado ? ` · A devolver pelo viajante: ${moedaBR(saldoTranslado)}` : " · Sem valor a devolver pelo viajante"}</dd></div>}
                       {form.precisaDevolucao === "sim" && <div><dt>Devolução de diária — roteiro reduzido</dt><dd>{form.valorDevolucao || "—"}</dd></div>}
                     </div>
                   </div>
@@ -7149,6 +7519,10 @@ function App() {
                         <li>Assine eletronicamente — no <b>e-Protocolo</b> (se você é servidor) ou no <b>gov.br</b> (se é colaborador eventual).</li>
                         <li>Encaminhe o PDF assinado ao solicitante da viagem, para lançamento no Sistema da Central de Viagens.</li>
                       </ol>
+                      <div className="external-actions">
+                        <a className="btn btn-ghost" href={LINK_EPROTOCOLO} target="_blank" rel="noopener noreferrer">Abrir e-Protocolo</a>
+                        <a className="btn btn-ghost" href={LINK_GOVBR_ASSINATURA} target="_blank" rel="noopener noreferrer">Abrir assinatura gov.br</a>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -7210,17 +7584,26 @@ function App() {
             </div>
 
             <aside className="sidebar compact-help">
-              <details className="help-details">
-                <summary className="help-trigger" title="Ajuda nesta etapa" aria-label="Abrir ajuda desta etapa">
+              <div
+                className={"help-details" + (ajudaEtapaAberta ? " aberta" : "")}
+                onMouseEnter={() => setAjudaEtapaAberta(true)}
+                onMouseLeave={() => setAjudaEtapaAberta(false)}
+              >
+                <button
+                  type="button"
+                  className="help-trigger"
+                  aria-expanded={ajudaEtapaAberta}
+                  aria-label="Ajuda nesta etapa"
+                >
                   <Icon name="help" size={20} />
-                </summary>
+                </button>
                 <div className="help-popover side-card">
                   <h3><Icon name="help" size={17} /> Ajuda nesta etapa</h3>
                   {step === 1 && <ul><li>Se o PDF não carregar direito, você pode preencher os dados manualmente.</li><li>Qualquer campo pode ser corrigido, mesmo depois de importado.</li><li>Use “Visualizar relatório técnico” para ver como o PDF final vai ficar.</li></ul>}
-                  {step === 2 && <ul><li>Só aparecem os documentos que se aplicam ao seu caso.</li><li>Sem o comprovante de saque? Escolha “Não possuo” e escreva o motivo.</li><li>Anexou o arquivo errado? Clique em “Excluir arquivo” e anexe de novo.</li></ul>}
+                  {step === 2 && <ul><li>Só aparecem os documentos que se aplicam ao seu caso.</li>{viagemNaoRealizada && <li>Em viagem não realizada, informe o valor que saiu da conta corporativa e devolva esse valor ao Estado.</li>}<li>Sem o comprovante de saque/transferência? Escolha “Não possuo” e escreva o motivo.</li><li>Anexou o arquivo errado? Clique em “Excluir arquivo” e anexe de novo.</li></ul>}
                   {step === 3 && <ul><li>A conferência é feita item por item, sem pressa.</li><li>Depois de gerar o PDF, ainda dá para corrigir usando o arquivo de rascunho baixado.</li></ul>}
                 </div>
-              </details>
+              </div>
             </aside>
           </div>
             </div>
@@ -7281,11 +7664,33 @@ function App() {
                 <>
                   <p className="section-hint" style={{ marginTop:0 }}>Esta escolha define o fluxo da prestação de contas.</p>
                   <div className="scv-type-grid">
-                    <button type="button" className={"scv-type-card " + (form.tipoPrestacao === "roteiro_sem_alteracao" ? "selected" : "")} onClick={() => { update({ tipoPrestacao:"roteiro_sem_alteracao", precisaDevolucao:"nao", valorDevolucao:"" }); setScvNaoRealizada(false); }}><strong>Roteiro sem alteração</strong><span>A viagem aconteceu conforme o período e o roteiro autorizados.</span></button>
-                    <button type="button" className={"scv-type-card " + (form.tipoPrestacao === "roteiro_reduzido" ? "selected" : "")} onClick={() => { update({ tipoPrestacao:"roteiro_reduzido", precisaDevolucao:"" }); setScvNaoRealizada(false); }}><strong>Roteiro reduzido</strong><span>O viajante retornou antes ou realizou período menor que o autorizado.</span></button>
-                    <button type="button" className="scv-type-card disabled" onClick={() => setScvNaoRealizada(true)}><strong>Viagem não realizada</strong><span>Não utiliza este relatório. A justificativa deve ser registrada no sistema oficial da Central de Viagens.</span></button>
+                    <button type="button" className={"scv-type-card " + (form.tipoPrestacao === "roteiro_sem_alteracao" ? "selected" : "")} onClick={() => { update({ tipoPrestacao:"roteiro_sem_alteracao", precisaDevolucao:"nao", valorDevolucao:"", sacouDiaria:"", valorMovimentadoDiaria:"" }); setScvNaoRealizada(false); }}><strong>Roteiro sem alteração</strong><span>A viagem aconteceu conforme o período e o roteiro autorizados.</span></button>
+                    <button type="button" className={"scv-type-card " + (form.tipoPrestacao === "roteiro_reduzido" ? "selected" : "")} onClick={() => { update({ tipoPrestacao:"roteiro_reduzido", precisaDevolucao:"", sacouDiaria:"", valorMovimentadoDiaria:"" }); setScvNaoRealizada(false); }}><strong>Roteiro reduzido</strong><span>O viajante retornou antes ou realizou período menor que o autorizado.</span></button>
+                    <button type="button" className={"scv-type-card " + (form.tipoPrestacao === "viagem_nao_realizada" ? "selected" : "")} onClick={() => { update({ tipoPrestacao:"viagem_nao_realizada", precisaDevolucao:"nao", valorDevolucao:"", sacouDiaria:"", valorMovimentadoDiaria:"" }); setScvNaoRealizada(false); }}><strong>Viagem não realizada</strong><span>A viagem autorizada não aconteceu. O sistema verificará se houve saque ou transferência da diária da conta corporativa.</span></button>
                   </div>
-                  {scvNaoRealizada && <div className="banner warn" style={{ marginTop:14 }}><Icon name="alert" size={17}/><span>Feche esta janela e continue diretamente no Sistema da Central de Viagens.</span></div>}
+
+                  {form.tipoPrestacao === "viagem_nao_realizada" && (
+                    <div className="choice-panel" style={{ marginTop: 16 }}>
+                      <p className="choice-question">Você sacou ou transferiu algum valor da diária da conta corporativa?</p>
+                      {!form.sacouDiaria && <p className="choice-help field-guidance">Responda antes de continuar. Esta escolha define se haverá prestação de contas neste sistema.</p>}
+                      <div className="toggle-row">
+                        <button type="button" className={"toggle-btn " + (form.sacouDiaria === "sim" ? "on" : "")} onClick={() => update({ sacouDiaria:"sim" })}>Sim, saquei ou transferi</button>
+                        <button type="button" className={"toggle-btn " + (form.sacouDiaria === "nao" ? "on" : "")} onClick={() => update({ sacouDiaria:"nao", valorMovimentadoDiaria:"", anexos:{ ...form.anexos, saque:[], devolucao_nao_realizada:[] }, saqueComprovante:"", justificativas:{ ...form.justificativas, saque:"" } })}>Não, o valor ficou na conta</button>
+                      </div>
+                      {form.sacouDiaria === "nao" && (
+                        <div className="banner warn" style={{ marginTop:14, marginBottom:0 }}>
+                          <Icon name="alert" size={17}/>
+                          <span>Não é necessário preencher uma prestação de contas neste sistema. Registre a justificativa da não realização e finalize a viagem diretamente no Sistema Oficial da Central de Viagens. Use o botão abaixo para acessar o sistema.</span>
+                        </div>
+                      )}
+                      {form.sacouDiaria === "sim" && (
+                        <div className="banner info" style={{ marginTop:14, marginBottom:0 }}>
+                          <Icon name="info" size={17}/>
+                          <span>Você continuará neste sistema. Na sequência, informe a justificativa, o valor sacado ou transferido, o comprovante da movimentação e o comprovante da devolução desse valor ao Estado.</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -7300,8 +7705,13 @@ function App() {
               <div className="right-group">
                 {scvEtapaModal === 1 ? (
                   <button className="btn btn-primary" onClick={() => setScvEtapaModal(2)}>Continuar</button>
+                ) : form.tipoPrestacao === "viagem_nao_realizada" && form.sacouDiaria === "nao" ? (
+                  <>
+                    <a className="btn btn-primary" href={LINK_CENTRAL_VIAGENS} target="_blank" rel="noopener noreferrer">Abrir Central de Viagens</a>
+                    <button className="btn btn-ghost" onClick={encerrarSemPrestacaoEVoltarParaInicio}>Voltar para Minhas prestações</button>
+                  </>
                 ) : (
-                  <button className="btn btn-primary" disabled={!form.tipoPrestacao || scvNaoRealizada} onClick={() => aplicarDadosScv(true)}>Confirmar informações</button>
+                  <button className="btn btn-primary" disabled={!form.tipoPrestacao || (form.tipoPrestacao === "viagem_nao_realizada" && form.sacouDiaria !== "sim")} onClick={() => aplicarDadosScv(true)}>Confirmar informações</button>
                 )}
               </div>
             </div>
@@ -7316,10 +7726,21 @@ function App() {
             <div style={{ padding: "18px 24px 4px", color: "var(--cinza)", fontSize: 14.5 }}>Confirme cada declaração. Leia com atenção antes de marcar.</div>
             <div style={{ padding: "0 24px 20px", overflowY: "auto" }}>
               <div className="conference-list">
-                <label className="conference-item"><input type="checkbox" checked={conferencia.dados} onChange={e => setConferencia(c => ({ ...c, dados: e.target.checked }))} /><span>Conferi os dados da viagem, as datas, a origem, o destino e as informações do relatório técnico.</span></label>
-                <label className="conference-item"><input type="checkbox" checked={conferencia.transporte} onChange={e => setConferencia(c => ({ ...c, transporte: e.target.checked }))} /><span>Conferi o meio de transporte, os deslocamentos de translado e os valores informados.</span></label>
-                <label className="conference-item"><input type="checkbox" checked={conferencia.documentos} onChange={e => setConferencia(c => ({ ...c, documentos: e.target.checked }))} /><span>Conferi os nomes dos arquivos e confirmo que os comprovantes correspondem a esta viagem.</span></label>
-                <label className="conference-item"><input type="checkbox" checked={conferencia.atesto} onChange={e => setConferencia(c => ({ ...c, atesto: e.target.checked }))} /><span>Atesto que as informações demonstram a realização da viagem e que os documentos apresentados são verdadeiros e pertinentes à prestação de contas.</span></label>
+                {viagemNaoRealizada ? (
+                  <>
+                    <label className="conference-item"><input type="checkbox" checked={conferencia.dados} onChange={e => setConferencia(c => ({ ...c, dados: e.target.checked }))} /><span>Conferi os dados da solicitação, as datas previstas, a origem, o destino e a justificativa da não realização da viagem.</span></label>
+                    <label className="conference-item"><input type="checkbox" checked={conferencia.transporte} onChange={e => setConferencia(c => ({ ...c, transporte: e.target.checked }))} /><span>Conferi o valor sacado ou transferido da conta corporativa e a devolução correspondente ao Estado.</span></label>
+                    <label className="conference-item"><input type="checkbox" checked={conferencia.documentos} onChange={e => setConferencia(c => ({ ...c, documentos: e.target.checked }))} /><span>Conferi o comprovante de saque ou transferência e o comprovante da devolução do valor sacado ou transferido anexados a esta prestação de contas.</span></label>
+                    <label className="conference-item"><input type="checkbox" checked={conferencia.atesto} onChange={e => setConferencia(c => ({ ...c, atesto: e.target.checked }))} /><span>Atesto que a viagem autorizada não foi realizada, que a justificativa informada corresponde aos fatos e que o valor sacado ou transferido da conta corporativa foi devolvido ao Estado, conforme os documentos apresentados.</span></label>
+                  </>
+                ) : (
+                  <>
+                    <label className="conference-item"><input type="checkbox" checked={conferencia.dados} onChange={e => setConferencia(c => ({ ...c, dados: e.target.checked }))} /><span>Conferi os dados da viagem, as datas, a origem, o destino e as informações do relatório técnico.</span></label>
+                    <label className="conference-item"><input type="checkbox" checked={conferencia.transporte} onChange={e => setConferencia(c => ({ ...c, transporte: e.target.checked }))} /><span>Conferi o meio de transporte, os deslocamentos de translado e os valores informados.</span></label>
+                    <label className="conference-item"><input type="checkbox" checked={conferencia.documentos} onChange={e => setConferencia(c => ({ ...c, documentos: e.target.checked }))} /><span>Conferi os nomes dos arquivos e confirmo que os comprovantes correspondem a esta viagem.</span></label>
+                    <label className="conference-item"><input type="checkbox" checked={conferencia.atesto} onChange={e => setConferencia(c => ({ ...c, atesto: e.target.checked }))} /><span>Atesto que as informações demonstram a realização da viagem e que os documentos apresentados são verdadeiros e pertinentes à prestação de contas.</span></label>
+                  </>
+                )}
               </div>
             </div>
             <div className="redact-actions" style={{ justifyContent: "flex-end" }}><button className="btn btn-ghost" onClick={() => setMostrarConferencia(false)}>Voltar</button><button className="btn btn-primary" disabled={!Object.values(conferencia).every(Boolean)} onClick={confirmarConferencia}>Confirmar atesto</button></div>
