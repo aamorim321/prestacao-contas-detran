@@ -4634,7 +4634,7 @@ function TelaMinhasPrestacoes() {
             <div className="endereco-contato">Central de Viagens — Ramal 1124 · Passagens Aéreas — Ramal 1312</div>
             <div className="endereco-contato">
               <a
-  href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(EMAIL_CENTRAL_VIAGENS)}&su=${encodeURIComponent("Dúvida sobre Prestação de Contas de Viagem")}&body=${encodeURIComponent(
+  href={`https://mail.google.com/a/detran.pr.gov.br/?view=cm&fs=1&to=${encodeURIComponent(EMAIL_CENTRAL_VIAGENS)}&su=${encodeURIComponent("Dúvida sobre Prestação de Contas de Viagem")}&body=${encodeURIComponent(
 `Olá, Central de Viagens.
 
 Preciso de auxílio referente à prestação de contas de uma viagem.
@@ -7724,23 +7724,7 @@ function App() {
         </div>
       </div>
 
-      <a
-  href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(EMAIL_CENTRAL_VIAGENS)}&su=${encodeURIComponent("Dúvida sobre Prestação de Contas de Viagem")}&body=${encodeURIComponent(
-`Olá, Central de Viagens.
-
-Preciso de auxílio referente à prestação de contas de uma viagem.
-
-Solicitação de Viagem:
-Nome do servidor:
-Dúvida:
-
-Atenciosamente,`
-  )}`}
-  target="_blank"
-  rel="noreferrer"
->
-  {EMAIL_CENTRAL_VIAGENS_EXIBICAO}
-</a>
+      <div className="band footer-links-bar">
         <div className="band-inner">
           <span className="footer-pill"><Icon name="doc" size={14} /> Manual de Procedimentos</span>
         </div>
@@ -7755,7 +7739,23 @@ Atenciosamente,`
             Av. Victor Ferreira do Amaral, 2940 — Tarumã — 82800-900 — Curitiba/PR
             <div className="endereco-contato">Central de Viagens — Ramal 1124 · Passagens Aéreas — Ramal 1312</div>
             <div className="endereco-contato">
-              <a href={`mailto:${EMAIL_CENTRAL_VIAGENS}`}>{EMAIL_CENTRAL_VIAGENS_EXIBICAO}</a>
+              <a
+                href={`https://mail.google.com/a/detran.pr.gov.br/?view=cm&fs=1&to=${encodeURIComponent(EMAIL_CENTRAL_VIAGENS)}&su=${encodeURIComponent("Dúvida sobre Prestação de Contas de Viagem")}&body=${encodeURIComponent(
+              `Olá, Central de Viagens.
+
+              Preciso de auxílio referente à prestação de contas de uma viagem.
+
+              Solicitação de Viagem:
+              Nome do servidor:
+              Dúvida:
+
+              Atenciosamente,`
+                )}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {EMAIL_CENTRAL_VIAGENS_EXIBICAO}
+              </a>
               <span> · </span>
               <a href="https://wa.me/message/VZIFISC2UH5LK1" target="_blank" rel="noreferrer">WhatsApp: {WHATSAPP_CENTRAL_EXIBICAO}</a>
             </div>
