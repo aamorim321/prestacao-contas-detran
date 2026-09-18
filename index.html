@@ -4977,7 +4977,7 @@ function FilePreviewModal({ arquivo, onClose }) {
   );
 }
 
-function consultarDistanciaRodoviaria(origem, destino) {
+function consultarDistanciaRodoviaria(origem, destino, tentativa = 1) {
   return new Promise((resolve, reject) => {
     if (!DISTANCIA_WEBAPP_URL || DISTANCIA_WEBAPP_URL.includes("COLE_AQUI")) {
       reject(new Error("Serviço de distância ainda não configurado."));
@@ -4986,7 +4986,9 @@ function consultarDistanciaRodoviaria(origem, destino) {
 
     const callback = "__distanciaCB_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
     const script = document.createElement("script");
-    const timeout = setTimeout(() => finalizar(new Error("Tempo esgotado ao calcular a distância.")), 15000);
+    script.async = true;
+    let respondido = false;
+    const timeout = setTimeout(() => finalizar(new Error("Tempo esgotado ao calcular a distância.")), 25000);
 
     function limpar() {
       clearTimeout(timeout);
@@ -4995,6 +4997,8 @@ function consultarDistanciaRodoviaria(origem, destino) {
     }
 
     function finalizar(erro, dados) {
+      if (respondido) return;
+      respondido = true;
       limpar();
       if (erro) reject(erro); else resolve(dados);
     }
@@ -5012,8 +5016,17 @@ function consultarDistanciaRodoviaria(origem, destino) {
     script.src = DISTANCIA_WEBAPP_URL + sep
       + "origem=" + encodeURIComponent(origem)
       + "&destino=" + encodeURIComponent(destino)
-      + "&callback=" + encodeURIComponent(callback);
+      + "&callback=" + encodeURIComponent(callback)
+      + "&_=" + Date.now();
     document.head.appendChild(script);
+  }).catch(async erro => {
+    // Apps Script pode levar alguns segundos para iniciar a primeira execução.
+    // Uma única nova tentativa reduz falhas transitórias sem sobrecarregar o serviço.
+    if (tentativa < 2) {
+      await new Promise(r => setTimeout(r, 1200));
+      return consultarDistanciaRodoviaria(origem, destino, tentativa + 1);
+    }
+    throw erro;
   });
 }
 
@@ -5883,11 +5896,53 @@ function App() {
     updateTranslado(itemId, { arquivo: null });
   }
 
+  function parseKmDiario(valor) {
+    const bruto = String(valor ?? "").trim();
+    if (!bruto) return null;
+    const normalizado = bruto.replace(/\./g, "").replace(",", ".").replace(/[^0-9.-]/g, "");
+    if (!normalizado || normalizado === "-" || normalizado === "." || normalizado === "-.") return null;
+    const n = Number(normalizado);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function recalcularHodometroEmCascata(trechosEntrada) {
+    const trechos = (trechosEntrada || []).map(t => ({ ...t }));
+
+    for (let i = 0; i < trechos.length; i += 1) {
+      const atual = trechos[i];
+
+      // A partir do segundo trecho, o KM de saída recebe automaticamente
+      // o KM de chegada do trecho anterior, salvo quando o usuário informou
+      // manualmente outro valor para refletir o hodômetro real.
+      if (i > 0 && !atual.kmSaidaManual) {
+        const anterior = trechos[i - 1];
+        const kmAnterior = parseKmDiario(anterior.kmChegada);
+        if (kmAnterior !== null) atual.kmSaida = String(Math.round(kmAnterior));
+        else atual.kmSaida = "";
+      }
+
+      const kmSaida = parseKmDiario(atual.kmSaida);
+      const distancia = parseKmDiario(atual.distanciaSugerida);
+
+      // O KM de chegada continua editável. Se o usuário o corrigiu manualmente,
+      // essa leitura real prevalece e passa a alimentar o trecho seguinte.
+      if (!atual.kmChegadaManual) {
+        if (kmSaida !== null && distancia !== null) {
+          atual.kmChegada = String(Math.round(kmSaida + distancia));
+        } else {
+          atual.kmChegada = "";
+        }
+      }
+    }
+
+    return trechos;
+  }
+
   async function calcularDistanciaTrecho(trecho) {
-    if (!trecho || !trecho.id) return;
+    if (!trecho || !trecho.id) return false;
     const origem = String(trecho.origem || "").trim();
     const destino = String(trecho.destino || "").trim();
-    if (!origem || !destino) return;
+    if (!origem || !destino) return false;
 
     const chaveRota = `${origem.toLocaleLowerCase("pt-BR")}|${destino.toLocaleLowerCase("pt-BR")}`;
     setDistanciaStatus(s => ({ ...s, [trecho.id]: "calculando" }));
@@ -5897,29 +5952,31 @@ function App() {
       const km = Number(resultado.km);
       if (!Number.isFinite(km) || km < 0) throw new Error("Distância inválida retornada pelo serviço.");
 
-      setForm(f => ({
-        ...f,
-        atesto: false,
-        diarioTrechos: (f.diarioTrechos || []).map(t => {
-          if (t.id !== trecho.id) return t;
-          // Se a pessoa alterou origem/destino enquanto a consulta estava rodando,
+      setForm(f => {
+        const atualizados = (f.diarioTrechos || []).map(t => {
+          if (t.id !== trecho.id) return { ...t };
+          // Se origem/destino mudou enquanto a consulta estava em andamento,
           // não aplicamos uma distância que pertence à rota anterior.
           const chaveAtual = `${String(t.origem || "").trim().toLocaleLowerCase("pt-BR")}|${String(t.destino || "").trim().toLocaleLowerCase("pt-BR")}`;
-          if (chaveAtual !== chaveRota) return t;
+          if (chaveAtual !== chaveRota) return { ...t };
+          return { ...t, distanciaSugerida: String(Math.round(km)), distanciaAutoRota: chaveRota };
+        });
 
-          const proximo = { ...t, distanciaSugerida: String(Math.round(km)), distanciaAutoRota: chaveRota };
-          const kmSaida = Number(String(proximo.kmSaida || "").replace(/\./g, "").replace(",", ".").replace(/[^0-9.-]/g, ""));
-          if (Number.isFinite(kmSaida)) proximo.kmChegada = String(Math.round(kmSaida + km));
-          return proximo;
-        })
-      }));
+        return {
+          ...f,
+          atesto: false,
+          diarioTrechos: recalcularHodometroEmCascata(atualizados)
+        };
+      });
       setDistanciaStatus(s => ({ ...s, [trecho.id]: "ok" }));
       setConferencia({ dados: false, transporte: false, documentos: false, privacidade: false, atesto: false });
       setPdfConcluido(false);
       setPdfGeradoUmaVez(false);
+      return true;
     } catch (erro) {
       console.warn("Falha ao calcular distância:", origem, destino, erro);
       setDistanciaStatus(s => ({ ...s, [trecho.id]: "erro" }));
+      return false;
     }
   }
 
@@ -5931,18 +5988,25 @@ function App() {
     if (form.diarioBordoModo !== "preencher") return;
     if (!DISTANCIA_WEBAPP_URL || DISTANCIA_WEBAPP_URL.includes("COLE_AQUI")) return;
 
+    let cancelado = false;
     const timer = setTimeout(() => {
-      (form.diarioTrechos || []).forEach(t => {
-        const origem = String(t.origem || "").trim();
-        const destino = String(t.destino || "").trim();
-        if (!origem || !destino) return;
-        const chave = `${origem.toLocaleLowerCase("pt-BR")}|${destino.toLocaleLowerCase("pt-BR")}`;
-        if (t.distanciaAutoRota === chave) return;
-        calcularDistanciaTrecho(t);
-      });
+      (async () => {
+        // As rotas são consultadas uma de cada vez. Isso evita uma rajada de
+        // várias execuções simultâneas no Apps Script quando o PDF tem muitos trechos.
+        for (const t of (form.diarioTrechos || [])) {
+          if (cancelado) break;
+          const origem = String(t.origem || "").trim();
+          const destino = String(t.destino || "").trim();
+          if (!origem || !destino) continue;
+          const chave = `${origem.toLocaleLowerCase("pt-BR")}|${destino.toLocaleLowerCase("pt-BR")}`;
+          if (t.distanciaAutoRota === chave || t.distanciaAutoRota === "manual") continue;
+          await calcularDistanciaTrecho(t);
+          if (!cancelado) await new Promise(r => setTimeout(r, 180));
+        }
+      })();
     }, 550);
 
-    return () => clearTimeout(timer);
+    return () => { cancelado = true; clearTimeout(timer); };
   }, [form.diarioBordoModo, assinaturaRotasDiario]);
 
   function iniciarDiarioPreenchido() {
@@ -5957,32 +6021,44 @@ function App() {
   }
 
   function atualizarTrechoDiario(id, campo, valor) {
-    const parseNumero = v => {
-      const n = Number(String(v ?? "").replace(/\./g, "").replace(",", ".").replace(/[^0-9.-]/g, ""));
-      return Number.isFinite(n) ? n : null;
-    };
     if (campo === "origem" || campo === "destino") {
       setDistanciaStatus(s => ({ ...s, [id]: "" }));
     }
-    setForm(f => ({
-      ...f,
-      atesto: false,
-      diarioTrechos: (f.diarioTrechos || []).map(t => {
-        if (t.id !== id) return t;
+
+    setForm(f => {
+      const alterados = (f.diarioTrechos || []).map(t => {
+        if (t.id !== id) return { ...t };
         const proximo = { ...t, [campo]: valor };
+
         if (campo === "origem" || campo === "destino") {
           proximo.distanciaAutoRota = "";
           proximo.distanciaSugerida = "";
-          proximo.kmChegada = "";
+          if (!proximo.kmChegadaManual) proximo.kmChegada = "";
         }
-        if (campo === "kmSaida" || campo === "distanciaSugerida") {
-          const kmSaida = parseNumero(proximo.kmSaida);
-          const distancia = parseNumero(proximo.distanciaSugerida);
-          if (kmSaida !== null && distancia !== null) proximo.kmChegada = String(Math.round(kmSaida + distancia));
+
+        if (campo === "kmSaida") {
+          proximo.kmSaidaManual = String(valor || "").trim() !== "";
         }
+
+        if (campo === "kmChegada") {
+          proximo.kmChegadaManual = String(valor || "").trim() !== "";
+        }
+
+        // Distância digitada manualmente passa a ser a referência deste trecho,
+        // mas continua podendo ser substituída se origem/destino forem alterados.
+        if (campo === "distanciaSugerida") {
+          proximo.distanciaAutoRota = "manual";
+        }
+
         return proximo;
-      })
-    }));
+      });
+
+      return {
+        ...f,
+        atesto: false,
+        diarioTrechos: recalcularHodometroEmCascata(alterados)
+      };
+    });
     setConferencia({ dados: false, transporte: false, documentos: false, privacidade: false, atesto: false });
     setPdfConcluido(false);
     setPdfGeradoUmaVez(false);
