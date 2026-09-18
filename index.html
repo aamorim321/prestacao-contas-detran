@@ -4982,6 +4982,10 @@ function FilePreviewModal({ arquivo, onClose }) {
 let filaDistanciaGoogle = Promise.resolve();
 
 function origemGooglePermitida_(origemEvento) {
+  // O HtmlService do Apps Script roda em sandbox. Dependendo do encadeamento
+  // de iframes do Google, o postMessage pode chegar com origem "null".
+  // A resposta ainda é validada pelo source fixo + requestId aleatório da chamada.
+  if (!origemEvento || origemEvento === "null") return true;
   try {
     const u = new URL(origemEvento);
     return u.protocol === "https:" && (
@@ -5044,8 +5048,8 @@ function consultarDistanciaRodoviariaDireto(origem, destino, tentativa = 1) {
     window.addEventListener("message", receberMensagem);
 
     const timeout = setTimeout(() => {
-      finalizar(new Error("Tempo esgotado ao calcular a distância."));
-    }, 30000);
+      finalizar(new Error("O Google calculou a rota, mas a resposta não retornou ao sistema dentro do tempo esperado."));
+    }, 12000);
 
     const sep = DISTANCIA_WEBAPP_URL.includes("?") ? "&" : "?";
     frame.src = DISTANCIA_WEBAPP_URL + sep
@@ -5058,7 +5062,7 @@ function consultarDistanciaRodoviariaDireto(origem, destino, tentativa = 1) {
     (document.body || document.documentElement).appendChild(frame);
   }).catch(async erro => {
     if (tentativa < 2) {
-      await new Promise(r => setTimeout(r, 1200));
+      await new Promise(r => setTimeout(r, 650));
       return consultarDistanciaRodoviariaDireto(origem, destino, tentativa + 1);
     }
     throw erro;
