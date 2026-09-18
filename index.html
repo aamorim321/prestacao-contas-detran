@@ -4977,23 +4977,30 @@ function FilePreviewModal({ arquivo, onClose }) {
   );
 }
 
-function consultarDistanciaRodoviaria(origem, destino, tentativa = 1) {
+// As consultas JSONP são serializadas porque o callback do Apps Script é global.
+// Isso também evita várias chamadas simultâneas quando o roteiro tem muitos trechos.
+let filaDistanciaGoogle = Promise.resolve();
+
+function consultarDistanciaRodoviariaDireto(origem, destino, tentativa = 1) {
   return new Promise((resolve, reject) => {
     if (!DISTANCIA_WEBAPP_URL || DISTANCIA_WEBAPP_URL.includes("COLE_AQUI")) {
       reject(new Error("Serviço de distância ainda não configurado."));
       return;
     }
 
-    const callback = "__distanciaCB_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+    // Callback simples e fixo: é o mesmo padrão que foi validado diretamente
+    // no navegador com o Web App do Google Apps Script.
+    const callback = "receberDistanciaGoogle";
     const script = document.createElement("script");
     script.async = true;
     let respondido = false;
-    const timeout = setTimeout(() => finalizar(new Error("Tempo esgotado ao calcular a distância.")), 25000);
 
     function limpar() {
       clearTimeout(timeout);
-      try { delete window[callback]; } catch (e) { window[callback] = undefined; }
       if (script.parentNode) script.parentNode.removeChild(script);
+      if (window[callback] === receberResposta) {
+        try { delete window[callback]; } catch (e) { window[callback] = undefined; }
+      }
     }
 
     function finalizar(erro, dados) {
@@ -5003,31 +5010,45 @@ function consultarDistanciaRodoviaria(origem, destino, tentativa = 1) {
       if (erro) reject(erro); else resolve(dados);
     }
 
-    window[callback] = dados => {
+    function receberResposta(dados) {
       if (!dados || !dados.ok) {
-        finalizar(new Error(dados?.erro || "Não foi possível calcular a distância."));
+        finalizar(new Error((dados && dados.erro) || "Não foi possível calcular a distância."));
         return;
       }
       finalizar(null, dados);
-    };
+    }
+
+    window[callback] = receberResposta;
+
+    const timeout = setTimeout(() => {
+      finalizar(new Error("Tempo esgotado ao calcular a distância."));
+    }, 30000);
 
     script.onerror = () => finalizar(new Error("Não foi possível acessar o serviço de distância."));
+
     const sep = DISTANCIA_WEBAPP_URL.includes("?") ? "&" : "?";
     script.src = DISTANCIA_WEBAPP_URL + sep
       + "origem=" + encodeURIComponent(origem)
       + "&destino=" + encodeURIComponent(destino)
-      + "&callback=" + encodeURIComponent(callback)
+      + "&callback=" + callback
       + "&_=" + Date.now();
-    document.head.appendChild(script);
+
+    (document.head || document.documentElement).appendChild(script);
   }).catch(async erro => {
-    // Apps Script pode levar alguns segundos para iniciar a primeira execução.
-    // Uma única nova tentativa reduz falhas transitórias sem sobrecarregar o serviço.
     if (tentativa < 2) {
       await new Promise(r => setTimeout(r, 1200));
-      return consultarDistanciaRodoviaria(origem, destino, tentativa + 1);
+      return consultarDistanciaRodoviariaDireto(origem, destino, tentativa + 1);
     }
     throw erro;
   });
+}
+
+function consultarDistanciaRodoviaria(origem, destino) {
+  const executar = () => consultarDistanciaRodoviariaDireto(origem, destino);
+  const consulta = filaDistanciaGoogle.then(executar, executar);
+  // A fila continua mesmo se uma rota específica falhar.
+  filaDistanciaGoogle = consulta.catch(() => undefined);
+  return consulta;
 }
 
 function App() {
