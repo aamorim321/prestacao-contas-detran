@@ -4981,6 +4981,19 @@ function FilePreviewModal({ arquivo, onClose }) {
 // Isso também evita várias chamadas simultâneas quando o roteiro tem muitos trechos.
 let filaDistanciaGoogle = Promise.resolve();
 
+function origemGooglePermitida_(origemEvento) {
+  try {
+    const u = new URL(origemEvento);
+    return u.protocol === "https:" && (
+      u.hostname === "script.google.com" ||
+      u.hostname === "script.googleusercontent.com" ||
+      u.hostname.endsWith(".googleusercontent.com")
+    );
+  } catch (e) {
+    return false;
+  }
+}
+
 function consultarDistanciaRodoviariaDireto(origem, destino, tentativa = 1) {
   return new Promise((resolve, reject) => {
     if (!DISTANCIA_WEBAPP_URL || DISTANCIA_WEBAPP_URL.includes("COLE_AQUI")) {
@@ -4988,29 +5001,39 @@ function consultarDistanciaRodoviariaDireto(origem, destino, tentativa = 1) {
       return;
     }
 
-    // Callback simples e fixo: é o mesmo padrão que foi validado diretamente
-    // no navegador com o Web App do Google Apps Script.
-    const callback = "receberDistanciaGoogle";
-    const script = document.createElement("script");
-    script.async = true;
-    let respondido = false;
+    const requestId = "dist_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
+    const frame = document.createElement("iframe");
+    frame.setAttribute("aria-hidden", "true");
+    frame.tabIndex = -1;
+    frame.style.position = "fixed";
+    frame.style.width = "1px";
+    frame.style.height = "1px";
+    frame.style.left = "-10000px";
+    frame.style.top = "-10000px";
+    frame.style.border = "0";
+    frame.style.opacity = "0";
+    frame.style.pointerEvents = "none";
+
+    let encerrado = false;
 
     function limpar() {
       clearTimeout(timeout);
-      if (script.parentNode) script.parentNode.removeChild(script);
-      if (window[callback] === receberResposta) {
-        try { delete window[callback]; } catch (e) { window[callback] = undefined; }
-      }
+      window.removeEventListener("message", receberMensagem);
+      if (frame.parentNode) frame.parentNode.removeChild(frame);
     }
 
     function finalizar(erro, dados) {
-      if (respondido) return;
-      respondido = true;
+      if (encerrado) return;
+      encerrado = true;
       limpar();
       if (erro) reject(erro); else resolve(dados);
     }
 
-    function receberResposta(dados) {
+    function receberMensagem(event) {
+      if (!origemGooglePermitida_(event.origin)) return;
+      const msg = event.data;
+      if (!msg || msg.source !== "detran-distancia-google" || msg.requestId !== requestId) return;
+      const dados = msg.payload;
       if (!dados || !dados.ok) {
         finalizar(new Error((dados && dados.erro) || "Não foi possível calcular a distância."));
         return;
@@ -5018,22 +5041,21 @@ function consultarDistanciaRodoviariaDireto(origem, destino, tentativa = 1) {
       finalizar(null, dados);
     }
 
-    window[callback] = receberResposta;
+    window.addEventListener("message", receberMensagem);
 
     const timeout = setTimeout(() => {
       finalizar(new Error("Tempo esgotado ao calcular a distância."));
     }, 30000);
 
-    script.onerror = () => finalizar(new Error("Não foi possível acessar o serviço de distância."));
-
     const sep = DISTANCIA_WEBAPP_URL.includes("?") ? "&" : "?";
-    script.src = DISTANCIA_WEBAPP_URL + sep
+    frame.src = DISTANCIA_WEBAPP_URL + sep
       + "origem=" + encodeURIComponent(origem)
       + "&destino=" + encodeURIComponent(destino)
-      + "&callback=" + callback
+      + "&modo=iframe"
+      + "&requestId=" + encodeURIComponent(requestId)
       + "&_=" + Date.now();
 
-    (document.head || document.documentElement).appendChild(script);
+    (document.body || document.documentElement).appendChild(frame);
   }).catch(async erro => {
     if (tentativa < 2) {
       await new Promise(r => setTimeout(r, 1200));
