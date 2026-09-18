@@ -521,6 +521,42 @@
   .translado-file-actions .btn-link-danger{ margin-left:auto; }
   .translado-order-hint{ font-size:13.5px; color:var(--cinza); margin:8px 0 0; }
 
+  /* ================= DIÁRIO DE BORDO ASSISTIDO ================= */
+  .diario-assistido{ margin-top:16px; padding:18px; border:1px solid #d8e6f2; border-radius:14px; background:#fbfdff; }
+  .diario-info{ display:flex; gap:10px; align-items:flex-start; padding:12px 14px; margin-bottom:16px; border-radius:12px; background:#eef6ff; color:var(--azul-escuro); font-size:14px; }
+  .diario-meta-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
+  .diario-passageiros{ margin:4px 0 16px; }
+  .diario-passageiros-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+  .diario-passageiros-head strong{ color:var(--grafite); font-size:14.5px; }
+  .passageiro-row{ display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+  .passageiro-row input{ flex:1; min-width:0; padding:10px 12px; border:1.5px solid var(--linha); border-radius:var(--r-sm); font:inherit; color:var(--grafite); background:#fff; }
+  .diario-table-wrap{ width:100%; overflow-x:auto; border:1px solid var(--linha); border-radius:12px; background:#fff; }
+  .diario-table{ width:100%; min-width:1080px; border-collapse:collapse; font-size:13px; }
+  .diario-table th{ background:#edf2f6; color:#263846; font-weight:700; text-align:left; padding:10px 8px; border-bottom:1px solid #d6dee4; white-space:nowrap; }
+  .diario-table td{ padding:6px; border-bottom:1px solid #edf1f3; vertical-align:middle; }
+  .diario-table tr:last-child td{ border-bottom:none; }
+  .diario-table input{ width:100%; min-width:86px; padding:8px 9px; border:1.2px solid #d8e0e5; border-radius:7px; font:inherit; color:var(--grafite); background:#fff; }
+  .diario-table input[type=date]{ min-width:130px; }
+  .diario-table input[type=time]{ min-width:105px; }
+  .diario-table .col-local{ min-width:145px; }
+  .diario-table .col-km{ min-width:105px; }
+  .diario-table .col-distancia{ min-width:130px; }
+  .diario-table .col-acoes{ width:56px; text-align:center; }
+  .diario-actions-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:12px; }
+  .diario-actions-buttons{ display:flex; align-items:center; justify-content:flex-end; gap:10px; flex-wrap:wrap; margin-left:auto; }
+  .diario-download-btn{ min-width:210px; }
+  .diario-note{ font-size:12.8px; color:var(--cinza); line-height:1.45; max-width:780px; }
+  .distancia-retry-btn{ min-width:36px; min-height:36px; padding:6px; border:1px solid #b8cfdd; border-radius:8px; background:#fff; color:var(--azul); font:700 15px var(--font-corpo); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+  .distancia-retry-btn:hover{ background:var(--azul-tint); border-color:var(--azul); }
+  .diario-head-inline{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; }
+  .diario-head-inline strong{ font-size:15px; color:var(--azul-escuro); line-height:1.35; }
+  .diario-help-inline{ flex:0 0 auto; }
+  .doc-item-block .diario-assistido{ grid-column:1 / -1; width:100%; max-width:none; }
+  .diario-assistido{ margin-top:16px; padding:22px 24px; }
+  .diario-passageiros-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+  .diario-table th, .diario-table td{ vertical-align:middle; }
+  .toggle-btn, .file-btn, .file-chip .file-remove, .btn-link-danger{ text-align:center; justify-content:center; }
+  @media (max-width:720px){ .diario-meta-grid{ grid-template-columns:1fr; } .diario-assistido{ padding:18px 16px; } .diario-head-inline{ align-items:center; } }
 
   .redact-canvas-wrap{ padding:16px 24px 24px; overflow:auto; flex:1; display:flex; align-items:flex-start; justify-content:center; background:var(--papel); }
   .redact-canvas-wrap canvas{ height:auto; max-width:none; cursor:crosshair; box-shadow:0 3px 14px rgba(0,0,0,.14); background:#fff; touch-action:none; border-radius:2px; }
@@ -3486,6 +3522,9 @@ const WHATSAPP_ROD_AVATAR = "./rod-whatsapp.png"; // Avatar do ROD para o card d
 const LINK_CENTRAL_VIAGENS = "https://www.centraldeviagens.pr.gov.br/ncv";
 const LINK_EPROTOCOLO = "https://www.eprotocolo.pr.gov.br/spiweb";
 const LINK_GOVBR_ASSINATURA = "https://www.gov.br/pt-br/servicos/assinatura-eletronica";
+// URL do Aplicativo da Web do Google Apps Script usado para sugerir a distância rodoviária.
+// Depois de publicar o Code.gs, cole aqui a URL que termina em /exec.
+const DISTANCIA_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw1F8OUkjrpUvNrASuwkzVhaCIGJH4v6J0_3YHda9e_LkIp9XtJyd0rEpZM32PfTk4YWA/exec";
 const BANCO_BRASIL_LOGO = "./banco-brasil-logo.png";
 const CONTA_DEVOLUCAO = {
   codigo: "001",
@@ -3542,15 +3581,12 @@ function docsFor(transporte, incluirDevolucaoTranslado, incluirDevolucaoRoteiro,
   return docs;
 }
 
-// Documentos que nem todo viajante tem (ex.: diretores não emitem solicitação
-// de veículo nem diário de bordo). Para eles o sistema pergunta "possui?" e,
-// se a resposta for não, exige justificativa escrita no lugar do arquivo.
-const DOCS_COM_JUSTIFICATIVA = ["saque", "solicitacao_veiculo", "diario_bordo"];
+// Apenas o comprovante de saque/transferência admite a opção "Não possuo".
+// Solicitação de veículo e diário de bordo passam a ter fluxos próprios.
+const DOCS_COM_JUSTIFICATIVA = ["saque"];
 
 const PERGUNTA_POSSUI_DOC = {
   saque: "Você possui o comprovante de saque ou transferência?",
-  solicitacao_veiculo: "Você possui a solicitação de veículo?",
-  diario_bordo: "Você possui o diário de bordo?",
 };
 
 // A resposta do saque continua guardada em `saqueComprovante` para não quebrar
@@ -3569,6 +3605,81 @@ function docJustificavelOk(form, docId) {
   const resposta = respostaPossuiDoc(form, docId);
   if (resposta === "sim") return !!(form.anexos[docId] && form.anexos[docId].length);
   return resposta === "nao" && !!String((form.justificativas || {})[docId] || "").trim();
+}
+
+function tituloDocumentoVeiculo(form) {
+  return form.documentoVeiculoTipo === "cessao"
+    ? "Termo de cessão de uso do veículo"
+    : "Solicitação de veículo";
+}
+
+function documentoVeiculoOk(form) {
+  return !!form.documentoVeiculoTipo && !!(form.anexos?.solicitacao_veiculo || []).length;
+}
+
+function diarioBordoPreenchidoOk(form) {
+  if (form.diarioBordoModo !== "preencher") return false;
+  const trechos = Array.isArray(form.diarioTrechos) ? form.diarioTrechos : [];
+  return !!String(form.diarioPlaca || "").trim()
+    && !!String(form.diarioCondutor || "").trim()
+    && trechos.length > 0
+    && trechos.every(t =>
+      !!t.data
+      && !!String(t.horaSaida || "").trim()
+      && !!String(t.origem || "").trim()
+      && !!String(t.destino || "").trim()
+      && !!String(t.horaChegada || "").trim()
+      && !!String(t.kmSaida || "").trim()
+      && !!String(t.kmChegada || "").trim()
+    );
+}
+
+function diarioBordoOk(form) {
+  if (form.diarioBordoModo === "anexar") return !!(form.anexos?.diario_bordo || []).length;
+  return diarioBordoPreenchidoOk(form);
+}
+
+function normalizarLocalDiario(valor) {
+  const texto = String(valor || "").trim();
+  if (!texto) return "";
+  const m = texto.match(/^(.+?)\s*-\s*([A-Z]{2})$/i);
+  if (m) return `${m[1].trim()}/${m[2].toUpperCase()}`;
+  return texto;
+}
+
+function criarTrechosDiarioIniciais(form) {
+  const importados = Array.isArray(form.roteiroScv) ? form.roteiroScv : [];
+  if (importados.length) {
+    return importados.map(t => ({
+      id: t.id || uid(),
+      data: t.data || "",
+      horaSaida: t.horaSaida || "",
+      origem: normalizarLocalDiario(t.origem),
+      destino: normalizarLocalDiario(t.destino),
+      horaChegada: t.horaChegada || "",
+      kmSaida: t.kmSaida || "",
+      distanciaSugerida: t.distanciaSugerida || "",
+      kmChegada: t.kmChegada || "",
+    }));
+  }
+
+  const origem = normalizarLocalDiario(form.origem);
+  const destinos = String(form.destino || "").split(",").map(v => normalizarLocalDiario(v.trim())).filter(Boolean);
+  const destino = destinos[0] || normalizarLocalDiario(form.destino);
+  const trechos = [];
+  if (origem || destino || form.dataSaida) {
+    trechos.push({
+      id: uid(), data: form.dataSaida || "", horaSaida: "",
+      origem, destino, horaChegada: "", kmSaida: "", distanciaSugerida: "", kmChegada: ""
+    });
+  }
+  if (form.dataRetorno && destino && origem && form.dataRetorno !== form.dataSaida) {
+    trechos.push({
+      id: uid(), data: form.dataRetorno, horaSaida: "",
+      origem: destino, destino: origem, horaChegada: "", kmSaida: "", distanciaSugerida: "", kmChegada: ""
+    });
+  }
+  return trechos;
 }
 
 function uid() {
@@ -3729,6 +3840,8 @@ const emptyForm = {
   saqueComprovante: "", possuiDocumento: {}, precisaDevolucao: "", valorDevolucao: "", valorTransladoLiberado: "",
   sacouDiaria: "", valorMovimentadoDiaria: "", justificativaNaoRealizada: "",
   retiradaTransladoIntegral: "", movimentacaoTransladoSemUso: "", valorTransladoRetirado: "",
+  documentoVeiculoTipo: "", diarioBordoModo: "",
+  diarioPlaca: "", diarioCondutor: "", diarioPassageiros: [], diarioTrechos: [], roteiroScv: [],
   justificativas: {}, anexos: {}, translados: [],
 };
 
@@ -4332,15 +4445,14 @@ function dadosRelatorioPreview(form, numeracaoAnexos) {
     return p ? `${nome} — pág. ${p}` : nome;
   };
   const docsPreview = [];
-  if (form.anexos?.solicitacao_veiculo?.length) docsPreview.push({ nome: comPag("Solicitação de veículo", "solicitacao_veiculo") });
-  if (form.anexos?.diario_bordo?.length) docsPreview.push({ nome: comPag("Diário de bordo", "diario_bordo") });
+  if (form.anexos?.solicitacao_veiculo?.length) docsPreview.push({ nome: comPag(tituloDocumentoVeiculo(form), "solicitacao_veiculo") });
+  if (form.diarioBordoModo === "preencher" && diarioBordoPreenchidoOk(form)) docsPreview.push({ nome: comPag("Diário de bordo", "diario_bordo"), detalhe: "Preenchido no Sistema de Prestação de Contas" });
+  else if (form.anexos?.diario_bordo?.length) docsPreview.push({ nome: comPag("Diário de bordo", "diario_bordo") });
   if (form.anexos?.embarque?.length) docsPreview.push({ nome: comPag("Cartão de embarque ou declaração de embarque", "embarque") });
   if (form.anexos?.bilhete?.length) docsPreview.push({ nome: comPag("Bilhete, BPE ou declaração de embarque", "bilhete") });
   if (form.anexos?.termo_ciencia?.length) docsPreview.push({ nome: comPag("Termo de Ciência e Responsabilidade", "termo_ciencia") });
   if (form.anexos?.saque?.length) docsPreview.push({ nome: comPag("Comprovante de saque ou transferência", "saque") });
   else if (form.saqueComprovante === "nao" && form.justificativas?.saque) docsPreview.push({ nome: "Justificativa registrada por não ter inserido o comprovante de saque/transferência", detalhe: form.justificativas.saque });
-  if (respostaPossuiDoc(form, "solicitacao_veiculo") === "nao" && form.justificativas?.solicitacao_veiculo) docsPreview.push({ nome: "Justificativa registrada por não ter inserido a solicitação de veículo", detalhe: form.justificativas.solicitacao_veiculo });
-  if (respostaPossuiDoc(form, "diario_bordo") === "nao" && form.justificativas?.diario_bordo) docsPreview.push({ nome: "Justificativa registrada por não ter inserido o diário de bordo", detalhe: form.justificativas.diario_bordo });
   if (form.anexos?.devolucao_roteiro?.length) docsPreview.push({ nome: comPag("Devolução de diária — roteiro reduzido", "devolucao_roteiro") });
   if (form.anexos?.devolucao_nao_realizada?.length) docsPreview.push({ nome: comPag("Comprovante de devolução do valor sacado ou transferido", "devolucao_nao_realizada") });
   if (transladosComArquivo.length) {
@@ -4865,6 +4977,46 @@ function FilePreviewModal({ arquivo, onClose }) {
   );
 }
 
+function consultarDistanciaRodoviaria(origem, destino) {
+  return new Promise((resolve, reject) => {
+    if (!DISTANCIA_WEBAPP_URL || DISTANCIA_WEBAPP_URL.includes("COLE_AQUI")) {
+      reject(new Error("Serviço de distância ainda não configurado."));
+      return;
+    }
+
+    const callback = "__distanciaCB_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+    const script = document.createElement("script");
+    const timeout = setTimeout(() => finalizar(new Error("Tempo esgotado ao calcular a distância.")), 15000);
+
+    function limpar() {
+      clearTimeout(timeout);
+      try { delete window[callback]; } catch (e) { window[callback] = undefined; }
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    function finalizar(erro, dados) {
+      limpar();
+      if (erro) reject(erro); else resolve(dados);
+    }
+
+    window[callback] = dados => {
+      if (!dados || !dados.ok) {
+        finalizar(new Error(dados?.erro || "Não foi possível calcular a distância."));
+        return;
+      }
+      finalizar(null, dados);
+    };
+
+    script.onerror = () => finalizar(new Error("Não foi possível acessar o serviço de distância."));
+    const sep = DISTANCIA_WEBAPP_URL.includes("?") ? "&" : "?";
+    script.src = DISTANCIA_WEBAPP_URL + sep
+      + "origem=" + encodeURIComponent(origem)
+      + "&destino=" + encodeURIComponent(destino)
+      + "&callback=" + encodeURIComponent(callback);
+    document.head.appendChild(script);
+  });
+}
+
 function App() {
   const { token, mostrarLista } = useDraftToken();
   const [step, setStep] = useState(1);
@@ -4893,8 +5045,16 @@ function App() {
   const [dadosScv, setDadosScv] = useState(null);
   const [scvNaoRealizada, setScvNaoRealizada] = useState(false);
   const [pdfGeradoUmaVez, setPdfGeradoUmaVez] = useState(false);
+  const [distanciaStatus, setDistanciaStatus] = useState({});
 
   const docFileInputRefs = useRef({});
+
+  function abrirSeletorArquivoDoc(docId) {
+    setTimeout(() => {
+      const campo = docFileInputRefs.current[docId];
+      if (campo) campo.click();
+    }, 80);
+  }
 
   useEffect(() => {
     function impedirAberturaDeArquivo(event) {
@@ -5096,6 +5256,12 @@ function App() {
       translados: [],
       saqueComprovante: "",
       possuiDocumento: {},
+      documentoVeiculoTipo: "",
+      diarioBordoModo: "",
+      diarioPlaca: "",
+      diarioCondutor: "",
+      diarioPassageiros: [],
+      diarioTrechos: [],
       precisaDevolucao: f.tipoPrestacao === "roteiro_reduzido" ? "" : "nao",
       valorDevolucao: "",
       justificativas: {},
@@ -5163,6 +5329,8 @@ function App() {
   const saqueOk = docJustificavelOk(form, "saque");
   const docs = docsFor(form.transporte, precisaDevolucaoTranslado, form.precisaDevolucao === "sim", viagemNaoRealizadaComSaque);
   const pendingDocs = docs.filter(d => {
+    if (d.id === "solicitacao_veiculo") return !documentoVeiculoOk(form);
+    if (d.id === "diario_bordo") return !diarioBordoOk(form);
     if (DOCS_COM_JUSTIFICATIVA.includes(d.id)) return !docJustificavelOk(form, d.id);
     return d.obrig && (!form.anexos[d.id] || form.anexos[d.id].length === 0);
   });
@@ -5362,14 +5530,83 @@ function App() {
       .join("\n");
   }
 
-  function interpretarTextoSCV(textoOriginal) {
+  function interpretarTextoSCV(textoOriginal, paginasOriginais = null) {
     const bruto = String(textoOriginal || "");
     const linhas = bruto.split(/\r?\n/).map(limparTextoExtraido).filter(Boolean);
     const texto = linhas.join(" ");
 
     const secaoViajante = (texto.match(/(?:^|\s)Viajante\s+([\s\S]*?)(?:\s+Planejamento da Viagem\s+|$)/i) || [])[1] || texto;
     const planejamento = (texto.match(/Planejamento da Viagem\s+([\s\S]*?)(?:\s+Roteiro\s+|$)/i) || [])[1] || texto;
-    const roteiro = (texto.match(/Roteiro\s+([\s\S]*?)(?:\s+Informações Adicionais\s+|$)/i) || [])[1] || "";
+
+    // O quadro Roteiro pode continuar na página 2, 3, 4... e PDFs assinados
+    // pelo e-Protocolo acrescentam rodapés com outras datas/horas. Se toda a
+    // documentação for tratada como um único texto, essas datas de assinatura
+    // podem ser confundidas com os últimos trechos. Por isso a rota é isolada
+    // página a página e os rodapés/assinaturas são descartados.
+    function extrairLinhasRoteiroDasPaginas(paginasEntrada) {
+      const paginas = Array.isArray(paginasEntrada) && paginasEntrada.length
+        ? paginasEntrada
+        : [bruto];
+      const resultado = [];
+      let continuacaoPossivel = false;
+
+      const ehRodapeOuAssinatura = linha => (
+        /^\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}(?::\d{2})?\s+.*\bP[aá]gina\s+\d+\s+de\s+\d+/i.test(linha) ||
+        /^SOLICITA[CÇ][AÃ]O DE VIAGEM\b/i.test(linha) ||
+        /Assinatura Avan[cç]ada realizada por:/i.test(linha) ||
+        /Inserido ao documento/i.test(linha) ||
+        /Demais assinaturas na [uú]ltima folha/i.test(linha) ||
+        /A autenticidade deste documento pode ser validada/i.test(linha) ||
+        /eprotocolo\.pr\.gov\.br\/spiweb\/validarDocumento/i.test(linha) ||
+        /^Documento:\s*/i.test(linha) ||
+        /^Documento assinado nos termos/i.test(linha)
+      );
+
+      const ehFimRoteiro = linha => (
+        /^Informa[cç][oõ]es Adicionais\b/i.test(linha) ||
+        /^Cart[oõ]es para Pagamento/i.test(linha) ||
+        /^Observa[cç][oõ]es\b/i.test(linha) ||
+        /^TOTAL\b/i.test(linha)
+      );
+
+      paginas.forEach((paginaTexto, paginaIndex) => {
+        const paginaLinhas = String(paginaTexto || "")
+          .split(/\r?\n/)
+          .map(limparTextoExtraido)
+          .filter(Boolean);
+        if (!paginaLinhas.length) return;
+
+        let inicio = paginaLinhas.findIndex(l => /^Roteiro(?:\s|$)/i.test(l));
+        if (inicio >= 0) {
+          inicio += 1;
+          continuacaoPossivel = true;
+        } else if (continuacaoPossivel) {
+          // Alguns geradores repetem apenas o cabeçalho da tabela nas páginas seguintes.
+          const cabecalho = paginaLinhas.findIndex(l =>
+            /Sa[ií]da/i.test(l) && /Chegada/i.test(l) && /Meio de Transporte/i.test(l)
+          );
+          inicio = cabecalho >= 0 ? cabecalho + 1 : -1;
+        }
+
+        if (inicio < 0) return;
+        let encontrouFimFormal = false;
+        for (let i = inicio; i < paginaLinhas.length; i++) {
+          const linha = paginaLinhas[i];
+          if (ehFimRoteiro(linha)) {
+            encontrouFimFormal = true;
+            break;
+          }
+          if (ehRodapeOuAssinatura(linha)) break;
+          resultado.push(linha);
+        }
+        if (encontrouFimFormal) continuacaoPossivel = false;
+      });
+
+      return resultado;
+    }
+
+    const linhasRoteiro = extrairLinhasRoteiroDasPaginas(paginasOriginais);
+    const roteiro = linhasRoteiro.join(" ");
 
     const numero = (texto.match(/Número:\s*([0-9./-]+)/i) || [])[1] || "";
     const nome = (secaoViajante.match(/(?:^|\s)Nome:\s*(.*?)\s+RG:/i) || [])[1] || "";
@@ -5407,6 +5644,80 @@ function App() {
       : "";
     const destinoLocal = localEvento ? paraNomeProprio(limparTextoExtraido(localEvento).toUpperCase()) : "";
 
+    // Extrai todos os trechos do quadro Roteiro, inclusive quando a tabela continua
+    // em páginas seguintes. Como a seção já foi limpa de rodapés e assinaturas,
+    // podemos remontar os pares cidade/data/hora na ordem em que aparecem.
+    const roteiroScv = [];
+    const cidadesSequencia = [];
+    const datasSequencia = [];
+    const horasSequencia = [];
+
+    for (const linha of linhasRoteiro) {
+      const cidadesDaLinha = [...linha.matchAll(/([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ .'-]*\/[A-Z]{2})/g)]
+        .map(m => limparCidadeCandidata(m[1]))
+        .filter(v => /^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ .'-]*\/[A-Z]{2}$/.test(v));
+      cidadesSequencia.push(...cidadesDaLinha);
+      datasSequencia.push(...[...linha.matchAll(/\b(\d{2}\/\d{2}\/\d{4})\b/g)].map(m => m[1]));
+      horasSequencia.push(...[...linha.matchAll(/\b(\d{2}:\d{2})(?::\d{2})?\b/g)].map(m => m[1]));
+    }
+
+    const qtdTrechosSequenciais = Math.min(
+      Math.floor(cidadesSequencia.length / 2),
+      Math.floor(datasSequencia.length / 2),
+      Math.floor(horasSequencia.length / 2)
+    );
+
+    if (qtdTrechosSequenciais > 0) {
+      for (let i = 0; i < qtdTrechosSequenciais; i++) {
+        roteiroScv.push({
+          id: uid(),
+          data: dataBRparaISO(datasSequencia[i * 2]),
+          horaSaida: horasSequencia[i * 2] || "",
+          origem: cidadesSequencia[i * 2] || "",
+          destino: cidadesSequencia[i * 2 + 1] || "",
+          horaChegada: horasSequencia[i * 2 + 1] || "",
+          kmSaida: "",
+          distanciaSugerida: "",
+          kmChegada: "",
+        });
+      }
+    }
+
+    // Fallback para PDFs cujo mecanismo de texto preserve cada linha completa da tabela.
+    if (!roteiroScv.length) {
+      const regexCidadeLinha = /([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ .'-]*\/[A-Z]{2})/g;
+      for (const linha of linhasRoteiro) {
+        const cidadesLinha = [...linha.matchAll(regexCidadeLinha)].map(m => limparCidadeCandidata(m[1]));
+        const datasLinha = [...linha.matchAll(/\b(\d{2}\/\d{2}\/\d{4})\b/g)].map(m => m[1]);
+        const horasLinha = [...linha.matchAll(/\b(\d{2}:\d{2})(?::\d{2})?\b/g)].map(m => m[1]);
+        if (cidadesLinha.length >= 2 && datasLinha.length >= 2 && horasLinha.length >= 2) {
+          roteiroScv.push({
+            id: uid(),
+            data: dataBRparaISO(datasLinha[0]),
+            horaSaida: horasLinha[0],
+            origem: cidadesLinha[0],
+            destino: cidadesLinha[1],
+            horaChegada: horasLinha[1],
+            kmSaida: "", distanciaSugerida: "", kmChegada: "",
+          });
+        }
+      }
+    }
+
+    if (!roteiroScv.length) {
+      const regexTrecho = /([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ .'-]*\/[A-Z]{2})\s+(\d{2}\/\d{2}\/\d{4})\s+(\d{2}:\d{2}(?::\d{2})?)\s+([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ .'-]*\/[A-Z]{2})\s+(\d{2}\/\d{2}\/\d{4})\s+(\d{2}:\d{2}(?::\d{2})?)/gi;
+      for (const m of roteiro.matchAll(regexTrecho)) {
+        const origemTrecho = limparCidadeCandidata(m[1]);
+        const destinoTrecho = limparCidadeCandidata(m[4]);
+        if (!origemTrecho || !destinoTrecho) continue;
+        roteiroScv.push({
+          id: uid(), data: dataBRparaISO(m[2]), horaSaida: String(m[3] || "").slice(0, 5),
+          origem: origemTrecho, destino: destinoTrecho, horaChegada: String(m[6] || "").slice(0, 5),
+          kmSaida: "", distanciaSugerida: "", kmChegada: "",
+        });
+      }
+    }
+
     // A primeira data do roteiro é a saída; a última é o retorno ao município de origem.
     const datasRoteiro = [...roteiro.matchAll(/\b(\d{2}\/\d{2}\/\d{4})\b/g)].map(m => m[1]);
     const dataSaidaRoteiro = datasRoteiro[0] || "";
@@ -5426,6 +5737,7 @@ function App() {
       tipoViagemScv: paraFrase(limparTextoExtraido(tipoViagemScv).toUpperCase()),
       localEventoScv: paraNomeProprio(limparTextoExtraido(localEvento).toUpperCase()),
       periodoEventoScv: periodoEvento.length ? `${periodoEvento[1]} ${periodoEvento[2]} a ${periodoEvento[3]} ${periodoEvento[4]}` : "",
+      roteiroScv,
       transporte: mapearTransporteSCV(roteiro || texto),
     };
   }
@@ -5456,7 +5768,7 @@ function App() {
         const content = await page.getTextContent();
         partes.push(reconstruirLinhasPdf(content.items));
       }
-      const extraidos = interpretarTextoSCV(partes.join("\n"));
+      const extraidos = interpretarTextoSCV(partes.join("\n"), partes);
       setDadosScv(extraidos);
       const idAnterior = form.scvArquivo?.id;
       if (idAnterior && idAnterior !== fileId) excluirConteudosArquivos([idAnterior]);
@@ -5569,6 +5881,131 @@ function App() {
       setAnexosContent(prev => { const n = { ...prev }; delete n[item.arquivo.id]; return n; });
     }
     updateTranslado(itemId, { arquivo: null });
+  }
+
+  async function calcularDistanciaTrecho(trecho) {
+    if (!trecho || !trecho.id) return;
+    const origem = String(trecho.origem || "").trim();
+    const destino = String(trecho.destino || "").trim();
+    if (!origem || !destino) return;
+
+    const chaveRota = `${origem.toLocaleLowerCase("pt-BR")}|${destino.toLocaleLowerCase("pt-BR")}`;
+    setDistanciaStatus(s => ({ ...s, [trecho.id]: "calculando" }));
+
+    try {
+      const resultado = await consultarDistanciaRodoviaria(origem, destino);
+      const km = Number(resultado.km);
+      if (!Number.isFinite(km) || km < 0) throw new Error("Distância inválida retornada pelo serviço.");
+
+      setForm(f => ({
+        ...f,
+        atesto: false,
+        diarioTrechos: (f.diarioTrechos || []).map(t => {
+          if (t.id !== trecho.id) return t;
+          // Se a pessoa alterou origem/destino enquanto a consulta estava rodando,
+          // não aplicamos uma distância que pertence à rota anterior.
+          const chaveAtual = `${String(t.origem || "").trim().toLocaleLowerCase("pt-BR")}|${String(t.destino || "").trim().toLocaleLowerCase("pt-BR")}`;
+          if (chaveAtual !== chaveRota) return t;
+
+          const proximo = { ...t, distanciaSugerida: String(Math.round(km)), distanciaAutoRota: chaveRota };
+          const kmSaida = Number(String(proximo.kmSaida || "").replace(/\./g, "").replace(",", ".").replace(/[^0-9.-]/g, ""));
+          if (Number.isFinite(kmSaida)) proximo.kmChegada = String(Math.round(kmSaida + km));
+          return proximo;
+        })
+      }));
+      setDistanciaStatus(s => ({ ...s, [trecho.id]: "ok" }));
+      setConferencia({ dados: false, transporte: false, documentos: false, privacidade: false, atesto: false });
+      setPdfConcluido(false);
+      setPdfGeradoUmaVez(false);
+    } catch (erro) {
+      console.warn("Falha ao calcular distância:", origem, destino, erro);
+      setDistanciaStatus(s => ({ ...s, [trecho.id]: "erro" }));
+    }
+  }
+
+  const assinaturaRotasDiario = (form.diarioTrechos || [])
+    .map(t => `${t.id}:${String(t.origem || "").trim()}>${String(t.destino || "").trim()}`)
+    .join("||");
+
+  useEffect(() => {
+    if (form.diarioBordoModo !== "preencher") return;
+    if (!DISTANCIA_WEBAPP_URL || DISTANCIA_WEBAPP_URL.includes("COLE_AQUI")) return;
+
+    const timer = setTimeout(() => {
+      (form.diarioTrechos || []).forEach(t => {
+        const origem = String(t.origem || "").trim();
+        const destino = String(t.destino || "").trim();
+        if (!origem || !destino) return;
+        const chave = `${origem.toLocaleLowerCase("pt-BR")}|${destino.toLocaleLowerCase("pt-BR")}`;
+        if (t.distanciaAutoRota === chave) return;
+        calcularDistanciaTrecho(t);
+      });
+    }, 550);
+
+    return () => clearTimeout(timer);
+  }, [form.diarioBordoModo, assinaturaRotasDiario]);
+
+  function iniciarDiarioPreenchido() {
+    const passageirosAtuais = Array.isArray(form.diarioPassageiros) ? form.diarioPassageiros : [];
+    const trechosAtuais = Array.isArray(form.diarioTrechos) ? form.diarioTrechos : [];
+    update({
+      diarioBordoModo: "preencher",
+      diarioPassageiros: passageirosAtuais.length ? passageirosAtuais : [{ id: uid(), nome: form.nomeViajante || "" }],
+      diarioTrechos: trechosAtuais.length ? trechosAtuais : criarTrechosDiarioIniciais(form),
+      anexos: { ...form.anexos, diario_bordo: [] },
+    });
+  }
+
+  function atualizarTrechoDiario(id, campo, valor) {
+    const parseNumero = v => {
+      const n = Number(String(v ?? "").replace(/\./g, "").replace(",", ".").replace(/[^0-9.-]/g, ""));
+      return Number.isFinite(n) ? n : null;
+    };
+    if (campo === "origem" || campo === "destino") {
+      setDistanciaStatus(s => ({ ...s, [id]: "" }));
+    }
+    setForm(f => ({
+      ...f,
+      atesto: false,
+      diarioTrechos: (f.diarioTrechos || []).map(t => {
+        if (t.id !== id) return t;
+        const proximo = { ...t, [campo]: valor };
+        if (campo === "origem" || campo === "destino") {
+          proximo.distanciaAutoRota = "";
+          proximo.distanciaSugerida = "";
+          proximo.kmChegada = "";
+        }
+        if (campo === "kmSaida" || campo === "distanciaSugerida") {
+          const kmSaida = parseNumero(proximo.kmSaida);
+          const distancia = parseNumero(proximo.distanciaSugerida);
+          if (kmSaida !== null && distancia !== null) proximo.kmChegada = String(Math.round(kmSaida + distancia));
+        }
+        return proximo;
+      })
+    }));
+    setConferencia({ dados: false, transporte: false, documentos: false, privacidade: false, atesto: false });
+    setPdfConcluido(false);
+    setPdfGeradoUmaVez(false);
+  }
+
+  function adicionarTrechoDiario() {
+    update({ diarioTrechos: [...(form.diarioTrechos || []), { id: uid(), data: "", horaSaida: "", origem: "", destino: "", horaChegada: "", kmSaida: "", distanciaSugerida: "", kmChegada: "" }] });
+  }
+
+  function removerTrechoDiario(id) {
+    update({ diarioTrechos: (form.diarioTrechos || []).filter(t => t.id !== id) });
+  }
+
+  function atualizarPassageiroDiario(id, nome) {
+    update({ diarioPassageiros: (form.diarioPassageiros || []).map(p => p.id === id ? { ...p, nome } : p) });
+  }
+
+  function adicionarPassageiroDiario() {
+    update({ diarioPassageiros: [...(form.diarioPassageiros || []), { id: uid(), nome: "" }] });
+  }
+
+  function removerPassageiroDiario(id) {
+    update({ diarioPassageiros: (form.diarioPassageiros || []).filter(p => p.id !== id) });
   }
 
   const datasValidas = !form.dataSaida || !form.dataRetorno || form.dataRetorno >= form.dataSaida;
@@ -5685,6 +6122,188 @@ function App() {
     );
   }
 
+  function renderSolicitacaoVeiculo(d, arquivos) {
+    const atendido = documentoVeiculoOk(form);
+    const tituloAtual = tituloDocumentoVeiculo(form);
+    function selecionarTipo(tipo) {
+      if (form.documentoVeiculoTipo === tipo) {
+        abrirSeletorArquivoDoc("solicitacao_veiculo");
+        return;
+      }
+      // Rascunhos antigos podem já ter o arquivo anexado sem esta nova classificação.
+      // Nesse caso preservamos o arquivo; só removemos quando a pessoa troca entre
+      // tipos que já tinham sido explicitamente escolhidos nesta versão.
+      const trocandoTipoJaEscolhido = !!form.documentoVeiculoTipo && form.documentoVeiculoTipo !== tipo;
+      if (trocandoTipoJaEscolhido && arquivos.length && !window.confirm("Ao trocar o tipo de documento, o arquivo já anexado será removido. Deseja continuar?")) return;
+      if (trocandoTipoJaEscolhido && arquivos.length) {
+        const ids = arquivos.map(a => a.id);
+        excluirConteudosArquivos(ids);
+        setAnexosContent(prev => { const n = { ...prev }; ids.forEach(id => delete n[id]); return n; });
+      }
+      update({ documentoVeiculoTipo: tipo, anexos: { ...form.anexos, solicitacao_veiculo: trocandoTipoJaEscolhido ? [] : arquivos } });
+      abrirSeletorArquivoDoc("solicitacao_veiculo");
+    }
+    return (
+      <div className={"doc-item-block " + (atendido ? "doc-done" : "")} id="doc-solicitacao_veiculo" key={d.id}>
+        <div className="doc-item-head">
+          <span className={"dot " + (atendido ? "ok" : "pend")}></span>
+          <div className="doc-info">
+            <div className="doc-name">Solicitação de veículo <span className="req">*</span></div>
+            <div className="doc-tag">Selecione o documento correspondente à utilização do veículo oficial.</div>
+          </div>
+          {atendido && <div className="doc-status ok">✓ anexado</div>}
+        </div>
+        <div className="choice-panel">
+          <div className="toggle-row">
+            <button type="button" className={"toggle-btn " + (form.documentoVeiculoTipo === "solicitacao" ? "on" : "")} onClick={() => selecionarTipo("solicitacao")}>Solicitação de veículo</button>
+            <button type="button" className={"toggle-btn " + (form.documentoVeiculoTipo === "cessao" ? "on" : "")} onClick={() => selecionarTipo("cessao")}>Termo de cessão de uso</button>
+          </div>
+          {!form.documentoVeiculoTipo && <p className="choice-help field-guidance">Escolha uma das opções para continuar.</p>}
+        </div>
+        {arquivos.length > 0 && (
+          <ul className="file-chip-list">
+            {arquivos.map(f => (
+              <li className="file-chip" key={f.id}>
+                <span className="file-chip-nome">{f.nome}</span>{f.redigido && <span className="redigido-tag">dados ocultados</span>}
+                {!f.redigido && <button className="file-remove file-remove-redact" onClick={() => openRedactForDoc("solicitacao_veiculo", f.id)}>Ocultar dados pessoais</button>}
+                <button className="file-remove file-remove-delete" onClick={() => removeFile("solicitacao_veiculo", f.id)}>Excluir arquivo</button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {form.documentoVeiculoTipo && (
+          <label className={"file-btn " + (arquivos.length ? "plus" : "")}>
+            <Icon name="paperclip" size={16} /> {arquivos.length ? "Substituir/adicionar arquivo" : `Anexar ${tituloAtual.toLowerCase()}`}
+            <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="file-input-hidden" ref={el => { docFileInputRefs.current.solicitacao_veiculo = el; }} onChange={e => { attachFiles("solicitacao_veiculo", e.target.files); e.target.value = ""; }} />
+          </label>
+        )}
+        {fileWarnings.solicitacao_veiculo && <div className="banner warn" style={{ marginTop:10, marginBottom:0 }}><Icon name="alert" size={16}/><span>{fileWarnings.solicitacao_veiculo}</span></div>}
+      </div>
+    );
+  }
+
+  function renderDiarioBordo(d, arquivos) {
+    const atendido = diarioBordoOk(form);
+    const passageiros = Array.isArray(form.diarioPassageiros) ? form.diarioPassageiros : [];
+    const trechos = Array.isArray(form.diarioTrechos) ? form.diarioTrechos : [];
+    return (
+      <div className={"doc-item-block " + (atendido ? "doc-done" : "")} id="doc-diario_bordo" key={d.id}>
+        <div className="doc-item-head">
+          <span className={"dot " + (atendido ? "ok" : "pend")}></span>
+          <div className="doc-info">
+            <div className="doc-name">Diário de bordo <span className="req">*</span></div>
+            <div className="doc-tag">Escolha como deseja apresentar o diário de bordo.</div>
+          </div>
+          {atendido && <div className="doc-status ok">{form.diarioBordoModo === "preencher" ? "✓ preenchido" : "✓ anexado"}</div>}
+        </div>
+        <div className="choice-panel">
+          <div className="toggle-row">
+            <button type="button" className={"toggle-btn " + (form.diarioBordoModo === "anexar" ? "on" : "")} onClick={() => { if (form.diarioBordoModo !== "anexar") update({ diarioBordoModo:"anexar" }); abrirSeletorArquivoDoc("diario_bordo"); }}>Anexar diário de bordo</button>
+            <button type="button" className={"toggle-btn " + (form.diarioBordoModo === "preencher" ? "on" : "")} onClick={() => {
+              if (arquivos.length && !window.confirm("Ao preencher o diário no sistema, o arquivo anexado será removido. Deseja continuar?")) return;
+              if (arquivos.length) {
+                const ids = arquivos.map(a => a.id);
+                excluirConteudosArquivos(ids);
+                setAnexosContent(prev => { const n = { ...prev }; ids.forEach(id => delete n[id]); return n; });
+              }
+              iniciarDiarioPreenchido();
+            }}>Preencher no sistema</button>
+          </div>
+          {!form.diarioBordoModo && <p className="choice-help field-guidance">Escolha uma opção para continuar.</p>}
+        </div>
+
+        {form.diarioBordoModo === "anexar" && (
+          <>
+            {arquivos.length > 0 && (
+              <ul className="file-chip-list">
+                {arquivos.map(f => (
+                  <li className="file-chip" key={f.id}>
+                    <span className="file-chip-nome">{f.nome}</span>{f.redigido && <span className="redigido-tag">dados ocultados</span>}
+                    {!f.redigido && <button className="file-remove file-remove-redact" onClick={() => openRedactForDoc("diario_bordo", f.id)}>Ocultar dados pessoais</button>}
+                    <button className="file-remove file-remove-delete" onClick={() => removeFile("diario_bordo", f.id)}>Excluir arquivo</button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <label className={"file-btn " + (arquivos.length ? "plus" : "")}>
+              <Icon name="paperclip" size={16}/> {arquivos.length ? "Adicionar outro arquivo" : "Anexar diário de bordo"}
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="file-input-hidden" ref={el => { docFileInputRefs.current.diario_bordo = el; }} onChange={e => { attachFiles("diario_bordo", e.target.files); e.target.value=""; }} />
+            </label>
+          </>
+        )}
+
+        {form.diarioBordoModo === "preencher" && (
+          <div className="diario-assistido">
+            <div className="diario-head-inline">
+              <strong>Diário de bordo — preenchimento assistido.</strong>
+              <span className="field-help-details diario-help-inline">
+                <button type="button" className="field-help-icon" aria-describedby="ajuda-diario-bordo" aria-label="Ajuda sobre o preenchimento assistido do diário de bordo">
+                  <Icon name="help" size={16} />
+                </button>
+                <span id="ajuda-diario-bordo" className="field-tooltip" role="tooltip">
+                  O roteiro importado da Solicitação de Viagem é apenas uma sugestão. Todos os campos abaixo podem ser editados.
+                </span>
+              </span>
+            </div>
+            <div className="diario-meta-grid">
+              <div className="field"><label>Placa do veículo <span className="req">*</span></label><input type="text" value={form.diarioPlaca || ""} onChange={e => update({ diarioPlaca:e.target.value.toUpperCase() })} placeholder="Ex: ABC-1D23" /></div>
+              <div className="field"><label>Condutor <span className="req">*</span></label><input type="text" value={form.diarioCondutor || ""} onChange={e => update({ diarioCondutor:e.target.value })} placeholder="Nome completo do condutor" /></div>
+            </div>
+
+            <div className="diario-passageiros">
+              <div className="diario-passageiros-head"><strong>Passageiros</strong><button type="button" className="file-btn plus" style={{marginTop:0}} onClick={adicionarPassageiroDiario}>+ Adicionar passageiro</button></div>
+              {passageiros.length === 0 && <div className="section-hint" style={{marginBottom:8}}>Nenhum passageiro informado. Adicione quando houver passageiros no veículo.</div>}
+              {passageiros.map((p, i) => (
+                <div className="passageiro-row" key={p.id}>
+                  <input type="text" value={p.nome || ""} onChange={e => atualizarPassageiroDiario(p.id, e.target.value)} placeholder={`Nome completo do passageiro ${i + 1}`} />
+                  <button type="button" className="btn-link-danger" onClick={() => removerPassageiroDiario(p.id)}>Excluir</button>
+                </div>
+              ))}
+            </div>
+
+            <div className="diario-table-wrap">
+              <table className="diario-table">
+                <thead><tr>
+                  <th>Data</th><th>Hora de saída</th><th>Origem</th><th>Destino</th><th>Hora de chegada</th><th>KM saída</th><th>Distância sugerida</th><th>KM chegada</th><th className="col-acoes">Ações</th>
+                </tr></thead>
+                <tbody>
+                  {trechos.map(t => <tr key={t.id}>
+                    <td><input type="date" value={t.data || ""} onChange={e => atualizarTrechoDiario(t.id,"data",e.target.value)} /></td>
+                    <td><input type="time" value={t.horaSaida || ""} onChange={e => atualizarTrechoDiario(t.id,"horaSaida",e.target.value)} /></td>
+                    <td className="col-local"><input type="text" value={t.origem || ""} onChange={e => atualizarTrechoDiario(t.id,"origem",e.target.value)} /></td>
+                    <td className="col-local"><input type="text" value={t.destino || ""} onChange={e => atualizarTrechoDiario(t.id,"destino",e.target.value)} /></td>
+                    <td><input type="time" value={t.horaChegada || ""} onChange={e => atualizarTrechoDiario(t.id,"horaChegada",e.target.value)} /></td>
+                    <td className="col-km"><input type="text" inputMode="numeric" value={t.kmSaida || ""} onChange={e => atualizarTrechoDiario(t.id,"kmSaida",e.target.value)} placeholder="0" /></td>
+                    <td className="col-distancia"><div style={{display:"flex",gap:6,alignItems:"center"}}><input type="text" inputMode="decimal" value={t.distanciaSugerida || ""} onChange={e => atualizarTrechoDiario(t.id,"distanciaSugerida",e.target.value)} placeholder={distanciaStatus[t.id] === "calculando" ? "Calculando..." : "km"} title={distanciaStatus[t.id] === "erro" ? "Não foi possível calcular automaticamente. Você pode preencher manualmente ou tentar novamente." : "Campo de referência para apoiar o preenchimento do diário de bordo."} />{distanciaStatus[t.id] === "erro" && <button type="button" className="distancia-retry-btn" onClick={() => calcularDistanciaTrecho(t)} title="Tentar calcular novamente">↻</button>}</div></td>
+                    <td className="col-km"><input type="text" inputMode="numeric" value={t.kmChegada || ""} onChange={e => atualizarTrechoDiario(t.id,"kmChegada",e.target.value)} placeholder="0" /></td>
+                    <td className="col-acoes"><button type="button" className="btn-link-danger" onClick={() => removerTrechoDiario(t.id)} title="Excluir trecho">Excluir</button></td>
+                  </tr>)}
+                </tbody>
+              </table>
+            </div>
+            <div className="diario-actions-row">
+              <span className="diario-note">A distância sugerida é apenas referência para o preenchimento. Confira sempre a quilometragem efetivamente registrada no hodômetro.{(!DISTANCIA_WEBAPP_URL || DISTANCIA_WEBAPP_URL.includes("COLE_AQUI")) && <><br/><b>Configuração pendente:</b> conecte o serviço de distância do Google Apps Script para o cálculo automático.</>}</span>
+              <div className="diario-actions-buttons">
+                <button type="button" className="file-btn plus" style={{marginTop:0}} onClick={adicionarTrechoDiario}>+ Adicionar trecho</button>
+                <button
+                  type="button"
+                  className="btn btn-ghost diario-download-btn"
+                  style={{marginTop:0}}
+                  onClick={baixarDiarioBordoPDF}
+                  disabled={!diarioBordoPreenchidoOk(form)}
+                  title={diarioBordoPreenchidoOk(form) ? "Baixar somente o Diário de Bordo em PDF" : "Preencha placa, condutor e todos os dados dos trechos para liberar o PDF"}
+                >
+                  <Icon name="doc" size={16} /> Baixar Diário de Bordo em PDF
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {fileWarnings.diario_bordo && <div className="banner warn" style={{ marginTop:10, marginBottom:0 }}><Icon name="alert" size={16}/><span>{fileWarnings.diario_bordo}</span></div>}
+      </div>
+    );
+  }
+
   const itensFaltandoEtapa2 = [];
   if (viagemNaoRealizadaComSaque && parseMoeda(form.valorMovimentadoDiaria) <= 0) itensFaltandoEtapa2.push({ id: "campo-valorMovimentadoDiaria", label: "Valor sacado ou transferido da conta corporativa" });
   if (!viagemNaoRealizada && !form.transporte) itensFaltandoEtapa2.push({ id: "campo-transporte", label: "Meio de transporte utilizado" });
@@ -5727,7 +6346,9 @@ function App() {
     });
   }
   docs.filter(d => d.obrig).forEach(d => {
-    tarefasEtapa2.push(DOCS_COM_JUSTIFICATIVA.includes(d.id) ? docJustificavelOk(form, d.id) : !!(form.anexos[d.id] && form.anexos[d.id].length));
+    if (d.id === "solicitacao_veiculo") tarefasEtapa2.push(documentoVeiculoOk(form));
+    else if (d.id === "diario_bordo") tarefasEtapa2.push(diarioBordoOk(form));
+    else tarefasEtapa2.push(DOCS_COM_JUSTIFICATIVA.includes(d.id) ? docJustificavelOk(form, d.id) : !!(form.anexos[d.id] && form.anexos[d.id].length));
   });
   if (form.tipoPrestacao === "roteiro_reduzido") {
     tarefasEtapa2.push(form.precisaDevolucao === "sim" || form.precisaDevolucao === "nao");
@@ -5834,10 +6455,15 @@ function App() {
       const anexosPreparados = [];
       async function prepararDocs(listaDocs) {
         for (const d of listaDocs) {
+          if (d.id === "diario_bordo" && form.diarioBordoModo === "preencher" && diarioBordoPreenchidoOk(form)) {
+            anexosPreparados.push({ tipo: "diario_gerado", docId: "diario_bordo", titulo: "Diário de bordo" });
+            continue;
+          }
           const arquivos = form.anexos[d.id] || [];
           for (let i = 0; i < arquivos.length; i++) {
             const meta = arquivos[i];
-            const titulo = arquivos.length > 1 ? `${d.nome} (${i + 1}/${arquivos.length})` : d.nome;
+            const nomeBase = d.id === "solicitacao_veiculo" ? tituloDocumentoVeiculo(form) : d.nome;
+            const titulo = arquivos.length > 1 ? `${nomeBase} (${i + 1}/${arquivos.length})` : nomeBase;
             let imagens = [];
             if (anexosContent[meta.id]) {
               try { imagens = await obterPaginasComoImagens(meta, anexosContent[meta.id]); } catch (e) { imagens = []; }
@@ -5868,6 +6494,7 @@ function App() {
       let totalPaginasAnexos = 0;
       anexosPreparados.forEach(a => {
         if (a.tipo === "doc") totalPaginasAnexos += Math.max(1, a.imagens.length);
+        else if (a.tipo === "diario_gerado") totalPaginasAnexos += 1;
         else totalPaginasAnexos += a.itens.reduce((acc, t) => acc + Math.max(1, Math.ceil((t.imagens.length || 1) / 2)), 0) + 1;
       });
 
@@ -5898,10 +6525,10 @@ function App() {
         let paginaSinteseTranslado = null;
         let paginasTranslado = [];
         anexosPreparados.forEach(a => {
-          if (a.tipo === "doc") {
+          if (a.tipo === "doc" || a.tipo === "diario_gerado") {
             if (!paginaPorDocId[a.docId]) paginaPorDocId[a.docId] = [];
             paginaPorDocId[a.docId].push(pagina);
-            pagina += Math.max(1, a.imagens.length);
+            pagina += a.tipo === "diario_gerado" ? 1 : Math.max(1, a.imagens.length);
           } else {
             paginaSinteseTranslado = pagina;
             pagina += paginasNecessariasSintese(a.itens.length);
@@ -6654,10 +7281,141 @@ function App() {
         rodapePaginaAnexo();
       }
 
+      function desenharDiarioBordoGerado() {
+        cabecalhoAnexo(true);
+
+        // Título do documento — layout aprovado para o diário de bordo.
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(20);
+        doc.setTextColor(...MX.navy);
+        doc.text("Diário de Bordo", margin, y + 6);
+        doc.setFontSize(10);
+        doc.setTextColor(...MX.cinzaTxt);
+        doc.text("DETRAN/PR", PAGE_W - margin, y - 2, { align: "right" });
+        doc.text("Departamento de Trânsito do Paraná", PAGE_W - margin, y + 11, { align: "right" });
+        doc.text("Central de Viagens", PAGE_W - margin, y + 24, { align: "right" });
+        y += 42;
+        doc.setDrawColor(...MX.cinzaBorda);
+        doc.setLineWidth(1);
+        doc.line(margin, y, PAGE_W - margin, y);
+        y += 14;
+
+        function faixa(titulo) {
+          doc.setFillColor(237, 242, 246);
+          doc.roundedRect(margin, y, contentW, 22, 4, 4, "F");
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(11);
+          doc.setTextColor(...MX.navy);
+          doc.text(titulo, margin + 8, y + 15);
+          y += 30;
+        }
+
+        function campo(x, yy, label, valor, larguraTotal = 210, corValor = MX.texto, larguraLabel = 104) {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(9.1);
+          doc.setTextColor(...MX.texto);
+          doc.text(label, x, yy);
+
+          const valorX = x + larguraLabel;
+          const larguraValor = Math.max(42, larguraTotal - larguraLabel);
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor(...corValor);
+          const texto = String(valor || "—");
+          const linhas = doc.splitTextToSize(texto, larguraValor);
+          doc.text(linhas, valorX, yy);
+          return Math.max(12, linhas.length * 10);
+        }
+
+        faixa("Dados da solicitação");
+        const passageiros = (form.diarioPassageiros || []).map(p => String(p.nome || "").trim()).filter(Boolean);
+        const trechos = Array.isArray(form.diarioTrechos) ? form.diarioTrechos : [];
+        const primeiraData = trechos[0]?.data || form.dataSaida || "";
+        const ultimaData = trechos[trechos.length - 1]?.data || form.dataRetorno || "";
+        const leftX = margin;
+        const leftW = contentW * 0.54;
+        const rightX = margin + contentW * 0.59;
+        const rightW = contentW * 0.41;
+        let yl = y + 4;
+        let yr = y + 4;
+
+        // Duas colunas para os dados curtos. A largura reservada ao rótulo foi
+        // aumentada para impedir que datas encostem em "Data de utilização (...)".
+        yl += campo(leftX, yl, "Número da solicitação:", form.numeroSolicitacao, leftW, MX.texto, 112);
+        yl += campo(leftX, yl, "Solicitante:", form.nomeViajante, leftW, MX.texto, 112);
+        yl += campo(leftX, yl, "Unidade:", form.siglaSetor, leftW, MX.texto, 112);
+        yl += campo(leftX, yl, "Data de utilização (inicial):", formatDateBR(primeiraData), leftW, MX.texto, 128);
+        yl += campo(leftX, yl, "Data de utilização (retorno):", formatDateBR(ultimaData), leftW, MX.texto, 128);
+
+        yr += campo(rightX, yr, "Situação:", "PREENCHIDO", rightW, MX.verdeTexto, 76);
+        yr += campo(rightX, yr, "Placa do veículo:", form.diarioPlaca, rightW, MX.texto, 82);
+        yr += campo(rightX, yr, "Condutor:", form.diarioCondutor, rightW, MX.texto, 82);
+
+        // Motivo e passageiros usam a largura inteira. Esses conteúdos podem ser
+        // longos e não devem ficar comprimidos na coluna esquerda.
+        y = Math.max(yl, yr) + 4;
+        y += campo(leftX, y, "Motivo da viagem:", form.nomeEvento || form.motivo, contentW, MX.texto, 104);
+        y += campo(leftX, y, "Lista de passageiros:", passageiros.length ? passageiros.join(", ") : "—", contentW, MX.texto, 104);
+        y += 8;
+
+        faixa("Itinerário");
+        const cols = [
+          { t:"Data", w:.125 }, { t:"Hora de saída", w:.14 }, { t:"Origem", w:.165 },
+          { t:"Destino", w:.165 }, { t:"Hora de chegada", w:.15 }, { t:"KM saída", w:.1275 }, { t:"KM chegada", w:.1275 },
+        ];
+        const headerH = 30, rowH = 23;
+        doc.setFillColor(224, 231, 236);
+        doc.rect(margin, y, contentW, headerH, "F");
+        doc.setDrawColor(178, 190, 198);
+        doc.setLineWidth(.6);
+        let x = margin;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8.5);
+        doc.setTextColor(...MX.texto);
+        cols.forEach(c => {
+          const cw = contentW * c.w;
+          doc.rect(x, y, cw, headerH, "S");
+          const linhasCabecalho = doc.splitTextToSize(c.t, cw - 8);
+          const alturaTexto = linhasCabecalho.length * 9;
+          const inicioY = y + (headerH - alturaTexto) / 2 + 7;
+          doc.text(linhasCabecalho, x + cw/2, inicioY, { align:"center" });
+          x += cw;
+        });
+        y += headerH;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.5);
+        trechos.forEach((t, ri) => {
+          if (y + rowH > PAGE_H - 92) return; // viagens usuais cabem em uma página; evita invadir o rodapé.
+          if (ri % 2 === 1) { doc.setFillColor(250,251,252); doc.rect(margin,y,contentW,rowH,"F"); }
+          const vals = [formatDateBR(t.data) || "—", t.horaSaida || "—", t.origem || "—", t.destino || "—", t.horaChegada || "—", t.kmSaida || "—", t.kmChegada || "—"];
+          let cx = margin;
+          cols.forEach((c, ci) => {
+            const cw = contentW * c.w;
+            doc.rect(cx, y, cw, rowH, "S");
+            const txt = doc.splitTextToSize(String(vals[ci]), cw - 8)[0] || "—";
+            doc.text(txt, cx + cw/2, y + 15, { align:"center" });
+            cx += cw;
+          });
+          y += rowH;
+        });
+        y += 18;
+
+        faixa("Abastecimento");
+        doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(...MX.texto);
+        doc.text("Não há registros.", margin + 8, y + 4); y += 24;
+
+        faixa("Observações");
+        doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(...MX.texto);
+        doc.text("Não há registros.", margin + 8, y + 4);
+
+        rodapePaginaAnexo();
+      }
+
       for (let n = 0; n < anexosPreparados.length; n++) {
         const a = anexosPreparados[n];
         const numero = n + 1;
-        if (a.tipo === "doc") {
+        if (a.tipo === "diario_gerado") {
+          desenharDiarioBordoGerado();
+        } else if (a.tipo === "doc") {
           const tipoIcone = /ve[íi]cul|di[áa]rio/i.test(a.titulo) ? "carro" : "doc";
           const paginas = a.imagens.length ? a.imagens : [null];
           for (let pi = 0; pi < paginas.length; pi++) {
@@ -6704,6 +7462,217 @@ function App() {
     }
   }
 
+
+  async function baixarDiarioBordoPDF() {
+    if (!diarioBordoPreenchidoOk(form)) {
+      window.alert("Preencha a placa, o condutor e todos os dados obrigatórios dos trechos antes de baixar o Diário de Bordo.");
+      return;
+    }
+    if (!(window.jspdf && window.jspdf.jsPDF)) {
+      window.alert("A biblioteca de geração de PDF ainda não carregou. Verifique sua conexão e tente novamente.");
+      return;
+    }
+
+    try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: "pt", format: "a4" });
+      const PAGE_W = 595.28, PAGE_H = 841.89;
+      const margin = 48;
+      const contentW = PAGE_W - margin * 2;
+      let y = 0;
+
+      const MX = {
+        navy: [2, 53, 110],
+        verdeVivo: [100, 183, 69],
+        verdeTexto: [44, 110, 28],
+        cinzaBorda: [227, 232, 236],
+        texto: [49, 66, 79],
+        cinzaTxt: [106, 119, 130],
+      };
+
+      const [detranLogoPdf, paranaLogoPdf] = await Promise.all([
+        loadImageEl(DETRAN_LOGO).catch(() => null),
+        loadImageEl(PARANA_LOGO).catch(() => null),
+      ]);
+
+      function barraMesclada(x, yBarra, largura, altura, azulAte = 0.74, verdeDesde = 0.86) {
+        const azul = MX.navy;
+        const verde = MX.verdeVivo;
+        const inicio = x + largura * azulAte;
+        const fim = x + largura * verdeDesde;
+        const raio = altura / 2;
+        doc.setFillColor(...azul);
+        doc.roundedRect(x, yBarra, largura, altura, raio, raio, "F");
+        const passos = 28;
+        const passoW = Math.max(0.3, (fim - inicio) / passos);
+        for (let i = 0; i < passos; i++) {
+          const t = i / Math.max(1, passos - 1);
+          const cor = azul.map((valor, indice) => Math.round(valor + (verde[indice] - valor) * t));
+          doc.setFillColor(...cor);
+          doc.rect(inicio + i * passoW, yBarra, passoW + 0.35, altura, "F");
+        }
+        doc.setFillColor(...verde);
+        doc.rect(fim, yBarra, Math.max(0, x + largura - fim - raio), altura, "F");
+        doc.circle(x + largura - raio, yBarra + raio, raio, "F");
+      }
+
+      // O PDF isolado usa exatamente o mesmo cabeçalho visual do Diário de Bordo
+      // que já integra o PDF consolidado. Nenhum outro anexo é incluído aqui.
+      const logoY = 30;
+      const detranH = 30, detranW = detranH / (575 / 2123);
+      const paranaH = 33, paranaW = paranaH * (273 / 320);
+      if (detranLogoPdf) doc.addImage(detranLogoPdf, "PNG", margin, logoY, detranW, detranH);
+      if (paranaLogoPdf) doc.addImage(paranaLogoPdf, "PNG", PAGE_W - margin - paranaW, logoY + (detranH - paranaH) / 2, paranaW, paranaH);
+      const barY = logoY + detranH + 14;
+      barraMesclada(margin, barY, contentW, 3.5);
+      y = barY + 3.5 + 24;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(20);
+      doc.setTextColor(...MX.navy);
+      doc.text("Diário de Bordo", margin, y + 6);
+      doc.setFontSize(10);
+      doc.setTextColor(...MX.cinzaTxt);
+      doc.text("DETRAN/PR", PAGE_W - margin, y - 2, { align: "right" });
+      doc.text("Departamento de Trânsito do Paraná", PAGE_W - margin, y + 11, { align: "right" });
+      doc.text("Central de Viagens", PAGE_W - margin, y + 24, { align: "right" });
+      y += 42;
+      doc.setDrawColor(...MX.cinzaBorda);
+      doc.setLineWidth(1);
+      doc.line(margin, y, PAGE_W - margin, y);
+      y += 14;
+
+      function faixa(titulo) {
+        doc.setFillColor(237, 242, 246);
+        doc.roundedRect(margin, y, contentW, 22, 4, 4, "F");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.setTextColor(...MX.navy);
+        doc.text(titulo, margin + 8, y + 15);
+        y += 30;
+      }
+
+      function campo(x, yy, label, valor, larguraTotal = 210, corValor = MX.texto, larguraLabel = 104) {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9.1);
+        doc.setTextColor(...MX.texto);
+        doc.text(label, x, yy);
+        const valorX = x + larguraLabel;
+        const larguraValor = Math.max(42, larguraTotal - larguraLabel);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(...corValor);
+        const linhas = doc.splitTextToSize(String(valor || "—"), larguraValor);
+        doc.text(linhas, valorX, yy);
+        return Math.max(12, linhas.length * 10);
+      }
+
+      faixa("Dados da solicitação");
+      const passageiros = (form.diarioPassageiros || []).map(p => String(p.nome || "").trim()).filter(Boolean);
+      const trechos = Array.isArray(form.diarioTrechos) ? form.diarioTrechos : [];
+      const primeiraData = trechos[0]?.data || form.dataSaida || "";
+      const ultimaData = trechos[trechos.length - 1]?.data || form.dataRetorno || "";
+      const leftX = margin;
+      const leftW = contentW * 0.54;
+      const rightX = margin + contentW * 0.59;
+      const rightW = contentW * 0.41;
+      let yl = y + 4;
+      let yr = y + 4;
+
+      yl += campo(leftX, yl, "Número da solicitação:", form.numeroSolicitacao, leftW, MX.texto, 112);
+      yl += campo(leftX, yl, "Solicitante:", form.nomeViajante, leftW, MX.texto, 112);
+      yl += campo(leftX, yl, "Unidade:", form.siglaSetor, leftW, MX.texto, 112);
+      yl += campo(leftX, yl, "Data de utilização (inicial):", formatDateBR(primeiraData), leftW, MX.texto, 128);
+      yl += campo(leftX, yl, "Data de utilização (retorno):", formatDateBR(ultimaData), leftW, MX.texto, 128);
+
+      yr += campo(rightX, yr, "Situação:", "PREENCHIDO", rightW, MX.verdeTexto, 76);
+      yr += campo(rightX, yr, "Placa do veículo:", form.diarioPlaca, rightW, MX.texto, 82);
+      yr += campo(rightX, yr, "Condutor:", form.diarioCondutor, rightW, MX.texto, 82);
+
+      y = Math.max(yl, yr) + 4;
+      y += campo(leftX, y, "Motivo da viagem:", form.nomeEvento || form.motivo, contentW, MX.texto, 104);
+      y += campo(leftX, y, "Lista de passageiros:", passageiros.length ? passageiros.join(", ") : "—", contentW, MX.texto, 104);
+      y += 8;
+
+      faixa("Itinerário");
+      const cols = [
+        { t:"Data", w:.125 }, { t:"Hora de saída", w:.14 }, { t:"Origem", w:.165 },
+        { t:"Destino", w:.165 }, { t:"Hora de chegada", w:.15 }, { t:"KM saída", w:.1275 }, { t:"KM chegada", w:.1275 },
+      ];
+      const headerH = 30, rowH = 23;
+      doc.setFillColor(224, 231, 236);
+      doc.rect(margin, y, contentW, headerH, "F");
+      doc.setDrawColor(178, 190, 198);
+      doc.setLineWidth(.6);
+      let x = margin;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8.5);
+      doc.setTextColor(...MX.texto);
+      cols.forEach(c => {
+        const cw = contentW * c.w;
+        doc.rect(x, y, cw, headerH, "S");
+        const linhasCabecalho = doc.splitTextToSize(c.t, cw - 8);
+        const alturaTexto = linhasCabecalho.length * 9;
+        const inicioY = y + (headerH - alturaTexto) / 2 + 7;
+        doc.text(linhasCabecalho, x + cw/2, inicioY, { align:"center" });
+        x += cw;
+      });
+      y += headerH;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      trechos.forEach((t, ri) => {
+        if (ri % 2 === 1) { doc.setFillColor(250,251,252); doc.rect(margin,y,contentW,rowH,"F"); }
+        const vals = [formatDateBR(t.data) || "—", t.horaSaida || "—", t.origem || "—", t.destino || "—", t.horaChegada || "—", t.kmSaida || "—", t.kmChegada || "—"];
+        let cx = margin;
+        cols.forEach((c, ci) => {
+          const cw = contentW * c.w;
+          doc.rect(cx, y, cw, rowH, "S");
+          const txt = doc.splitTextToSize(String(vals[ci]), cw - 8)[0] || "—";
+          doc.text(txt, cx + cw/2, y + 15, { align:"center" });
+          cx += cw;
+        });
+        y += rowH;
+      });
+      y += 18;
+
+      faixa("Abastecimento");
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(...MX.texto);
+      doc.text("Não há registros.", margin + 8, y + 4); y += 24;
+
+      faixa("Observações");
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(...MX.texto);
+      doc.text("Não há registros.", margin + 8, y + 4);
+
+      const linhaY = PAGE_H - 40;
+      barraMesclada(margin, linhaY - 17, contentW, 2.2);
+      const segmentos = [
+        "DETRAN/PR",
+        "Sistema de Prestação de Contas de Viagem",
+        `Solicitação: ${form.numeroSolicitacao || "—"}`,
+        "Página 1 de 1",
+      ];
+      const pesos = [0.7, 2.6, 1.5, 0.9];
+      const somaPesos = pesos.reduce((a, b) => a + b, 0);
+      doc.setFontSize(8);
+      let xAtual = margin;
+      segmentos.forEach((texto, i) => {
+        const colW = (contentW * pesos[i]) / somaPesos;
+        if (i > 0) {
+          doc.setTextColor(...MX.cinzaTxt);
+          doc.text("|", xAtual, linhaY);
+        }
+        doc.setFont("helvetica", i === 0 ? "bold" : "normal");
+        doc.setTextColor(...(i === 0 ? MX.texto : MX.cinzaTxt));
+        doc.text(texto, xAtual + colW / 2, linhaY, { align: "center" });
+        xAtual += colW;
+      });
+
+      const bytes = doc.output("arraybuffer");
+      downloadBytes(new Uint8Array(bytes), `diario_bordo_${form.numeroSolicitacao || "sem_numero"}.pdf`);
+    } catch (e) {
+      window.alert("Não foi possível gerar o Diário de Bordo em PDF (" + (e && e.message ? e.message : "erro desconhecido") + "). Tente novamente.");
+    }
+  }
+
   async function abrirPreviewPdf() {
     setPreviewErro("");
     setMostrarPreview(true);
@@ -6747,7 +7716,11 @@ function App() {
   const arquivosRevisao = [];
   docs.filter(d => d.id !== "comprobatorio").forEach(d => {
     const arquivos = form.anexos[d.id] || [];
-    arquivos.forEach(f => arquivosRevisao.push({ categoria: d.nome, nome: f.nome }));
+    const categoria = d.id === "solicitacao_veiculo" ? tituloDocumentoVeiculo(form) : d.nome;
+    arquivos.forEach(f => arquivosRevisao.push({ categoria, nome: f.nome }));
+    if (d.id === "diario_bordo" && form.diarioBordoModo === "preencher" && diarioBordoPreenchidoOk(form)) {
+      arquivosRevisao.push({ categoria: "Diário de bordo", nome: "Preenchido no sistema e incluído automaticamente no PDF" });
+    }
     if (DOCS_COM_JUSTIFICATIVA.includes(d.id) && !arquivos.length && respostaPossuiDoc(form, d.id) === "nao" && form.justificativas[d.id]) {
       arquivosRevisao.push({ categoria: d.nome, nome: "Justificativa registrada no sistema" });
     }
@@ -7546,6 +8519,8 @@ function App() {
                         <h2 className="section-title" style={{ fontSize: 18 }}><Icon name="paperclip" size={19} /> Demais documentos e comprovantes</h2>
                         {docs.filter(d => !["devolucao_translado", "devolucao_roteiro", "devolucao_nao_realizada"].includes(d.id)).map(d => {
                           const arquivos = form.anexos[d.id] || [];
+                          if (d.id === "solicitacao_veiculo") return renderSolicitacaoVeiculo(d, arquivos);
+                          if (d.id === "diario_bordo") return renderDiarioBordo(d, arquivos);
                           const atendido = d.id === "saque" ? saqueOk : (arquivos.length > 0 || !d.obrig);
                           const justificadoAqui = DOCS_COM_JUSTIFICATIVA.includes(d.id) && respostaPossuiDoc(form, d.id) === "nao" && docJustificavelOk(form, d.id);
                           const statusTexto = justificadoAqui ? "✓ justificado" : arquivos.length ? "✓ anexado" : "";
