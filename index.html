@@ -309,6 +309,30 @@
   /* ===== Relatório — layout "institucional contemporâneo" ===== */
   .rp-card{ border: 1px solid var(--linha); border-radius: 12px; margin-bottom: 18px; overflow: hidden; background: #fff; }
   .rp-card-tab{ display: inline-flex; align-items: center; gap: 8px; background: var(--azul-escuro); color: #fff; font-size: 12px; font-weight: 800; letter-spacing: .07em; padding: 8px 18px; border-radius: 0 0 12px 0; }
+  .rp-resumo-financeiro-wrap{ display:block; }
+  .rp-finance-card{ border:1px solid #d9e1e5; border-radius:12px; margin-bottom:18px; overflow:hidden; background:#fff; }
+  .rp-finance-head{ display:flex; align-items:center; justify-content:space-between; gap:18px; padding:13px 18px; background:#f8fafb; border-bottom:1px solid #e7ecef; }
+  .rp-finance-title{ display:flex; align-items:center; gap:10px; color:var(--azul-escuro); font-size:13px; font-weight:800; letter-spacing:.05em; }
+  .rp-finance-title-icon{ width:32px; height:32px; border-radius:9px; background:var(--azul-tint); color:var(--azul); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .rp-finance-total{ display:flex; align-items:baseline; gap:10px; padding:7px 12px; border-radius:10px; background:var(--amarelo-bg); color:var(--amarelo); white-space:nowrap; }
+  .rp-finance-total span{ font-size:11.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; }
+  .rp-finance-total strong{ font-size:19px; line-height:1; }
+  .rp-finance-body{ padding:14px 18px 16px; }
+  .rp-finance-section-title{ font-size:11.5px; font-weight:800; letter-spacing:.05em; color:#6a7780; margin-bottom:5px; }
+  .rp-finance-row{ display:flex; align-items:center; justify-content:space-between; gap:18px; padding:8px 0; border-bottom:1px solid #eef1f3; font-size:14px; }
+  .rp-finance-row:last-of-type{ border-bottom:none; }
+  .rp-finance-row span{ color:#43525c; }
+  .rp-finance-row strong{ color:var(--grafite); font-weight:700; white-space:nowrap; }
+  .rp-finance-divider{ height:1px; background:#dde4e8; margin:13px 0; }
+  .rp-finance-detail-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 22px; }
+  .rp-finance-detail{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:7px 0; border-bottom:1px solid #f0f2f3; font-size:13.5px; }
+  .rp-finance-detail span{ color:#66747d; }
+  .rp-finance-detail strong{ color:#31424f; font-weight:700; text-align:right; }
+  @media (max-width:620px){
+    .rp-finance-head{ align-items:flex-start; flex-direction:column; }
+    .rp-finance-total{ width:100%; justify-content:space-between; }
+    .rp-finance-detail-grid{ grid-template-columns:1fr; }
+  }
   .rp-resumo-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 0 26px; padding: 12px 18px 14px; }
   .rp-resumo-item{ display: flex; align-items: baseline; gap: 10px; padding: 9px 0; border-bottom: 1px solid #eef1f3; font-size: 14.5px; flex-wrap: wrap; }
   .rp-resumo-item span{ font-weight: 700; color: var(--grafite); flex-shrink: 0; }
@@ -3477,7 +3501,17 @@ const UNIDADES_LOTACAO = [
   ]},
 ].map(grupo => ({ ...grupo, opcoes: grupo.opcoes.map(([valor, nome]) => ({ valor, nome })) }));
 
-const UNIDADES_LOTACAO_VALORES = new Set(UNIDADES_LOTACAO.flatMap(grupo => grupo.opcoes.map(opcao => opcao.valor)));
+const OUTRO_ORGAO_VALOR = "__OUTRO_ORGAO__";
+const UNIDADES_LOTACAO_VALORES = new Set([
+  ...UNIDADES_LOTACAO.flatMap(grupo => grupo.opcoes.map(opcao => opcao.valor)),
+  OUTRO_ORGAO_VALOR,
+]);
+
+function unidadeLotacaoExibida(form) {
+  return form.siglaSetor === OUTRO_ORGAO_VALOR
+    ? String(form.outroOrgao || "").trim()
+    : String(form.siglaSetor || "").trim();
+}
 
 
 function Icon({ name, size = 18, style, className }) {
@@ -3819,7 +3853,10 @@ function paraFrase(texto) {
 // aparecer no relatório, sem o sistema tentar adivinhar o gênero pelo nome.
 const CARGOS_FUNCOES = [
   "Agente de Trânsito",
+  "Analista de Atividades de Trânsito",
   "Assessor(a)",
+  "Auxiliar de Atividades de Trânsito",
+  "Colaborador Eventual",
   "Chefe de Ciretran",
   "Chefe de Departamento",
   "Chefe de Divisão",
@@ -3833,7 +3870,7 @@ const CARGOS_FUNCOES = [
 ];
 
 const emptyForm = {
-  numeroSolicitacao: "", nomeViajante: "", cargoFuncao: "", siglaSetor: "", origem: "", destino: "",
+  numeroSolicitacao: "", nomeViajante: "", cargoFuncao: "", siglaSetor: "", outroOrgao: "", origem: "", destino: "",
   dataSaida: "", dataRetorno: "", nomeEvento: "", motivo: "", conclusao: "",
   infoComplementares: "", transporte: "", tipoPrestacao: "", usouTranslado: "", atesto: false,
   scvImportado: false, scvArquivo: null, dadosScvConfirmados: false,
@@ -4424,7 +4461,8 @@ function dadosRelatorioPreview(form, numeracaoAnexos) {
   const tipoViagem = form.tipoPrestacao === "viagem_nao_realizada"
     ? "Viagem não realizada"
     : (TRANSPORTES.find(t => t.id === form.transporte)?.label || "—");
-  const cargoLinha = [form.cargoFuncao, form.siglaSetor].filter(Boolean).join(" — ");
+  const unidadeLinha = unidadeLotacaoExibida(form);
+  const cargoLinha = [form.cargoFuncao, unidadeLinha].filter(Boolean).join(" - ");
   const tipoPrestacao = form.tipoPrestacao === "roteiro_reduzido" ? "ROTEIRO REDUZIDO" : form.tipoPrestacao === "roteiro_sem_alteracao" ? "ROTEIRO SEM ALTERAÇÃO" : form.tipoPrestacao === "viagem_nao_realizada" ? "VIAGEM NÃO REALIZADA" : "—";
   const transladosComArquivo = (form.translados || []).filter(t => t.arquivo);
   const totalTranslados = transladosComArquivo.reduce((a, t) => a + parseMoeda(t.valor), 0);
@@ -4468,7 +4506,23 @@ function dadosRelatorioPreview(form, numeracaoAnexos) {
   const atestoPreview = form.tipoPrestacao === "viagem_nao_realizada"
     ? "Atesto e certifico que a viagem autorizada não foi realizada, que a justificativa registrada neste documento corresponde aos fatos e que o valor sacado ou transferido da conta corporativa foi devolvido ao Estado, conforme os documentos anexados a esta prestação de contas, nos termos do Decreto Estadual n.º 6.358/2024."
     : "Atesto e certifico que as informações constantes no presente documento demonstram efetivamente a realização e a efetividade da viagem, e que os comprovantes de despesa anexos a esta prestação de contas foram efetivamente realizados no estrito interesse da administração pública, conforme o Decreto Estadual n.º 6.358/2024.";
-  return { periodo, tipoViagem, cargoLinha, tipoPrestacao, docsPreview, atestoPreview, saldoADevolver, resumoTranslado };
+  const situacaoTranslado = form.usouTranslado === "sim" ? "Utilizado" : form.usouTranslado === "nao" ? "Não utilizado" : "";
+  return {
+    periodo,
+    tipoViagem,
+    cargoLinha,
+    tipoPrestacao,
+    docsPreview,
+    atestoPreview,
+    saldoRoteiroDevolver,
+    saldoTransladoDevolver,
+    valorNaoRealizadaDevolver,
+    saldoADevolver,
+    resumoTranslado,
+    situacaoTranslado,
+    liberadoTranslado,
+    valorRetiradoTranslado
+  };
 }
 
 // Converte o texto digitado pelo viajante em blocos semânticos.
@@ -4533,25 +4587,67 @@ function RelatorioBlocos({ form, numeracaoAnexos }) {
   }
   return (
     <>
-      <div className="rp-card">
-        <div className="rp-card-tab"><Icon name="maleta" size={14} /> RESUMO DA VIAGEM</div>
-        <div className="rp-resumo-grid">
-          <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="pessoa" size={15} /></span><span>Viajante:</span><strong>{form.nomeViajante || "—"}</strong></div>
-          <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="maleta" size={15} /></span><span>Tipo de viagem:</span><strong>{d.tipoViagem}</strong></div>
-          <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="pin" size={15} /></span><span>Origem:</span><strong>{form.origem || "—"}</strong></div>
-          <div className="rp-resumo-item rp-resumo-situacao">
-            <div className="rp-situacao-head"><span className="rp-ri-icon"><Icon name="alvo" size={15} /></span><span>Situação do roteiro:</span></div>
-            <span className={"rp-selo " + (form.tipoPrestacao === "roteiro_sem_alteracao" ? "ok" : "warn")}><Icon name="check" size={12} /> {d.tipoPrestacao}</span>
+      <div className="rp-resumo-financeiro-wrap">
+        <div className="rp-card">
+          <div className="rp-card-tab"><Icon name="maleta" size={14} /> RESUMO DA VIAGEM</div>
+          <div className="rp-resumo-grid">
+            <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="pessoa" size={15} /></span><span>Viajante:</span><strong>{form.nomeViajante || "—"}</strong></div>
+            <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="maleta" size={15} /></span><span>Tipo de viagem:</span><strong>{d.tipoViagem}</strong></div>
+            <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="pin" size={15} /></span><span>Origem:</span><strong>{form.origem || "—"}</strong></div>
+            <div className="rp-resumo-item rp-resumo-situacao">
+              <div className="rp-situacao-head"><span className="rp-ri-icon"><Icon name="alvo" size={15} /></span><span>Situação do roteiro:</span></div>
+              <span className={"rp-selo " + (form.tipoPrestacao === "roteiro_sem_alteracao" ? "ok" : "warn")}><Icon name="check" size={12} /> {d.tipoPrestacao}</span>
+            </div>
+            <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="pin" size={15} /></span><span>Destino:</span><strong>{form.destino || "—"}</strong></div>
+            <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="calendario" size={15} /></span><span>Período:</span><strong>{d.periodo}</strong></div>
           </div>
-          <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="pin" size={15} /></span><span>Destino:</span><strong>{form.destino || "—"}</strong></div>
-          <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="calendario" size={15} /></span><span>Período:</span><strong>{d.periodo}</strong></div>
-          {d.saldoADevolver > 0.009 && (
-            <div className="rp-resumo-item"><span className="rp-ri-icon"><Icon name="doc" size={15} /></span><span>Saldo a devolver:</span><strong>{moedaBR(d.saldoADevolver)}</strong></div>
-          )}
-          {d.resumoTranslado && (
-            <div className="rp-resumo-item" style={{ gridColumn: "1 / -1" }}><span className="rp-ri-icon"><Icon name="car" size={15} /></span><span>Translado:</span><strong>{d.resumoTranslado}</strong></div>
-          )}
         </div>
+
+        {d.saldoADevolver > 0.009 && (
+          <div className="rp-finance-card">
+            <div className="rp-finance-head">
+              <div className="rp-finance-title">
+                <span className="rp-finance-title-icon"><Icon name="doc" size={16} /></span>
+                SALDO A DEVOLVER
+              </div>
+              <div className="rp-finance-total">
+                <span>Total</span>
+                <strong>{moedaBR(d.saldoADevolver)}</strong>
+              </div>
+            </div>
+
+            <div className="rp-finance-body">
+              <div className="rp-finance-section-title">COMPOSIÇÃO DO SALDO</div>
+              <div className="rp-finance-row">
+                <span>Roteiro reduzido</span>
+                <strong>{moedaBR(d.saldoRoteiroDevolver)}</strong>
+              </div>
+              <div className="rp-finance-row">
+                <span>Translado a devolver</span>
+                <strong>{moedaBR(d.saldoTransladoDevolver)}</strong>
+              </div>
+              {d.valorNaoRealizadaDevolver > 0.009 && (
+                <div className="rp-finance-row">
+                  <span>Viagem não realizada</span>
+                  <strong>{moedaBR(d.valorNaoRealizadaDevolver)}</strong>
+                </div>
+              )}
+
+              {d.situacaoTranslado && form.valorTransladoLiberado && (
+                <>
+                  <div className="rp-finance-divider" />
+                  <div className="rp-finance-section-title">DETALHAMENTO DO TRANSLADO</div>
+                  <div className="rp-finance-detail-grid">
+                    <div className="rp-finance-detail"><span>Situação</span><strong>{d.situacaoTranslado}</strong></div>
+                    <div className="rp-finance-detail"><span>Valor liberado</span><strong>{moedaBR(d.liberadoTranslado)}</strong></div>
+                    <div className="rp-finance-detail"><span>Sacado/transferido</span><strong>{moedaBR(d.valorRetiradoTranslado)}</strong></div>
+                    <div className="rp-finance-detail"><span>Valor a devolver</span><strong>{moedaBR(d.saldoTransladoDevolver)}</strong></div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {form.tipoPrestacao === "viagem_nao_realizada" ? (
@@ -6138,6 +6234,9 @@ function App() {
     { id: "campo-nomeViajante", label: "Nome completo do viajante", ok: !!form.nomeViajante },
     { id: "campo-cargoFuncao", label: "Cargo/Função", ok: !!form.cargoFuncao },
     { id: "campo-siglaSetor", label: "Unidade de lotação", ok: !!form.siglaSetor },
+    ...(form.siglaSetor === OUTRO_ORGAO_VALOR ? [
+      { id: "campo-outroOrgao", label: "Nome do outro órgão", ok: !!String(form.outroOrgao || "").trim() },
+    ] : []),
     { id: "campo-origem", label: "Origem", ok: !!form.origem },
     { id: "campo-destino", label: "Destino", ok: !!form.destino },
     { id: "campo-dataSaida", label: "Data de saída", ok: !!form.dataSaida },
@@ -6853,7 +6952,7 @@ function App() {
         const imagensImg = Array.from(container.querySelectorAll("img"));
         await Promise.all(imagensImg.map(im => im.complete ? Promise.resolve() : new Promise(res => { im.onload = im.onerror = res; })));
 
-        const resumoEl = container.querySelectorAll(".rp-card")[0];
+        const resumoEl = container.querySelector(".rp-resumo-financeiro-wrap") || container.querySelectorAll(".rp-card")[0];
         const declEl = container.querySelector(".rp-decl-assin");
 
         async function capturar(el) {
@@ -7465,7 +7564,7 @@ function App() {
         // aumentada para impedir que datas encostem em "Data de utilização (...)".
         yl += campo(leftX, yl, "Número da solicitação:", form.numeroSolicitacao, leftW, MX.texto, 112);
         yl += campo(leftX, yl, "Solicitante:", form.nomeViajante, leftW, MX.texto, 112);
-        yl += campo(leftX, yl, "Unidade:", form.siglaSetor, leftW, MX.texto, 112);
+        yl += campo(leftX, yl, "Unidade:", unidadeLotacaoExibida(form), leftW, MX.texto, 112);
         yl += campo(leftX, yl, "Data de utilização (inicial):", formatDateBR(primeiraData), leftW, MX.texto, 128);
         yl += campo(leftX, yl, "Data de utilização (retorno):", formatDateBR(ultimaData), leftW, MX.texto, 128);
 
@@ -7485,7 +7584,7 @@ function App() {
           { t:"Data", w:.125 }, { t:"Hora de saída", w:.14 }, { t:"Origem", w:.165 },
           { t:"Destino", w:.165 }, { t:"Hora de chegada", w:.15 }, { t:"KM saída", w:.1275 }, { t:"KM chegada", w:.1275 },
         ];
-        const headerH = 30, rowH = 23;
+        const headerH = 30, rowHMin = 23;
         doc.setFillColor(224, 231, 236);
         doc.rect(margin, y, contentW, headerH, "F");
         doc.setDrawColor(178, 190, 198);
@@ -7507,28 +7606,25 @@ function App() {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.5);
         trechos.forEach((t, ri) => {
-          if (y + rowH > PAGE_H - 92) return; // viagens usuais cabem em uma página; evita invadir o rodapé.
-          if (ri % 2 === 1) { doc.setFillColor(250,251,252); doc.rect(margin,y,contentW,rowH,"F"); }
           const vals = [formatDateBR(t.data) || "—", t.horaSaida || "—", t.origem || "—", t.destino || "—", t.horaChegada || "—", t.kmSaida || "—", t.kmChegada || "—"];
+          const linhasCelulas = cols.map((c, ci) => doc.splitTextToSize(String(vals[ci]), contentW * c.w - 8));
+          const maiorNumeroLinhas = Math.max(1, ...linhasCelulas.map(linhas => linhas.length));
+          const rowH = Math.max(rowHMin, 8 + maiorNumeroLinhas * 9);
+          if (y + rowH > PAGE_H - 92) return; // evita invadir o rodapé.
+          if (ri % 2 === 1) { doc.setFillColor(250,251,252); doc.rect(margin,y,contentW,rowH,"F"); }
           let cx = margin;
           cols.forEach((c, ci) => {
             const cw = contentW * c.w;
             doc.rect(cx, y, cw, rowH, "S");
-            const txt = doc.splitTextToSize(String(vals[ci]), cw - 8)[0] || "—";
-            doc.text(txt, cx + cw/2, y + 15, { align:"center" });
+            const linhas = linhasCelulas[ci].length ? linhasCelulas[ci] : ["—"];
+            const alturaTexto = linhas.length * 9;
+            const textoY = y + (rowH - alturaTexto) / 2 + 7;
+            doc.text(linhas, cx + cw/2, textoY, { align:"center" });
             cx += cw;
           });
           y += rowH;
         });
         y += 18;
-
-        faixa("Abastecimento");
-        doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(...MX.texto);
-        doc.text("Não há registros.", margin + 8, y + 4); y += 24;
-
-        faixa("Observações");
-        doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(...MX.texto);
-        doc.text("Não há registros.", margin + 8, y + 4);
 
         rodapePaginaAnexo();
       }
@@ -7703,7 +7799,7 @@ function App() {
 
       yl += campo(leftX, yl, "Número da solicitação:", form.numeroSolicitacao, leftW, MX.texto, 112);
       yl += campo(leftX, yl, "Solicitante:", form.nomeViajante, leftW, MX.texto, 112);
-      yl += campo(leftX, yl, "Unidade:", form.siglaSetor, leftW, MX.texto, 112);
+      yl += campo(leftX, yl, "Unidade:", unidadeLotacaoExibida(form), leftW, MX.texto, 112);
       yl += campo(leftX, yl, "Data de utilização (inicial):", formatDateBR(primeiraData), leftW, MX.texto, 128);
       yl += campo(leftX, yl, "Data de utilização (retorno):", formatDateBR(ultimaData), leftW, MX.texto, 128);
 
@@ -7721,7 +7817,7 @@ function App() {
         { t:"Data", w:.125 }, { t:"Hora de saída", w:.14 }, { t:"Origem", w:.165 },
         { t:"Destino", w:.165 }, { t:"Hora de chegada", w:.15 }, { t:"KM saída", w:.1275 }, { t:"KM chegada", w:.1275 },
       ];
-      const headerH = 30, rowH = 23;
+      const headerH = 30, rowHMin = 23;
       doc.setFillColor(224, 231, 236);
       doc.rect(margin, y, contentW, headerH, "F");
       doc.setDrawColor(178, 190, 198);
@@ -7743,27 +7839,24 @@ function App() {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8.5);
       trechos.forEach((t, ri) => {
-        if (ri % 2 === 1) { doc.setFillColor(250,251,252); doc.rect(margin,y,contentW,rowH,"F"); }
         const vals = [formatDateBR(t.data) || "—", t.horaSaida || "—", t.origem || "—", t.destino || "—", t.horaChegada || "—", t.kmSaida || "—", t.kmChegada || "—"];
+        const linhasCelulas = cols.map((c, ci) => doc.splitTextToSize(String(vals[ci]), contentW * c.w - 8));
+        const maiorNumeroLinhas = Math.max(1, ...linhasCelulas.map(linhas => linhas.length));
+        const rowH = Math.max(rowHMin, 8 + maiorNumeroLinhas * 9);
+        if (ri % 2 === 1) { doc.setFillColor(250,251,252); doc.rect(margin,y,contentW,rowH,"F"); }
         let cx = margin;
         cols.forEach((c, ci) => {
           const cw = contentW * c.w;
           doc.rect(cx, y, cw, rowH, "S");
-          const txt = doc.splitTextToSize(String(vals[ci]), cw - 8)[0] || "—";
-          doc.text(txt, cx + cw/2, y + 15, { align:"center" });
+          const linhas = linhasCelulas[ci].length ? linhasCelulas[ci] : ["—"];
+          const alturaTexto = linhas.length * 9;
+          const textoY = y + (rowH - alturaTexto) / 2 + 7;
+          doc.text(linhas, cx + cw/2, textoY, { align:"center" });
           cx += cw;
         });
         y += rowH;
       });
       y += 18;
-
-      faixa("Abastecimento");
-      doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(...MX.texto);
-      doc.text("Não há registros.", margin + 8, y + 4); y += 24;
-
-      faixa("Observações");
-      doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(...MX.texto);
-      doc.text("Não há registros.", margin + 8, y + 4);
 
       const linhaY = PAGE_H - 40;
       barraMesclada(margin, linhaY - 17, contentW, 2.2);
@@ -8235,7 +8328,7 @@ function App() {
                         )}
                         {CARGOS_FUNCOES.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
-                      <FieldGuide show={!form.cargoFuncao}>Escolha a forma como deve aparecer no relatório (ex.: Assessora — DAFI).</FieldGuide>
+                      <FieldGuide show={!form.cargoFuncao}>Escolha a forma como deve aparecer no relatório (ex.: Assessora - DAFI).</FieldGuide>
                       {invalidos1.has("campo-cargoFuncao") && <div className="campo-erro-msg">Preencha o cargo/função.</div>}
                     </div>
                     <div className={"field lotacao-field" + (invalidos1.has("campo-siglaSetor") ? " field-invalido" : "")} id="campo-siglaSetor">
@@ -8250,7 +8343,10 @@ function App() {
                           </span>
                         </span>
                       </div>
-                      <select id="unidade-lotacao" value={form.siglaSetor} onChange={e => update({ siglaSetor: e.target.value })}>
+                      <select id="unidade-lotacao" value={form.siglaSetor} onChange={e => {
+                        const valor = e.target.value;
+                        update({ siglaSetor: valor, ...(valor === OUTRO_ORGAO_VALOR ? {} : { outroOrgao: "" }) });
+                      }}>
                         <option value="">Selecione a unidade onde você trabalha</option>
                         {form.siglaSetor && !UNIDADES_LOTACAO_VALORES.has(form.siglaSetor) && (
                           <option value={form.siglaSetor}>{form.siglaSetor} — unidade informada anteriormente</option>
@@ -8262,8 +8358,17 @@ function App() {
                             ))}
                           </optgroup>
                         ))}
+                        <option value={OUTRO_ORGAO_VALOR}>Outro órgão — digitar o nome do órgão</option>
                       </select>
                       {invalidos1.has("campo-siglaSetor") && <div className="campo-erro-msg">Selecione a unidade de lotação.</div>}
+                      {form.siglaSetor === OUTRO_ORGAO_VALOR && (
+                        <div className={"field" + (invalidos1.has("campo-outroOrgao") ? " field-invalido" : "")} id="campo-outroOrgao" style={{ marginTop: 12 }}>
+                          <label>Nome do órgão <span className="req">*</span></label>
+                          <input type="text" value={form.outroOrgao || ""} onChange={e => update({ outroOrgao: e.target.value })} placeholder="Ex: SEFA/PR" />
+                          <FieldGuide show={!String(form.outroOrgao || "").trim()}>Digite a sigla ou o nome do órgão. Ex.: SEFA/PR.</FieldGuide>
+                          {invalidos1.has("campo-outroOrgao") && <div className="campo-erro-msg">Informe o órgão de lotação.</div>}
+                        </div>
+                      )}
                     </div>
                   </div>
 
