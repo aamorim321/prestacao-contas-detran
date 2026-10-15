@@ -3379,10 +3379,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
-  if (window.pdfjsLib) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-
   // ---- Opções de leitura de PDF -------------------------------------------
+  // Declaradas aqui FORA do if, no nível do script, para que os quatro pontos
+  // que leem PDF enxerguem esta constante. Dentro do if ela ficaria restrita
+  // àquele bloco e qualquer leitura falharia.
+  //
   // useSystemFonts: false corrige os PDFs que apareciam ilegíveis. Arquivos
   // gerados pelo Word muitas vezes não embutem fontes comuns (Arial, Times);
   // nesses casos o leitor tentava aproveitar a fonte instalada no Windows,
@@ -3391,13 +3392,13 @@
   // substituta e o texto volta a aparecer corretamente.
   //
   // isEvalSupported: false é a mitigação do CVE-2024-4367 e continua valendo.
-  //
-  // Testado em 15/10/2026 com PDFs do Word 2013: resolve sem precisar baixar
-  // nada de servidor externo.
-  const PDFJS_OPCOES = {
+  var PDFJS_OPCOES = {
     isEvalSupported: false,
     useSystemFonts: false,
   };
+
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
   }
 </script>
 <script type="text/babel" data-presets="react">
