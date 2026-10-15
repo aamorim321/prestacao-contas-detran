@@ -3381,6 +3381,23 @@
 <script>
   if (window.pdfjsLib) {
     pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+  // ---- Opções de leitura de PDF -------------------------------------------
+  // useSystemFonts: false corrige os PDFs que apareciam ilegíveis. Arquivos
+  // gerados pelo Word muitas vezes não embutem fontes comuns (Arial, Times);
+  // nesses casos o leitor tentava aproveitar a fonte instalada no Windows,
+  // mas continuava usando a tabela de posições da fonte original — e cada
+  // letra saía trocada por outra. Com esta opção ele usa a própria fonte
+  // substituta e o texto volta a aparecer corretamente.
+  //
+  // isEvalSupported: false é a mitigação do CVE-2024-4367 e continua valendo.
+  //
+  // Testado em 15/10/2026 com PDFs do Word 2013: resolve sem precisar baixar
+  // nada de servidor externo.
+  const PDFJS_OPCOES = {
+    isEvalSupported: false,
+    useSystemFonts: false,
+  };
   }
 </script>
 <script type="text/babel" data-presets="react">
@@ -4013,7 +4030,7 @@ function TransladoPdfThumb({ meta, src, onOpen }) {
       try {
         if (!window.pdfjsLib) { setErro(true); return; }
         const bytes = dataUrlToBytes(src);
-        const pdf = await window.pdfjsLib.getDocument({ data: bytes, isEvalSupported: false }).promise;
+        const pdf = await window.pdfjsLib.getDocument({ data: bytes, ...PDFJS_OPCOES }).promise;
         const page = await pdf.getPage(1);
         const viewport = page.getViewport({ scale: 1.7 });
         const cnv = document.createElement("canvas");
@@ -4118,7 +4135,7 @@ function RedactModal({ meta, dataUrl, onSave, onClose }) {
         if (isPdf) {
           if (!window.pdfjsLib) { setLoadError("A biblioteca de leitura de PDF não carregou. Verifique sua conexão."); return; }
           const bytes = dataUrlToBytes(dataUrl);
-          const pdf = await window.pdfjsLib.getDocument({ data: bytes, isEvalSupported: false }).promise;
+          const pdf = await window.pdfjsLib.getDocument({ data: bytes, ...PDFJS_OPCOES }).promise;
           const urls = [];
           for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
@@ -5917,7 +5934,7 @@ function App() {
       setAnexosContent(prev => ({ ...prev, [fileId]: dataUrl }));
       persistFileComAviso(fileId, dataUrl);
       const bytes = new Uint8Array(await file.arrayBuffer());
-      const pdf = await window.pdfjsLib.getDocument({ data: bytes, isEvalSupported: false }).promise;
+      const pdf = await window.pdfjsLib.getDocument({ data: bytes, ...PDFJS_OPCOES }).promise;
       const partes = [];
       for (let p = 1; p <= pdf.numPages; p++) {
         const page = await pdf.getPage(p);
@@ -6656,7 +6673,7 @@ function App() {
         }
         if (!window.pdfjsLib) throw new Error("Leitor de PDF indisponível");
         const bytes = dataUrlToBytes(contentDataUrl);
-        const pdfDoc = await window.pdfjsLib.getDocument({ data: bytes, isEvalSupported: false }).promise;
+        const pdfDoc = await window.pdfjsLib.getDocument({ data: bytes, ...PDFJS_OPCOES }).promise;
         const paginas = [];
         for (let i = 1; i <= pdfDoc.numPages; i++) {
           const pagina = await pdfDoc.getPage(i);
